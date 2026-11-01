@@ -1,17 +1,17 @@
 **English** · [Deutsch](README.de.md)
 
 <p align="center">
-  <img src="assets/design/icons/dark/ThreadDesk-dark-256.png" alt="ThreadDesk" width="256" height="256">
+  <img src="assets/readme/normalized/ThreadDesk-large.svg" alt="ThreadDesk" width="256" height="256">
 </p>
 
 <p align="center">
   <a href="https://github.com/landjunge/KiraBridge/blob/docs/product-family-readme-20261031/README.md" title="KiraBridge"><img src="assets/readme/KiraBridge-dark.svg" alt="KiraBridge" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/4AllPass/blob/docs/product-family-readme-20261031/README.md" title="4AllPass"><img src="assets/readme/4AllPass-dark-128.png" alt="4AllPass" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/4AllPass/blob/docs/product-family-readme-20261031/README.md" title="4AllPass"><img src="assets/readme/normalized/4AllPass-small.svg" alt="4AllPass" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/tollgate/blob/docs/product-family-readme-20261031/README.md" title="TollGate"><img src="assets/readme/TollGate-dark-128.png" alt="TollGate" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/tollgate/blob/docs/product-family-readme-20261031/README.md" title="TollGate"><img src="assets/readme/normalized/TollGate-small.svg" alt="TollGate" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/agent-authority-lab/blob/docs/product-family-readme-20261031/README.md" title="Agent Authority"><img src="assets/readme/Agent-Authority-dark.svg" alt="Agent Authority" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/agent-authority-lab/blob/docs/product-family-readme-20261031/README.md" title="Agent Authority"><img src="assets/readme/normalized/Agent-Authority-small.svg" alt="Agent Authority" width="48" height="48"></a>
 </p>
 
 <h1 align="center">ThreadDesk</h1>
