@@ -27,7 +27,7 @@ def main():
     watch = sub.add_parser('watch')
     watch.add_argument('--interval', type=int, default=60)
     args = parser.parse_args()
-    reports = module.AgentReports(ThreadService(JsonStore(args.workspace)))
+    reports = module.AgentReports(ThreadService(JsonStore(args.workspace), bus=module.ReportEventBus()))
     if args.action == 'report':
         print(json.dumps(reports.report(args.instance, args.agent, args.report_id,
             args.status, args.done, args.working, args.next, args.blocker), ensure_ascii=False))

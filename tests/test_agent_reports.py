@@ -81,3 +81,19 @@ def test_foreign_metadata_cannot_break_overview(setup):
     assert len(r.snapshot()['instances']) == 1
     send(r, rid='two')
     assert r.snapshot()['instances'][0]['report_id'] == 'two'
+
+
+def test_legacy_event_bus_buffers_and_rolls_back():
+    from threaddesk.services.agent_reports import ReportEventBus
+    bus = ReportEventBus()
+    received = []
+    bus.on('*', lambda name, data: received.append(name))
+    with bus.defer_until_commit():
+        bus.emit('committed')
+        assert not received
+    assert received == ['committed']
+    with pytest.raises(ValueError):
+        with bus.defer_until_commit():
+            bus.emit('rolled_back')
+            raise ValueError('rollback')
+    assert received == ['committed']

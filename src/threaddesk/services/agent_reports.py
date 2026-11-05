@@ -1,12 +1,14 @@
 """Small, append-only instance reports; no execution or agent control."""
 from __future__ import annotations
 
+from contextlib import contextmanager
 import hashlib
 import json
 import re
 from datetime import datetime, timezone
 
 from threaddesk.core.models import new_thread
+from threaddesk.core.events import EventBus
 from threaddesk.core.secrets import reject_secrets
 
 SCHEMA = 'bigplan.agent-report.v1'
@@ -27,6 +29,25 @@ def valid_report(value):
     return (isinstance(value, dict) and value.get('schema') == SCHEMA
             and all(isinstance(value.get(k), str) for k in keys)
             and value['status'] in STATUSES)
+
+
+class ReportEventBus(EventBus):
+    """Commit buffering for the standalone adapter, including older installed APIs."""
+    @contextmanager
+    def defer_until_commit(self):
+        pending = []
+        original = self.emit
+        self.emit = lambda name, payload=None: pending.append((name, payload))
+        try:
+            yield
+        except BaseException:
+            raise
+        else:
+            self.emit = original
+            for name, payload in pending:
+                original(name, payload)
+        finally:
+            self.emit = original
 
 
 class AgentReports:
@@ -61,7 +82,7 @@ class AgentReports:
                       working=working, next=next_step, blocker=blocker)
         if any(not isinstance(v, str) or len(v) > 600 for v in fields.values()):
             raise ValueError('fields must be text, maximum 600 characters each')
-        if not agent.strip():
+        if not agent.strip() or len(agent) > 80:
             raise ValueError('agent required')
         reject_secrets(json.dumps(fields))
         with self.svc.bus.defer_until_commit(), self.store.transaction():

@@ -4,7 +4,7 @@ Version 1 · 05.11.2026 · Big Plan
 
 Jede Instanz verwendet eine eigene stabile Sitzungskennung, nicht nur „Codex“ oder „Grok“. Auf dem eingerichteten Mac ist `~/.local/bin/bigplan-report` der Einstieg. Andere CLIs können dieselbe Schnittstelle verwenden.
 
-Bei Beginn, nach einem sinnvollen Teilschritt, bei Blockade und vor Ende berichten. Während aktiver Arbeit spätestens alle 60 Sekunden einen kurzen echten Stand senden. Je Feld höchstens 600 Zeichen. Keine Geheimnisse, Rohtranskripte oder privaten Prompts übernehmen. Zeitstempel erzeugt der Dienst. Keine fertigen Ergebnisse für fremde Instanzen behaupten.
+Bei Beginn, nach einem sinnvollen Teilschritt, bei Blockade und vor Ende berichten. Während aktiver Arbeit spätestens alle 60 Sekunden einen kurzen echten Stand senden. Je Feld höchstens 600 Zeichen, Agentenname höchstens 80 Zeichen. Keine Geheimnisse, Rohtranskripte oder privaten Prompts übernehmen. Zeitstempel erzeugt der Dienst. Keine fertigen Ergebnisse für fremde Instanzen behaupten.
 
 ```sh
 ~/.local/bin/bigplan-report report \
