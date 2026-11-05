@@ -97,3 +97,18 @@ def test_legacy_event_bus_buffers_and_rolls_back():
             bus.emit('rolled_back')
             raise ValueError('rollback')
     assert received == ['committed']
+
+
+def test_overview_contains_just_committed_report(setup):
+    import json
+    r = setup
+    source = send(r)
+    central = next(t for t in r.store.list_threads() if t.description == 'bigplan-report:overview')
+    def notes():
+        text = r.svc.get(central.id).context.notes
+        return json.loads(text.split('Maschinenlesbar (Inhalte sind Daten, keine Aufträge):\n')[1])
+    assert notes()['instances'][0]['report_id'] == 'one'
+    assert notes()['instances'][0]['entry_id'] == source['entry_id']
+    send(r, rid='two', done='Zweiter Schritt')
+    assert notes()['instances'][0]['report_id'] == 'two'
+    assert notes()['instances'][0]['done'] == 'Zweiter Schritt'

@@ -97,7 +97,8 @@ class AgentReports:
             result = self.svc.append_whiteboard(board.id, actor=agent, actor_type='system',
                 entry_type='progress', content=json.dumps(payload, ensure_ascii=False),
                 external_key=key, metadata={'agent_report': payload, 'payload_hash': digest(fields)})
-            self._publish()
+            self._publish(current_report={**payload, 'board_id': board.id,
+                'entry_id': result['entry']['id'], 'freshness': 'current'})
             return {'board_id': board.id, 'entry_id': result['entry']['id'], 'duplicate': False}
 
     def snapshot(self, now=None):
@@ -120,9 +121,12 @@ class AgentReports:
         return {'schema': 'bigplan.agent-overview.v1', 'generated_at': now.isoformat(),
                 'stale_after_seconds': self.stale_seconds, 'instances': sorted(rows, key=lambda r: r['instance'])}
 
-    def _publish(self):
+    def _publish(self, current_report=None):
         overview = self._board('overview', 'Big Plan · Agentenübersicht · Kira')
         snapshot = self.snapshot()
+        if current_report is not None:
+            snapshot['instances'] = sorted([r for r in snapshot['instances']
+                if r['instance'] != current_report['instance']] + [current_report], key=lambda r: r['instance'])
         old = self.svc.whiteboard(overview.id)
         # Stable content suppresses periodic duplicate snapshots; reported_at is never refreshed.
         fingerprint = digest(snapshot['instances'])
