@@ -1,0 +1,21 @@
+.np-desktop.project-memory-shell { min-width: 0; min-height: 0; height: 100dvh; width: 100%; }
+.project-memory-shell .topbar { flex-wrap: wrap; }
+.project-memory-shell .topbar-actions { min-width: 0; flex-wrap: wrap; }
+.project-memory-shell .view-nav { display: flex; flex-wrap: wrap; }
+.project-memory { min-width: 0; min-height: 0; overflow: auto; overflow-wrap: anywhere; }
+.project-memory-summary, .project-memory-thread { padding: 1.2rem; }
+.project-memory-threads { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; margin: 1rem 0; }
+.project-memory-text { white-space: pre-wrap; }
+.project-memory-items { padding-inline-start: 1.3rem; }
+.project-memory-items li + li { margin-top: .8rem; }
+.project-memory .project-memory-archive { display: flex; align-items: center; gap: .5rem; }
+.project-memory .knowledge-filter label { min-width: 0; }
+.project-memory select { width: 100%; min-width: 0; max-width: min(32rem, 100%); }
+.project-memory .panel-head { flex-wrap: wrap; }
+.project-memory .panel-head h2 { min-width: 0; }
+.project-memory a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+@media (max-width: 700px) {
+  .project-memory-shell .topbar-actions { flex-basis: 100%; }
+  .project-memory .knowledge-filter { flex-direction: column; align-items: stretch; }
+  .project-memory .knowledge-filter label { flex: auto; }
+}

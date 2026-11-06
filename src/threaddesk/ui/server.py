@@ -361,6 +361,8 @@ def create_app() -> FastAPI:
     templates.env.globals.update(
         build_label=BUILD_LABEL, build_description=BUILD_DESCRIPTION, build_id=BUILD_ID,
     )
+    from threaddesk.ui.project_memory_router import project_memory_router
+    app.include_router(project_memory_router(_svc, templates, _language, _register, _browser_strings))
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
     def workspace(request: Request, extra: dict | None = None) -> HTMLResponse:

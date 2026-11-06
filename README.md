@@ -443,6 +443,21 @@ server are added. [Exact tools, limits and state semantics](docs/MCP.md).
 
 ### Wissen und Wiedereinstieg / Knowledge and re-entry (TD-C03 source)
 
+**Neuer Quellkandidat · Projektgedächtnis:** `/projects` bündelt Wiedereinstieg,
+Entscheidungen, Aufgaben, Fragen und Beiträge der ausdrücklich zugeordneten
+Projektthreads. CLI, HTTP und MCP verwenden denselben lesenden Befehl
+`project.memory`. Projektgrenzen und Änderungen zwischen Seiten werden geprüft.
+Separate Demo mit Beispieldaten: `Start Projektgedaechtnis Demo.command`.
+Kein bereits installiertes Desktoprelease.
+[Einstieg, tatsächlicher Bestand und Grenzen](docs/plans/UNIVERSAL-PLATFORM-20261106.md).
+
+**New source candidate · Project memory:** `/projects` brings together saved
+resume context, decisions, tasks, questions and recent contributions from explicitly
+assigned project threads. CLI, HTTP and MCP share the read command `project.memory`,
+with project boundaries and consistent pagination. The separate demo launcher above
+uses synthetic data. This is not an installed desktop release.
+[Setup, verified inventory and limits](docs/plans/UNIVERSAL-PLATFORM-20261106.md).
+
 `knowledge_manage` speichert referenzierte Entscheidungen, offene Fragen,
 verworfene Vorschläge und Aufgaben über denselben MCP-Zugang. Erwartete Thread-
 und Knotenrevision, persistente Operationskennung und die bestehende Quittung

@@ -8,6 +8,8 @@ def specifications():
     from threaddesk.services.commands.whiteboards import specifications as whiteboards
     from threaddesk.services.commands.prompt_history import specifications as prompt_history
     from threaddesk.services.commands.authority import specifications as authority
+    from threaddesk.services.commands.project_memory import specifications as project_memory
+    yield from project_memory()
     yield from prompt_history()
     yield from authority()
     yield from whiteboards()

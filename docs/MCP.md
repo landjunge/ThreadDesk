@@ -1,5 +1,16 @@
 # ThreadDesk MCP
 
+Quellkandidat vom 06.11.2026: Der neue lesende Command `project.memory` erscheint
+als `td_project__memory` im generierten MCP-Katalog. Hülle: `workspace_id` und
+`arguments: {project_id, limit?, offset?, include_archived?, expected_snapshot?}`.
+`project_id` ist die exakte ID eines Projektknotens. Folgeseiten (`offset > 0`)
+benötigen den `snapshot` der ersten Seite als `expected_snapshot`; Änderungen
+liefern `snapshot_conflict`. Umfang: ausdrücklich zugeordnete Threads, gespeicherter
+Wiedereinstieg, begrenzte Wissensprojektion und letzte Whiteboardbeiträge.
+`workspace.read`, keine Ausführung und keine Benutzer-/Mandanten-ACL.
+Der aktuelle KiraBridge-Livepeer hat diesen neuen Quellstand noch nicht übernommen.
+[Aufruf, Grenzen und Abnahmeumfang](plans/UNIVERSAL-PLATFORM-20261106.md).
+
 Lokaler stdio-Server mit dynamischen Fachwerkzeugen aus der gemeinsamen
 CommandRegistry. Bestehende Werkzeugnamen bleiben erhalten. ThreadDesk bleibt
 eigenständig; KiraBridge führt seine eigene Autorisierung vor dem Aufruf durch.
