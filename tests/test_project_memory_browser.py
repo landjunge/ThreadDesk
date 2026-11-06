@@ -123,3 +123,104 @@ def test_project_selection_pagination_and_keyboard(demo, language, width, scheme
             )
         finally:
             browser.close()
+
+
+@pytest.mark.parametrize("language,width", [("de", 1280), ("en", 390)])
+def test_idea_preview_edit_validation_save_and_existing_selection(
+    demo, language, width
+):
+    from threaddesk.storage.json_store import JsonStore
+
+    store = JsonStore(Path(demo["workspace"]))
+    before_id = store.get_current_id()
+    before_threads = len(store.list_threads())
+    before_nodes = len(store.list_nodes())
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            executable_path=os.environ.get("THREADDESK_CHROMIUM") or None
+        )
+        try:
+            page = browser.new_page(viewport={"width": width, "height": 1000})
+            page.goto(demo["url"] + "?lang=" + language)
+            page.get_by_role(
+                "link",
+                name="Neues Projekt" if language == "de" else "New project",
+                exact=True,
+            ).click()
+            page.wait_for_url("**/projects/new?**")
+            intake = page.locator("[data-project-intake]")
+            operation = intake.locator('[name="operation_id"]').input_value()
+            title = "Browserstart-" + language
+            intake.locator('[name="title"]').fill(title)
+            intake.locator('[name="idea"]').fill(
+                "Eine neue Projektidee in eigenen Worten festhalten."
+            )
+            intake.get_by_role("button").click()
+            page.locator("[data-project-draft]").wait_for()
+            assert page.locator('[name="operation_id"]').input_value() == operation
+            assert (
+                len(store.list_threads()) == before_threads
+                and len(store.list_nodes()) == before_nodes
+            )
+            page.locator('[name="goals"]').fill("x" * 301)
+            page.locator("[data-project-intake] button").click()
+            page.locator('[role="alert"]').wait_for()
+            assert page.locator('[name="operation_id"]').input_value() == operation
+            assert len(store.list_threads()) == before_threads
+            page.locator('[name="goals"]').fill(
+                "Quellen prüfen und Ergebnis nachvollziehbar festhalten"
+            )
+            page.locator('[name="next_steps"]').fill(
+                "Erste Quelle prüfen\nErgebnis dokumentieren"
+            )
+            boxes = page.locator(
+                '.project-memory-shell, main, [data-project-intake], [data-project-intake] input:not([type="hidden"]), [data-project-intake] textarea, [data-project-intake] button'
+            ).evaluate_all(
+                "nodes => nodes.map(n => { const r=n.getBoundingClientRect(); return [r.left,r.right,r.width]; })"
+            )
+            assert all(
+                left >= 0 and right <= width + 1 and size > 0
+                for left, right, size in boxes
+            ), boxes
+            destination = Path(
+                os.environ.get(
+                    "THREADDESK_PROJECT_MEMORY_EVIDENCE", "test-results/project-memory"
+                )
+            )
+            destination.mkdir(parents=True, exist_ok=True)
+            page.locator("main").evaluate("n => n.scrollTo(0,0)")
+            page.screenshot(
+                path=str(destination / f"start-draft-{language}-{width}.png")
+            )
+            page.locator("[data-project-intake] button").click()
+            page.wait_for_url(
+                lambda url: "/projects?project_id=" in str(url),
+                wait_until="networkidle",
+            )
+            assert page.locator("#project-memory-project").inner_text() == title
+            assert "Erste Quelle prüfen" in page.locator("main").inner_text()
+            assert store.get_current_id() == before_id
+            assert len(store.list_threads()) == before_threads + 1
+            assert (
+                len(
+                    [
+                        n
+                        for n in store.list_nodes()
+                        if n.kind == "project" and n.title == title
+                    ]
+                )
+                == 1
+            )
+            new_link = page.get_by_role(
+                "link",
+                name="Neues Projekt" if language == "de" else "New project",
+                exact=True,
+            )
+            box = new_link.bounding_box()
+            assert box and box["x"] >= 0 and box["x"] + box["width"] <= width + 1
+            page.locator("main").evaluate("n => n.scrollTo(0,0)")
+            page.screenshot(
+                path=str(destination / f"start-saved-{language}-{width}.png")
+            )
+        finally:
+            browser.close()

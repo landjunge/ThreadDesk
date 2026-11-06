@@ -54,16 +54,18 @@ class ThreadService:
         self.threads = ThreadReader(self.store)
         self.knowledge = KnowledgeReader(self.store)
 
-    def create(self, title: str, description: str = "") -> Thread:
+    def create(self, title: str, description: str = "", *, activate: bool = True) -> Thread:
         title = reject_secrets(title).strip()
         description = reject_secrets(description)
         if not title:
             raise InvalidState("Titel fehlt.")
         thread = new_thread(title, description)
         self.store.save_thread(thread)
-        self.store.set_current_id(thread.id)
+        if activate:
+            self.store.set_current_id(thread.id)
         self.bus.emit("thread.created", {"id": thread.id})
-        self.bus.emit("thread.switched", {"id": thread.id})
+        if activate:
+            self.bus.emit("thread.switched", {"id": thread.id})
         return thread
 
     def create_node(

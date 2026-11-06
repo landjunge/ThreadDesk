@@ -1,5 +1,6 @@
 """Project memory uses the existing command transports and workspace read grant."""
 
+from threaddesk.services import project_start
 from threaddesk.services.commands.model import CommandSpec
 from threaddesk.services.project_memory import SCHEMA, read
 
@@ -13,4 +14,24 @@ def specifications():
         "Use expected_snapshot for consistent pagination; sources remain unverified.",
         SCHEMA,
         read,
+    )
+    yield CommandSpec(
+        "project.preview",
+        "project",
+        "Prepare an editable local project outline from an idea or supplied plan. "
+        "Does not save data, call a model or start work.",
+        project_start.SCHEMA,
+        project_start.preview,
+    )
+    yield CommandSpec(
+        "project.start",
+        "project",
+        "Atomically save an idea as a project, assigned thread and draft knowledge. "
+        "Preserves the active thread. Does not execute agents or authorize tasks.",
+        project_start.SCHEMA,
+        project_start.start,
+        effect="data",
+        scope="workspace.write",
+        revision_target="create",
+        affects_index=True,
     )

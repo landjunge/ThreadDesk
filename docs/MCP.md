@@ -11,6 +11,19 @@ Wiedereinstieg, begrenzte Wissensprojektion und letzte Whiteboardbeiträge.
 Der aktuelle KiraBridge-Livepeer hat diesen neuen Quellstand noch nicht übernommen.
 [Aufruf, Grenzen und Abnahmeumfang](plans/UNIVERSAL-PLATFORM-20261106.md).
 
+Folgepaket M2: `project.preview` (`td_project__preview`, `workspace.read`) bereitet
+einen lokalen, ungespeicherten Ausgangsentwurf vor. `project.start`
+(`td_project__start`, `workspace.write`, `operation_id`, `expected_revision: 0`)
+speichert Projekt, zugeordneten Thread und Entwurf atomar mit derselben vorhandenen
+Commandquittung. Gemeinsame Argumente: `idea`, `source_ref`, `source_revision`;
+optional `title`, `language: de|en`, `plan: {goals?, next_steps?, open_questions?}`.
+Bis acht Texte à300Zeichen je Planliste, Idee bis10000Zeichen. Schritte erhalten
+`idea`, Ziele `proposed`, Fragen `waiting`; kein Modell-/Workerstart. Derselbe
+Request mit gleicher Operationskennung liest das alte Ergebnis, anderer Inhalt
+liefert `operation_conflict`. Nach unklarem Ausgang `command.operation` lesen.
+Große Previewantworten verwenden den bestehenden `result_page`-/Digest-Vertrag.
+[Beispiele, Grenzen und Wiederherstellungsnachweise](plans/PROJECT-START-20261106.md).
+
 Lokaler stdio-Server mit dynamischen Fachwerkzeugen aus der gemeinsamen
 CommandRegistry. Bestehende Werkzeugnamen bleiben erhalten. ThreadDesk bleibt
 eigenständig; KiraBridge führt seine eigene Autorisierung vor dem Aufruf durch.

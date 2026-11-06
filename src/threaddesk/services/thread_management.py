@@ -73,7 +73,8 @@ def validate(arguments: dict[str, Any]) -> dict[str, Any]:
     return args
 
 
-def _organize(svc, thread_id, fields):
+def organize_in_transaction(svc, thread_id, fields):
+    """Shared organization primitive; the caller owns validation and transaction."""
     thread = svc.store.get_thread(thread_id)
     current = organization(thread)
     current.update(fields)
@@ -118,7 +119,7 @@ def manage(svc, arguments: dict[str, Any]) -> dict[str, Any]:
             if action == "create":
                 thread = svc.create(data["title"], data.get("description", ""))
                 if set(data) & {"project_id", "parent_thread_id"}:
-                    thread = _organize(svc, thread.id, {key: data[key] for key in ("project_id", "parent_thread_id") if key in data})
+                    thread = organize_in_transaction(svc, thread.id, {key: data[key] for key in ("project_id", "parent_thread_id") if key in data})
             elif action == "update":
                 if "title" in data:
                     thread = svc.rename(thread.id, data["title"])
@@ -133,7 +134,7 @@ def manage(svc, arguments: dict[str, Any]) -> dict[str, Any]:
             elif action == "remove_file":
                 thread = svc.remove_file(data["path"], thread.id)
             elif action == "organize":
-                thread = _organize(svc, thread.id, data)
+                thread = organize_in_transaction(svc, thread.id, data)
             elif action in {"archive", "unarchive", "switch"}:
                 thread = getattr(svc, action)(thread.id)
             elif action == "snapshot":

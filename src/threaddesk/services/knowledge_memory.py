@@ -163,7 +163,16 @@ def _source(data):
     }
 
 
-def _record(svc, thread, data, *, supersedes=None):
+def set_reentry(thread, data):
+    """Set a validated re-entry value; the transaction owner saves the thread."""
+    thread.context.extra["reentry"] = {
+        "summary": data["summary"], "next_step": data["next_step"],
+        "recorded_at": now_iso(), **_source(data),
+    }
+
+
+def record_node(svc, thread, data, *, supersedes=None):
+    """Record one scoped node inside the caller's validated write transaction."""
     kind = data.get("kind", "decision")
     metadata = {"thread_id": thread.id, "knowledge_type": kind, **_source(data)}
     if supersedes is not None:
@@ -225,7 +234,7 @@ def manage(svc, arguments):
             action, data = args["action"], args["data"]
             node = None
             if action == "record":
-                node = _record(svc, thread, data)
+                node = record_node(svc, thread, data)
             elif action == "supersede":
                 previous = _owned_node(svc, thread, data)
                 if previous.kind != "decision" or previous.status != "confirmed":
@@ -234,7 +243,7 @@ def manage(svc, arguments):
                         "Nur eine bestätigte Entscheidung kann "
                         "nachvollziehbar ersetzt werden.",
                     )
-                node = _record(
+                node = record_node(
                     svc,
                     thread,
                     {**data, "kind": "decision", "status": "confirmed"},
@@ -277,12 +286,7 @@ def manage(svc, arguments):
                     "knowledge.question_resolved", node.id, node.kind, node.revision
                 )
             else:
-                thread.context.extra["reentry"] = {
-                    "summary": data["summary"],
-                    "next_step": data["next_step"],
-                    "recorded_at": now_iso(),
-                    **_source(data),
-                }
+                set_reentry(thread, data)
             # Knowledge changes are part of the thread basis and stale old handoffs.
             thread.updated_at = now_iso()
             svc.store.save_thread(thread)

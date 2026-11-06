@@ -15,8 +15,8 @@ PROJECT_MEMORY_STRINGS = {
     },
     "project.memory.open": {"de": "Stand anzeigen", "en": "Show context"},
     "project.memory.no_projects": {
-        "de": "Noch kein Projekt vorhanden. Lege in der Wissensansicht einen Projektknoten an.",
-        "en": "No projects yet. Create a project node in the knowledge view.",
+        "de": "Noch kein Projekt vorhanden. Starte mit deiner Idee ein neues Projekt.",
+        "en": "No projects yet. Start a new project with your idea.",
     },
     "project.memory.empty": {
         "de": "Diesem Projekt sind noch keine Threads ausdrücklich zugeordnet.",
@@ -59,5 +59,62 @@ PROJECT_MEMORY_STRINGS = {
     "project.memory.error": {
         "de": "Dieser Projektstand kann nicht angezeigt werden. Projekt auswählen und erneut anzeigen.",
         "en": "This project context cannot be displayed. Choose a project and show its context again.",
+    },
+    "project.start.title": {"de": "Neues Projekt", "en": "New project"},
+    "project.start.lead": {
+        "de": "Beschreibe deine Idee. Daraus entsteht ein erster Plan, den du anpassen kannst.",
+        "en": "Describe your idea. Start with a first plan that you can adjust.",
+    },
+    "project.start.name": {
+        "de": "Projektname (optional)",
+        "en": "Project name (optional)",
+    },
+    "project.start.idea": {"de": "Deine Idee", "en": "Your idea"},
+    "project.start.preview": {
+        "de": "Ersten Plan vorbereiten",
+        "en": "Prepare a first plan",
+    },
+    "project.start.outline": {
+        "de": "Lokaler Ausgangsentwurf. Passe Ziele, nächste Schritte und offene Fragen an.",
+        "en": "Local starting outline. Adjust goals, next steps and open questions.",
+    },
+    "project.start.goals": {"de": "Ziele", "en": "Goals"},
+    "project.start.next_steps": {"de": "Nächste Schritte", "en": "Next steps"},
+    "project.start.open_questions": {"de": "Offene Fragen", "en": "Open questions"},
+    "project.start.lines": {
+        "de": "Ein Eintrag pro Zeile, höchstens acht je Feld. Die Schritte werden als Ideen gespeichert.",
+        "en": "One item per line, up to eight per field. Steps are saved as ideas.",
+    },
+    "project.start.save": {
+        "de": "Projekt und Entwurf speichern",
+        "en": "Save project and draft",
+    },
+    "project.start.check": {
+        "de": "Gespeicherten Stand prüfen",
+        "en": "Check saved state",
+    },
+    "project.start.error": {
+        "de": "Der Entwurf wurde nicht bestätigt. Prüfe die Eingaben und verwende weiter dasselbe Formular.",
+        "en": "The draft was not confirmed. Check your input and keep using this form.",
+    },
+    "project.start.uncertain": {
+        "de": "Das Ergebnis ist noch unklar. Prüfe zuerst den gespeicherten Stand. Dieses Formular behält seine Kennung.",
+        "en": "The outcome is still unclear. Check the saved state first. This form keeps its identifier.",
+    },
+    "project.start.not_confirmed": {
+        "de": "Ein gespeichertes Projekt ist für dieses Formular noch nicht bestätigt. Der Entwurf auf der vorherigen Seite bleibt maßgeblich.",
+        "en": "No saved project is confirmed for this form yet. Keep the draft on the previous page.",
+    },
+    "project.start.default.goals": {
+        "de": "Gewünschten Nutzen und Erfolgskriterien festhalten",
+        "en": "Define the intended benefit and success criteria",
+    },
+    "project.start.default.next_steps": {
+        "de": "Anforderungen und vorhandene Quellen prüfen",
+        "en": "Review requirements and existing sources",
+    },
+    "project.start.default.open_questions": {
+        "de": "Was muss zuerst geklärt werden?",
+        "en": "What needs to be clarified first?",
     },
 }

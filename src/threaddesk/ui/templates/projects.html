@@ -8,6 +8,7 @@
       <h1 id="project-memory-title">{{ t('project.memory.title') }}</h1>
       <p class="muted">{{ t('project.memory.lead') }}</p>
     </div>
+    <a class="btn btn-ghost" href="/projects/new?lang={{ lang }}&amp;mode={{ register }}">{{ t('project.start.title') }}</a>
   </header>
   <form class="panel knowledge-filter" method="get" action="/projects">
     <input type="hidden" name="lang" value="{{ lang }}" />

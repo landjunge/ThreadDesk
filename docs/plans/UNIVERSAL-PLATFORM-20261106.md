@@ -6,6 +6,9 @@ Quelle: direkter Masterauftrag vom 6. November 2026. ThreadDesk-Zuordnung
 unabhängiger Codex-Prüfer `0c2bfd2e81c0`. Basis `main@067a525` im eigenen Worktree
 `threaddesk-worktrees/project-memory-20261106`, Branch `feat/project-memory-20261106`.
 
+Folgepaket: [M2 – Idee, bearbeitbarer Erstplan und atomarer Projektstart](PROJECT-START-20261106.md)
+auf eigenem Folgebranch; die folgenden M1-Nachweise bleiben historisch erhalten.
+
 ## Nutzbarer Einstieg
 
 **Projekte → Projektgedächtnis** (`/projects`) bündelt pro ausdrücklich zugeordnetem
