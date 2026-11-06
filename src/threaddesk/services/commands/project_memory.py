@@ -1,11 +1,29 @@
 """Project memory uses the existing command transports and workspace read grant."""
 
-from threaddesk.services import project_start
+from threaddesk.services import project_plan, project_start
 from threaddesk.services.commands.model import CommandSpec
 from threaddesk.services.project_memory import SCHEMA, read
 
 
 def specifications():
+    yield CommandSpec(
+        "project.plan.get",
+        "project",
+        "Read a current or historical plan, provenance and live re-entry; no execution.",
+        project_plan.READ_SCHEMA,
+        project_plan.get,
+    )
+    yield CommandSpec(
+        "project.plan.revise",
+        "project",
+        "Atomically revise a project plan with thread CAS and complete knowledge binding; no execution.",
+        project_plan.WRITE_SCHEMA,
+        project_plan.revise,
+        effect="data",
+        scope="workspace.write",
+        revision_target="thread_id",
+        affects_index=True,
+    )
     yield CommandSpec(
         "project.memory",
         "project",

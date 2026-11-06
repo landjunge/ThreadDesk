@@ -118,3 +118,85 @@ PROJECT_MEMORY_STRINGS = {
         "en": "What needs to be clarified first?",
     },
 }
+
+PROJECT_MEMORY_STRINGS.update(
+    {
+        "project.plan.title": {
+            "de": "Projektplan und Verlauf",
+            "en": "Project plan and history",
+        },
+        "project.plan.lead": {
+            "de": "Schreibe den Plan fort und halte fest, warum er sich ändert. Frühere Fassungen bleiben nachvollziehbar.",
+            "en": "Update the plan and record why it changes. Earlier versions remain traceable.",
+        },
+        "project.plan.link": {
+            "de": "Plan und Verlauf öffnen",
+            "en": "Open plan and history",
+        },
+        "project.plan.current": {
+            "de": "Aktueller Wiedereinstieg · Fassung {revision}",
+            "en": "Current resume context · version {revision}",
+        },
+        "project.plan.version": {
+            "de": "Fassung {revision}",
+            "en": "Version {revision}",
+        },
+        "project.plan.history": {
+            "de": "Bisherige Fassungen und Herkunft",
+            "en": "Earlier versions and provenance",
+        },
+        "project.plan.more": {"de": "Ältere Fassungen", "en": "Older versions"},
+        "project.plan.observed": {
+            "de": "Beobachteter Ausgangsstand aus dem bisherigen Plan, kein ursprünglicher Erstellungsnachweis.",
+            "en": "Observed baseline from the existing plan, not original creation evidence.",
+        },
+        "project.plan.frozen": {
+            "de": "Gespeicherte frühere Fassung. Für Änderungen den aktuellen Plan öffnen.",
+            "en": "Saved earlier version. Open the current plan to make changes.",
+        },
+        "project.plan.edit": {
+            "de": "Aktuellen Plan fortschreiben",
+            "en": "Update the current plan",
+        },
+        "project.plan.summary": {
+            "de": "Zusammenfassung für den Wiedereinstieg",
+            "en": "Summary for resuming work",
+        },
+        "project.plan.reason": {
+            "de": "Warum ändert sich der Plan?",
+            "en": "Why is the plan changing?",
+        },
+        "project.plan.save": {
+            "de": "Neue Planfassung speichern",
+            "en": "Save a new plan version",
+        },
+        "project.plan.reload": {
+            "de": "Aktuellen Plan öffnen",
+            "en": "Open the current plan",
+        },
+        "project.plan.no_open": {
+            "de": "Kein offener Schritt in dieser Planfassung.",
+            "en": "No open step in this plan version.",
+        },
+        "project.plan.source_hint": {
+            "de": "Quellen sind referenziert, noch nicht extern geprüft. Gespeicherte Schritte starten keine Arbeit.",
+            "en": "Sources are referenced and not externally verified. Saved steps do not start work.",
+        },
+        "project.plan.read_error": {
+            "de": "Der aktuelle Planstand ist nicht verlässlich lesbar. Projektzuordnung und erhaltene Verlaufsbelege zuerst prüfen.",
+            "en": "The current plan cannot be read reliably. Check project membership and retained history first.",
+        },
+        "project.plan.error": {
+            "de": "Die neue Fassung wurde nicht bestätigt. Prüfe die Eingaben; der Entwurf bleibt in diesem Formular.",
+            "en": "The new version was not confirmed. Check the input; this form keeps the draft.",
+        },
+        "project.plan.stale": {
+            "de": "Plan, Wissen oder Projektzuordnung haben sich geändert. Öffne den aktuellen Plan und gleiche deinen Entwurf bewusst ab.",
+            "en": "The plan, knowledge or project membership changed. Open the current plan and reconcile your draft.",
+        },
+        "project.plan.uncertain": {
+            "de": "Der Ausgang ist unklar. Erst den gespeicherten Stand prüfen; dieses Formular behält seine Kennung und den Entwurf.",
+            "en": "The outcome is unclear. Check the saved state first; this form keeps its identifier and draft.",
+        },
+    }
+)

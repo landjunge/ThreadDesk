@@ -1,5 +1,7 @@
 # Projektstart aus einer Idee
 
+Folgepaket: [M3 – nachvollziehbare Planrevision und aktueller Wiedereinstieg](PROJECT-PLAN-20261106.md).
+
 Stand: 6. November 2026. **BP-PROJECT-START-20261106-M2**.
 Auftrag: Fortsetzung des universellen Plattformauftrags, ausdrücklich ohne die
 andere Sitzung zu stören. ThreadDesk-Arbeitszuordnung `188ce4729a62/d9a2db6c4bc0`.

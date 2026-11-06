@@ -58,7 +58,7 @@ def _source(fields):
     }
 
 
-def _thread(thread, nodes, board):
+def _thread(thread, nodes, board, current_plan=None):
     saved = thread.context.extra.get("reentry")
     reentry = (
         _source(
@@ -109,6 +109,7 @@ def _thread(thread, nodes, board):
             }
         ),
         "saved_reentry": reentry,
+        "current_plan": current_plan,
         "knowledge": knowledge,
         "knowledge_counts": [
             {"kind": kind, "status": status, "total": count}
@@ -216,7 +217,28 @@ def read(svc, arguments):
                 "instruction": INSTRUCTION,
             }
             for thread in members[offset : offset + limit]:
-                row = _thread(thread, nodes[thread.id], boards[thread.id])
+                from threaddesk.services.project_plan import current_context
+
+                current = current_context(svc, thread)
+                if current and current["available"]:
+                    current = {
+                        "available": True,
+                        "plan_revision": current["plan_revision"],
+                        "next_node_id": current["next_node_id"],
+                        "source_verification": current["source_verification"],
+                        **_excerpt(
+                            {
+                                key: current[key]
+                                for key in (
+                                    "summary",
+                                    "next_step",
+                                    "source_ref",
+                                    "source_revision",
+                                )
+                            }
+                        ),
+                    }
+                row = _thread(thread, nodes[thread.id], boards[thread.id], current)
                 candidate = {**result, "threads": [*result["threads"], row]}
                 if len(encode(candidate).encode()) > MAX_PAGE_BYTES - 256:
                     if not result["threads"]:
@@ -237,6 +259,10 @@ def read(svc, arguments):
                     or bool(
                         row["saved_reentry"]
                         and row["saved_reentry"]["content_truncated"]
+                    )
+                    or bool(
+                        row["current_plan"]
+                        and row["current_plan"].get("content_truncated")
                     )
                     for row in result["threads"]
                 )

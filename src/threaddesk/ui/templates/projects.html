@@ -41,10 +41,15 @@
       </header>
       <p class="project-memory-text">{{ thread.description }}</p>
       <h3>{{ t('project.memory.resume') }}</h3>
-      {% if thread.saved_reentry %}
-        <p class="project-memory-text">{{ thread.saved_reentry.summary }}</p>
-        <p><strong>{{ t('project.memory.next') }}</strong> <span class="project-memory-text">{{ thread.saved_reentry.next_step }}</span></p>
+      {% set resume = thread.current_plan if thread.current_plan and thread.current_plan.available else thread.saved_reentry %}
+      {% if resume %}
+        <p class="project-memory-text">{{ resume.summary }}</p>
+        <p><strong>{{ t('project.memory.next') }}</strong> <span class="project-memory-text">{{ resume.next_step or t('project.plan.no_open') }}</span></p>
       {% else %}<p class="muted">{{ t('project.memory.no_reentry') }}</p>{% endif %}
+      {% if thread.current_plan %}
+        {% if not thread.current_plan.available %}<p class="muted">{{ t('project.plan.read_error') }}</p>{% endif %}
+        <a class="btn btn-ghost" href="/projects/{{ memory.project_id }}/plan/{{ thread.id }}?lang={{ lang }}&amp;mode={{ register }}">{{ t('project.plan.link') }}</a>
+      {% endif %}
       {% if thread.notes_excerpt %}<details><summary>{{ t('project.memory.notes') }}</summary><p class="project-memory-text">{{ thread.notes_excerpt }}</p></details>{% endif %}
       <h3>{{ t('project.memory.knowledge') }}</h3>
       {% if thread.knowledge['items'] %}

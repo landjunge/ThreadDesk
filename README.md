@@ -450,6 +450,9 @@ Projektthreads. CLI, HTTP und MCP verwenden denselben lesenden Befehl
 Unter **Neues Projekt** wird eine Idee zu einem bearbeitbaren Ausgangsentwurf.
 Beim Speichern entstehen Projekt, zugeordneter Thread und Plan gemeinsam; die
 aktive Threadauswahl bleibt erhalten. Die ersten Schritte bleiben Ideen.
+**Plan und Verlauf** speichert neue Fassungen mit Herkunft und Begründung.
+Der aktuelle Wiedereinstieg berücksichtigt den heutigen Zustand der Planpunkte;
+frühere Fassungen bleiben getrennt lesbar.
 Separate Demo mit Beispieldaten: `Start Projektgedaechtnis Demo.command`.
 Kein bereits installiertes Desktoprelease.
 [Einstieg, tatsächlicher Bestand und Grenzen](docs/plans/UNIVERSAL-PLATFORM-20261106.md).
@@ -460,9 +463,12 @@ assigned project threads. CLI, HTTP and MCP share the read command `project.memo
 with project boundaries and consistent pagination. The separate demo launcher above
 uses synthetic data. **New project** prepares an editable local outline from an idea
 and saves the project, assigned thread and draft together, preserving the active
-thread. Steps remain ideas. This is not an installed desktop release.
+thread. Steps remain ideas. **Plan and history** saves new versions with provenance
+and a reason, preserves earlier versions and derives the current next step from
+live item states. This is not an installed desktop release.
 [Setup, verified inventory and limits](docs/plans/UNIVERSAL-PLATFORM-20261106.md).
 [Projektstart / Project intake](docs/plans/PROJECT-START-20261106.md).
+[Planrevisionen / Plan revisions](docs/plans/PROJECT-PLAN-20261106.md).
 
 `knowledge_manage` speichert referenzierte Entscheidungen, offene Fragen,
 verworfene Vorschläge und Aufgaben über denselben MCP-Zugang. Erwartete Thread-

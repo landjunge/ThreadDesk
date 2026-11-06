@@ -128,6 +128,8 @@ def start(svc, arguments):
         },
     )
     thread.updated_at = now_iso()
+    from threaddesk.services.project_plan import initialize
+    initialize(svc, thread, draft)
     svc.store.save_thread(thread)
     svc.bus.emit(
         "project.draft_created", {"project_id": project.id, "thread_id": thread.id}

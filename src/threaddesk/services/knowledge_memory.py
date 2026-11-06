@@ -417,6 +417,8 @@ def reentry(svc, arguments):
                 "truncated": len(all_nodes) > len(nodes),
                 "instruction": INSTRUCTION,
             }
+            from threaddesk.services.project_plan import current_context
+            result["current_plan"] = current_context(svc, thread)
             reject_secrets(json.dumps(result, ensure_ascii=False))
             return result
     except NotFound as exc:
@@ -486,7 +488,7 @@ def context_from_nodes(
             and node.status == "waiting"
         ):
             return 1
-        if node.kind == "task" and node.status not in {"accepted", "done", "archived"}:
+        if node.kind == "task" and node.status not in {"accepted", "done", "archived", "superseded"}:
             return 2
         return 3
 

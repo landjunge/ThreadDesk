@@ -20,6 +20,7 @@ from threaddesk.storage.json_store import JsonStore
 
 def seed(root):
     svc = ThreadService(JsonStore(root))
+    app = CommandApplication(svc)
     projects = []
     for number, (title, summary, next_step) in enumerate(
         (
@@ -40,13 +41,41 @@ def seed(root):
             ),
         )
     ):
-        project = svc.create_node(
-            "project",
-            title,
-            details="Synthetische Beispieldaten, keine laufende Projektarbeit.",
+        started = app.call(
+            {
+                "version": 1,
+                "workspace_id": app.workspace_id,
+                "command": "project.start",
+                "operation_id": f"demo-project-{number}",
+                "expected_revision": 0,
+                "arguments": {
+                    "title": title,
+                    "idea": "Synthetische Beispieldaten. " + summary,
+                    "source_ref": "synthetic:project-memory-demo",
+                    "source_revision": "demo-v2",
+                    "plan": {
+                        "goals": ["Ein nachvollziehbares erstes Ergebnis erstellen"],
+                        "next_steps": [next_step],
+                        "open_questions": ["Welche Quellen und Anforderungen gelten?"],
+                    },
+                },
+            }
+        )["result"]
+        projects.append(
+            {
+                "id": started["project_id"],
+                "title": title,
+                "plan_thread_id": started["thread_id"],
+            }
         )
-        projects.append({"id": project.id, "title": title})
-        for step in range(4 if number == 0 else 1):
+        svc.append_whiteboard(
+            started["thread_id"],
+            actor="Demo",
+            actor_type="human",
+            entry_type="note",
+            content="Gespeicherter Beispielstand; keine Agenten gestartet.",
+        )
+        for step in range(1, 4 if number == 0 else 1):
             thread = manage(
                 svc,
                 {
@@ -55,45 +84,25 @@ def seed(root):
                     "expected_revision": 0,
                     "data": {
                         "title": f"{title} · Arbeitsschritt {step + 1}",
-                        "project_id": project.id,
+                        "project_id": started["project_id"],
                     },
                 },
             )["thread_id"]
-            for item, (action, fields) in enumerate(
-                (
-                    ("save_reentry", {"summary": summary, "next_step": next_step}),
-                    ("record", {"kind": "task", "title": next_step}),
-                    (
-                        "record",
-                        {
-                            "kind": "question",
-                            "title": "Welche Quellen und Anforderungen gelten?",
-                        },
-                    ),
-                )
-            ):
-                remember(
-                    svc,
-                    {
-                        "operation_id": f"demo-memory-{number}-{step}-{item}",
-                        "id": thread,
-                        "expected_revision": svc.get(thread).revision,
-                        "action": action,
-                        "data": {
-                            "source_ref": "synthetic:project-memory-demo",
-                            "source_revision": "demo-v1",
-                            **fields,
-                        },
+            remember(
+                svc,
+                {
+                    "operation_id": f"demo-memory-{number}-{step}",
+                    "id": thread,
+                    "expected_revision": svc.get(thread).revision,
+                    "action": "save_reentry",
+                    "data": {
+                        "source_ref": "synthetic:project-memory-demo",
+                        "source_revision": "demo-v2",
+                        "summary": summary,
+                        "next_step": next_step,
                     },
-                )
-            svc.append_whiteboard(
-                thread,
-                actor="Demo",
-                actor_type="human",
-                entry_type="note",
-                content="Gespeicherter Beispielstand; keine Agenten gestartet.",
+                },
             )
-    app = CommandApplication(svc, allowed_scopes={"workspace.read"})
     result = app.call(
         {
             "version": 1,

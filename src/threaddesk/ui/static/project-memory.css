@@ -12,6 +12,7 @@
 .project-memory .knowledge-filter label { min-width: 0; }
 .project-memory select { width: 100%; min-width: 0; max-width: min(32rem, 100%); }
 .project-memory .panel-head { flex-wrap: wrap; }
+.project-memory .knowledge-head { flex-wrap: wrap; }
 .project-memory .panel-head h2 { min-width: 0; }
 .project-memory a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .project-start-form { display: grid; gap: 1rem; padding: 1.2rem; margin-bottom: 1rem; }

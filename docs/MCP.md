@@ -1,5 +1,18 @@
 # ThreadDesk MCP
 
+M3-Quellkandidat: `project.plan.get` (`td_project__plan__get`, `workspace.read`)
+liest aktuelle oder einzelne alte Planfassungen, Herkunft, getrennte Livezustände
+und den aktuellen Wiedereinstieg. Argumente: exakte `project_id`/`thread_id`, optional
+`revision`, `limit` (1–20), `offset`; Folgeseiten brauchen `expected_plan_revision`.
+`project.plan.revise` (`td_project__plan__revise`, `workspace.write`) verwendet die
+bestehende Commandhülle mit `operation_id`/`expected_revision` (Thread-CAS).
+Argumente zusätzlich: `expected_plan_revision`, `expected_basis` aus dem letzten
+Read, vollständiger `plan: {goals, next_steps, open_questions}`, `reason`,
+`source_ref`/`source_revision`, optional `summary`. Gleiche Operation liest ihre
+alte Quittung; abweichender Inhalt oder geänderte Wissensbasis wird abgewiesen.
+Revisionsresultate bleiben klein, große Reads verwenden bestehende Readbackseiten.
+Kein Worker-/Modellstart. [Vertrag und Prüfgrenzen](plans/PROJECT-PLAN-20261106.md).
+
 Quellkandidat vom 06.11.2026: Der neue lesende Command `project.memory` erscheint
 als `td_project__memory` im generierten MCP-Katalog. Hülle: `workspace_id` und
 `arguments: {project_id, limit?, offset?, include_archived?, expected_snapshot?}`.
