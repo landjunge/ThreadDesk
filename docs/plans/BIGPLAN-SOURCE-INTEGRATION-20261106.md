@@ -59,3 +59,40 @@ existing Linux acceptance workflow is unchanged. Native package builds retain
 their existing checks and are explicitly dispatched; PRs no longer automatically
 fan out to Intel and deferred ARM builds. Source integration does not attest a
 new desktop package, installation, public download or production remote service.
+
+## Quellenabschluss und tatsächliche Laufzeitgrenze
+
+[PR99](https://github.com/landjunge/threaddesk/pull/99) wurde regulär nach
+Main `b6774db87781be65a43a581d6637c3220ae75fbd` gemergt. Sein Dateibaum entspricht
+exakt dem unabhängig geprüften Head `87d91aba0999b36381e22bbf014345b5f21cb833`.
+Alle vier oben genannten Quelllinien sind erhaltene Vorfahren des Mainstands.
+
+[Gesamt-CI42217592012](https://github.com/landjunge/threaddesk/actions/runs/42217592012)
+bestand zwei vollständige Läufe mit jeweils2680Tests,0Fehlern und0Skips. Beide
+JUnit-Dateien wurden nach dem Lauf unabhängig zurückgelesen. Die separate
+[Linux-TLS-/Restore-CI42217592084](https://github.com/landjunge/threaddesk/actions/runs/42217592084)
+bestand. Die Integration erhielt einen eigenen Quellen-/Workflowreview und
+17 unabhängige gezielte Integrationsfälle ohne Skips. Diese überlappen die
+vorhandenen Prüfungen und werden nicht addiert.
+
+Auch die nach dem Merge automatisch gestartete
+[Main-TLS-/Restore-CI42223212208](https://github.com/landjunge/threaddesk/actions/runs/42223212208)
+bestand. Das tatsächliche Ergebnis der
+[Main-Gesamt-CI42223212219](https://github.com/landjunge/threaddesk/actions/runs/42223212219)
+wird vor dem abschließenden Dokumentationsmerge ergänzt.
+
+KiraBridgeRC40 ist gesondert aus5f4dd46 nativ auf dem Intel-Mac gebaut, geprüft,
+sichtbar installiert und live bestätigt; QuellenmergePR59/Main1b77d78 und beide
+Linux-CIs bestanden. Die bestehende TD-MCP-Gegenstelle wurde dabei bewusst
+beim geprüften `threaddesk-770bbc9/src`-Stand erhalten. Die neue Projekt-/Plan-
+oberfläche ist hier ein integrierter Quellstand, kein neuer installierter
+ThreadDesk-Desktopnachweis. Kurzberichte verwenden weiter den getrennten
+6eeb465-Adapter. Originaler Operator-Workspace, aktive Threads und Nutzerdaten
+wurden weder auf eine alte Datenbank zurückgesetzt noch durch eine andere
+Installation ersetzt.
+
+Private Arbeits- und Prüfnachweise:
+`~/.local/state/td-current-integration-20261106/` und
+`~/.local/state/current-mac-integration-20261106/`. Der Big-Plan-/Installations-
+abschluss wird im vorhandenen Entwicklungsboard188ce4729a62 und im gemeinsamen
+Koordinationsboard482f593429ad getrennt von Übergabe und Dauerbetrieb festgehalten.
