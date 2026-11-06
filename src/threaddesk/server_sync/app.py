@@ -64,7 +64,8 @@ def text(value, limit=8000) -> str:
     return value
 
 
-def create_app(data_dir: Path, *, public_origin: str, allow_http_loopback: bool = False) -> FastAPI:
+def create_app(data_dir: Path, *, public_origin: str, allow_http_loopback: bool = False,
+               handoff_rpc: bool = False) -> FastAPI:
     origin = urlsplit(public_origin)
     if origin.scheme not in {"http", "https"} or not origin.hostname or origin.path not in {"", "/"} or origin.query or origin.fragment or origin.username:
         raise ValueError("public-origin must be an absolute origin")
@@ -410,4 +411,7 @@ def create_app(data_dir: Path, *, public_origin: str, allow_http_loopback: bool 
                                               external_key=text(value["external_key"], 128))
         return await run_in_threadpool(operation)
 
+    if handoff_rpc:
+        from threaddesk.server_sync.handoffs import register
+        register(app, project, body)
     return app
