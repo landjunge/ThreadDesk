@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block shell_class %} project-memory-shell{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/project-memory.css" />{% endblock %}
+{% block body %}
+<main class="knowledge-page project-memory" aria-labelledby="project-start-title">
+  <header class="knowledge-head"><div>
+    <h1 id="project-start-title">{{ t('project.start.title') }}</h1>
+    <p class="muted">{{ t('project.start.lead') }}</p>
+  </div><a class="btn btn-ghost" href="/projects">{{ t('project.memory.nav') }}</a></header>
+  {% if intake_error %}<p class="np-notice" role="alert">{{ intake_error }}</p>{% endif %}
+  {% if status_url %}<a class="btn btn-ghost" href="{{ status_url }}">{{ t('project.start.check') }}</a>{% endif %}
+  <form class="panel project-start-form" method="post" action="{{ '/projects/start' if draft else '/projects/preview' }}" data-project-intake>
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+    <input type="hidden" name="operation_id" value="{{ intake.operation_id }}" />
+    <input type="hidden" name="lang" value="{{ lang }}" />
+    <input type="hidden" name="mode" value="{{ register }}" />
+    {% if draft %}<input type="hidden" name="expected_revision" value="0" />{% endif %}
+    <label>{{ t('project.start.name') }}<input name="title" maxlength="240" value="{{ intake.get('title', '') }}" /></label>
+    <label>{{ t('project.start.idea') }}<textarea name="idea" rows="5" maxlength="10000" required>{{ intake.get('idea', '') }}</textarea></label>
+    {% if draft %}
+    <p class="muted" data-project-draft>{{ t('project.start.outline') }}</p>
+    {% for key, label in (('goals', t('project.start.goals')), ('next_steps', t('project.start.next_steps')), ('open_questions', t('project.start.open_questions'))) %}
+    <label>{{ label }}<textarea name="{{ key }}" rows="4" maxlength="2408">{{ intake.get(key, '') }}</textarea></label>
+    {% endfor %}
+    <p class="muted">{{ t('project.start.lines') }}</p>
+    <button class="btn btn-primary" type="submit">{{ t('project.start.save') }}</button>
+    {% else %}<button class="btn btn-primary" type="submit">{{ t('project.start.preview') }}</button>{% endif %}
+  </form>
+</main>
+{% endblock %}

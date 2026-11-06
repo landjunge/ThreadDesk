@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block shell_class %} project-memory-shell{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/project-memory.css" />{% endblock %}
+{% block body %}
+<main class="knowledge-page project-memory" aria-labelledby="project-plan-title">
+  <header class="knowledge-head"><div><h1 id="project-plan-title">{{ t('project.plan.title') }}</h1><p class="muted">{{ t('project.plan.lead') }}</p></div>
+    <a class="btn btn-ghost" href="/projects?project_id={{ project_id }}&amp;lang={{ lang }}&amp;mode={{ register }}">{{ t('project.memory.title') }}</a>
+  </header>
+  {% if plan_error %}<p class="np-notice" role="alert">{{ plan_error }}</p><a class="btn btn-ghost" href="{{ plan_path }}?lang={{ lang }}&amp;mode={{ register }}">{{ t('project.plan.reload') }}</a>{% endif %}
+  {% if status_url %}<a class="btn btn-ghost" href="{{ status_url }}">{{ t('project.start.check') }}</a>{% endif %}
+  {% if plan_result %}
+  <section class="panel project-memory-summary" data-plan-current>
+    <h2>{{ t('project.plan.current', revision=plan_result.plan_revision) }}</h2>
+    <p class="project-memory-text">{{ plan_result.current_reentry.summary }}</p>
+    <p><strong>{{ t('project.memory.next') }}</strong> {{ plan_result.current_reentry.next_step or t('project.plan.no_open') }}</p>
+    <p class="muted">{{ t('project.plan.source_hint') }}</p>
+  </section>
+  <details class="panel project-memory-summary" open data-plan-history><summary>{{ t('project.plan.history') }}</summary>
+    <ul class="project-memory-items">
+      {% for row in plan_result.history %}<li>
+        <a href="{{ plan_path }}?revision={{ row.revision }}&amp;lang={{ lang }}&amp;mode={{ register }}">{{ t('project.plan.version', revision=row.revision) }}</a>
+        <p class="project-memory-text">{{ row.reason }}</p><p class="muted project-memory-text">{{ row.source_ref }} · {{ row.source_revision }}</p>
+        {% if row.origin == 'observed_m2' %}<p class="muted">{{ t('project.plan.observed') }}</p>{% endif %}
+      </li>{% endfor %}
+    </ul>
+    {% if plan_result.next_offset is not none %}<a href="{{ plan_path }}?offset={{ plan_result.next_offset }}&amp;expected_plan_revision={{ plan_result.plan_revision }}&amp;lang={{ lang }}&amp;mode={{ register }}">{{ t('project.plan.more') }}</a>{% endif %}
+  </details>
+  {% if plan_result.snapshot.revision != plan_result.plan_revision %}
+  <section class="panel project-memory-summary" data-plan-old>
+    <h2>{{ t('project.plan.version', revision=plan_result.snapshot.revision) }}</h2>
+    <p class="muted">{{ t('project.plan.frozen') }}</p>
+    <p class="project-memory-text">{{ plan_result.snapshot.summary }}</p>
+    <p class="project-memory-text">{{ plan_result.snapshot.reason }}</p>
+    <p class="muted project-memory-text">{{ plan_result.snapshot.source_ref }} · {{ plan_result.snapshot.source_revision }}</p>
+    {% if plan_result.snapshot.origin == 'observed_m2' %}<p class="muted">{{ t('project.plan.observed') }}</p>{% endif %}
+    {% for key, label in (('goals', t('project.start.goals')), ('next_steps', t('project.start.next_steps')), ('open_questions', t('project.start.open_questions'))) %}
+    <h3>{{ label }}</h3><ul>{% for item in plan_result.snapshot.plan[key] %}<li>{{ item.title }} · {{ t('status.' ~ item.status) }}</li>{% endfor %}</ul>
+    {% endfor %}
+    <a class="btn btn-ghost" href="{{ plan_path }}?lang={{ lang }}&amp;mode={{ register }}">{{ t('project.plan.reload') }}</a>
+  </section>
+  {% endif %}
+  {% endif %}
+  {% if intake.get('expected_basis') and (not plan_result or plan_result.snapshot.revision == plan_result.plan_revision) %}
+  <form method="post" action="{{ plan_path }}" class="panel project-start-form" data-project-intake data-project-plan>
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
+    {% for key in ('operation_id', 'expected_revision', 'expected_plan_revision', 'expected_basis') %}<input type="hidden" name="{{ key }}" value="{{ intake.get(key, '') }}" />{% endfor %}
+    <input type="hidden" name="lang" value="{{ lang }}" /><input type="hidden" name="mode" value="{{ register }}" />
+    <h2>{{ t('project.plan.edit') }}</h2>
+    <label>{{ t('project.plan.summary') }}<textarea name="summary" rows="3" maxlength="10000">{{ intake.get('summary', '') }}</textarea></label>
+    {% for key, label in (('goals', t('project.start.goals')), ('next_steps', t('project.start.next_steps')), ('open_questions', t('project.start.open_questions'))) %}
+    <label>{{ label }}<textarea name="{{ key }}" rows="4" maxlength="2408">{{ intake.get(key, '') }}</textarea></label>
+    {% endfor %}
+    <p class="muted">{{ t('project.start.lines') }}</p>
+    <label>{{ t('project.plan.reason') }}<textarea name="reason" rows="2" maxlength="2000" required>{{ intake.get('reason', '') }}</textarea></label>
+    <button class="btn btn-primary" type="submit">{{ t('project.plan.save') }}</button>
+  </form>
+  {% endif %}
+</main>
+{% endblock %}

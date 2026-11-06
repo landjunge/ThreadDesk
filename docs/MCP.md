@@ -1,5 +1,42 @@
 # ThreadDesk MCP
 
+M3-Quellkandidat: `project.plan.get` (`td_project__plan__get`, `workspace.read`)
+liest aktuelle oder einzelne alte Planfassungen, Herkunft, getrennte Livezustände
+und den aktuellen Wiedereinstieg. Argumente: exakte `project_id`/`thread_id`, optional
+`revision`, `limit` (1–20), `offset`; Folgeseiten brauchen `expected_plan_revision`.
+`project.plan.revise` (`td_project__plan__revise`, `workspace.write`) verwendet die
+bestehende Commandhülle mit `operation_id`/`expected_revision` (Thread-CAS).
+Argumente zusätzlich: `expected_plan_revision`, `expected_basis` aus dem letzten
+Read, vollständiger `plan: {goals, next_steps, open_questions}`, `reason`,
+`source_ref`/`source_revision`, optional `summary`. Gleiche Operation liest ihre
+alte Quittung; abweichender Inhalt oder geänderte Wissensbasis wird abgewiesen.
+Revisionsresultate bleiben klein, große Reads verwenden bestehende Readbackseiten.
+Kein Worker-/Modellstart. [Vertrag und Prüfgrenzen](plans/PROJECT-PLAN-20261106.md).
+
+Quellkandidat vom 06.11.2026: Der neue lesende Command `project.memory` erscheint
+als `td_project__memory` im generierten MCP-Katalog. Hülle: `workspace_id` und
+`arguments: {project_id, limit?, offset?, include_archived?, expected_snapshot?}`.
+`project_id` ist die exakte ID eines Projektknotens. Folgeseiten (`offset > 0`)
+benötigen den `snapshot` der ersten Seite als `expected_snapshot`; Änderungen
+liefern `snapshot_conflict`. Umfang: ausdrücklich zugeordnete Threads, gespeicherter
+Wiedereinstieg, begrenzte Wissensprojektion und letzte Whiteboardbeiträge.
+`workspace.read`, keine Ausführung und keine Benutzer-/Mandanten-ACL.
+Der aktuelle KiraBridge-Livepeer hat diesen neuen Quellstand noch nicht übernommen.
+[Aufruf, Grenzen und Abnahmeumfang](plans/UNIVERSAL-PLATFORM-20261106.md).
+
+Folgepaket M2: `project.preview` (`td_project__preview`, `workspace.read`) bereitet
+einen lokalen, ungespeicherten Ausgangsentwurf vor. `project.start`
+(`td_project__start`, `workspace.write`, `operation_id`, `expected_revision: 0`)
+speichert Projekt, zugeordneten Thread und Entwurf atomar mit derselben vorhandenen
+Commandquittung. Gemeinsame Argumente: `idea`, `source_ref`, `source_revision`;
+optional `title`, `language: de|en`, `plan: {goals?, next_steps?, open_questions?}`.
+Bis acht Texte à300Zeichen je Planliste, Idee bis10000Zeichen. Schritte erhalten
+`idea`, Ziele `proposed`, Fragen `waiting`; kein Modell-/Workerstart. Derselbe
+Request mit gleicher Operationskennung liest das alte Ergebnis, anderer Inhalt
+liefert `operation_conflict`. Nach unklarem Ausgang `command.operation` lesen.
+Große Previewantworten verwenden den bestehenden `result_page`-/Digest-Vertrag.
+[Beispiele, Grenzen und Wiederherstellungsnachweise](plans/PROJECT-START-20261106.md).
+
 Lokaler stdio-Server mit dynamischen Fachwerkzeugen aus der gemeinsamen
 CommandRegistry. Bestehende Werkzeugnamen bleiben erhalten. ThreadDesk bleibt
 eigenständig; KiraBridge führt seine eigene Autorisierung vor dem Aufruf durch.

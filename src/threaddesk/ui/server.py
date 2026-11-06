@@ -303,6 +303,7 @@ def create_app() -> FastAPI:
     async def refresh_library_after_commit(request: Request, call_next):
         response = await call_next(request)
         if (request.method == "POST" and response.status_code < 400
+                and not request.url.path.startswith("/projects/")
                 and not request.url.path.startswith(("/api/library/", "/library/", "/api/commands", "/api/graph/views", "/api/graph/v2", "/api/graph/view-control"))):
             from starlette.background import BackgroundTasks
 
@@ -361,6 +362,12 @@ def create_app() -> FastAPI:
     templates.env.globals.update(
         build_label=BUILD_LABEL, build_description=BUILD_DESCRIPTION, build_id=BUILD_ID,
     )
+    from threaddesk.ui.project_memory_router import project_memory_router
+    app.include_router(project_memory_router(_svc, templates, _language, _register, _browser_strings))
+    from threaddesk.ui.project_start_router import project_start_router
+    app.include_router(project_start_router(_svc, templates, _language, _register, _browser_strings))
+    from threaddesk.ui.project_plan_router import project_plan_router
+    app.include_router(project_plan_router(_svc, templates, _language, _register, _browser_strings))
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
     def workspace(request: Request, extra: dict | None = None) -> HTMLResponse:

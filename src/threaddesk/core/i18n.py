@@ -18,6 +18,7 @@ from __future__ import annotations
 from threaddesk.core.graph_i18n import GRAPH_STRINGS
 from threaddesk.core.library_i18n import FILE_STRINGS
 from threaddesk.core.trash_i18n import TRASH_STRINGS
+from threaddesk.core.project_memory_i18n import PROJECT_MEMORY_STRINGS
 
 LANGUAGES = ("de", "en")
 DEFAULT_LANGUAGE = "de"
@@ -1273,6 +1274,7 @@ CATALOG: dict[str, dict[str, str]] = {
 CATALOG.update(FILE_STRINGS)
 CATALOG.update(GRAPH_STRINGS)
 CATALOG.update(TRASH_STRINGS)
+CATALOG.update(PROJECT_MEMORY_STRINGS)
 
 
 def normalise(language: str | None) -> str:

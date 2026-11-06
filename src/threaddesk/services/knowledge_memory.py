@@ -163,7 +163,16 @@ def _source(data):
     }
 
 
-def _record(svc, thread, data, *, supersedes=None):
+def set_reentry(thread, data):
+    """Set a validated re-entry value; the transaction owner saves the thread."""
+    thread.context.extra["reentry"] = {
+        "summary": data["summary"], "next_step": data["next_step"],
+        "recorded_at": now_iso(), **_source(data),
+    }
+
+
+def record_node(svc, thread, data, *, supersedes=None):
+    """Record one scoped node inside the caller's validated write transaction."""
     kind = data.get("kind", "decision")
     metadata = {"thread_id": thread.id, "knowledge_type": kind, **_source(data)}
     if supersedes is not None:
@@ -225,7 +234,7 @@ def manage(svc, arguments):
             action, data = args["action"], args["data"]
             node = None
             if action == "record":
-                node = _record(svc, thread, data)
+                node = record_node(svc, thread, data)
             elif action == "supersede":
                 previous = _owned_node(svc, thread, data)
                 if previous.kind != "decision" or previous.status != "confirmed":
@@ -234,7 +243,7 @@ def manage(svc, arguments):
                         "Nur eine bestätigte Entscheidung kann "
                         "nachvollziehbar ersetzt werden.",
                     )
-                node = _record(
+                node = record_node(
                     svc,
                     thread,
                     {**data, "kind": "decision", "status": "confirmed"},
@@ -277,12 +286,7 @@ def manage(svc, arguments):
                     "knowledge.question_resolved", node.id, node.kind, node.revision
                 )
             else:
-                thread.context.extra["reentry"] = {
-                    "summary": data["summary"],
-                    "next_step": data["next_step"],
-                    "recorded_at": now_iso(),
-                    **_source(data),
-                }
+                set_reentry(thread, data)
             # Knowledge changes are part of the thread basis and stale old handoffs.
             thread.updated_at = now_iso()
             svc.store.save_thread(thread)
@@ -413,6 +417,8 @@ def reentry(svc, arguments):
                 "truncated": len(all_nodes) > len(nodes),
                 "instruction": INSTRUCTION,
             }
+            from threaddesk.services.project_plan import current_context
+            result["current_plan"] = current_context(svc, thread)
             reject_secrets(json.dumps(result, ensure_ascii=False))
             return result
     except NotFound as exc:
@@ -450,15 +456,28 @@ def capture_handoff_knowledge(svc, identity):
     """Projection and local hash come from the same read snapshot."""
     nodes = _thread_nodes(svc, identity)
     fingerprint = _fingerprint(nodes)
-    return _handoff_projection(identity, nodes), fingerprint
+    return context_from_nodes(identity, nodes), fingerprint
 
 
 def handoff_context(svc, identity):
     return capture_handoff_knowledge(svc, identity)[0]
 
 
-def _handoff_projection(identity, nodes):
-    """A bounded, data-only projection for newly issued packets; no source IO."""
+def knowledge_kind(node):
+    """Generic graph metadata is untyped; do not emit it as a kind object."""
+    value = node.metadata.get("knowledge_type")
+    return value if isinstance(value, str) and 0 < len(value) <= 64 else node.kind
+
+
+def context_from_nodes(
+    identity, nodes, *, max_items=HANDOFF_MAX_ITEMS,
+    max_bytes=HANDOFF_MAX_BYTES, text_chars=HANDOFF_TEXT_CHARS,
+):
+    """Project an already scoped snapshot, without source IO or store writes.
+
+    Handoffs retain their existing defaults. Other read views can use a smaller
+    transport budget without inventing a second knowledge representation.
+    """
 
     # Current decisions/questions precede historical or secondary graph content.
     def weight(node):
@@ -469,11 +488,11 @@ def _handoff_projection(identity, nodes):
             and node.status == "waiting"
         ):
             return 1
-        if node.kind == "task" and node.status not in {"accepted", "done", "archived"}:
+        if node.kind == "task" and node.status not in {"accepted", "done", "archived", "superseded"}:
             return 2
         return 3
 
-    nodes.sort(key=weight)  # Stable: retain latest-first order inside each group.
+    nodes = sorted(nodes, key=weight)  # Retain latest-first order inside each group.
     result = {
         "format": "threaddesk.knowledge-context.v1",
         "provenance": "source_local",
@@ -483,41 +502,41 @@ def _handoff_projection(identity, nodes):
         "included": 0,
         "truncated": False,
         "limits": {
-            "items": HANDOFF_MAX_ITEMS,
-            "bytes": HANDOFF_MAX_BYTES,
-            "text_characters": HANDOFF_TEXT_CHARS,
+            "items": max_items,
+            "bytes": max_bytes,
+            "text_characters": text_chars,
         },
         "instruction": INSTRUCTION,
     }
-    for node in nodes[:HANDOFF_MAX_ITEMS]:
+    for node in nodes[:max_items]:
         item = {
             "id": node.id,
             "revision": node.revision,
             "kind": node.kind,
-            "knowledge_type": node.metadata.get("knowledge_type", node.kind),
+            "knowledge_type": knowledge_kind(node),
             "status": node.status,
-            "title": node.title[:HANDOFF_TEXT_CHARS],
-            "details": node.details[:HANDOFF_TEXT_CHARS],
-            "source_ref": node.source[:HANDOFF_TEXT_CHARS],
+            "title": node.title[:text_chars],
+            "details": node.details[:text_chars],
+            "source_ref": node.source[:text_chars],
             "source_revision": str(node.metadata.get("source_revision") or "")[:256]
             or None,
             "source_verification": "referenced_unverified"
             if node.metadata.get("source_revision")
             else "unknown",
             "content_truncated": any(
-                len(text) > HANDOFF_TEXT_CHARS
+                len(text) > text_chars
                 for text in (node.title, node.details, node.source)
             ),
         }
         resolution = node.metadata.get("resolution")
         if isinstance(resolution, dict):
             item["resolution"] = {
-                key: str(resolution.get(key) or "")[:HANDOFF_TEXT_CHARS]
+                key: str(resolution.get(key) or "")[:text_chars]
                 for key in ("text", "source_ref", "source_revision")
             }
             item["resolution"]["source_verification"] = "referenced_unverified"
             item["content_truncated"] |= any(
-                len(str(resolution.get(key) or "")) > HANDOFF_TEXT_CHARS
+                len(str(resolution.get(key) or "")) > text_chars
                 for key in ("text", "source_ref", "source_revision")
             )
         supersedes = node.metadata.get("supersedes")
@@ -533,7 +552,7 @@ def _handoff_projection(identity, nodes):
         }
         if (
             len(json.dumps(candidate, ensure_ascii=False, sort_keys=True).encode())
-            > HANDOFF_MAX_BYTES
+            > max_bytes
         ):
             break
         result["items"].append(item)

@@ -347,6 +347,13 @@ class IssuedHandoffs:
                     "not_found", "Übergabe wurde hier nicht ausgestellt."
                 )
             handoff = record["handoff"]
+            delivery = record.get("remote_delivery")
+            if delivery is not None and (
+                delivery.get("core_task_id") != args["bridge_task_id"]
+                or delivery.get("operator_scope") != args["operator_scope"]
+                or delivery.get("principal_ref") != args["principal_ref"]
+            ):
+                raise ManagementError("binding_conflict", "Run differs from its delivery reservation")
             if (
                 args["handoff_revision"] != handoff["revision"]
                 or args["task_id"] != handoff["task_id"]
