@@ -469,6 +469,8 @@ live item states. This is not an installed desktop release.
 [Setup, verified inventory and limits](docs/plans/UNIVERSAL-PLATFORM-20261106.md).
 [Projektstart / Project intake](docs/plans/PROJECT-START-20261106.md).
 [Planrevisionen / Plan revisions](docs/plans/PROJECT-PLAN-20261106.md).
+[Gemeinsamer Big-Plan-Quellstand / Integrated Big Plan source](docs/plans/BIGPLAN-SOURCE-INTEGRATION-20261106.md)
+verbindet diese Arbeit mit den [Instanz-Kurzberichten / instance short reports](docs/agents/SHORT-REPORTS.md).
 
 `knowledge_manage` speichert referenzierte Entscheidungen, offene Fragen,
 verworfene Vorschläge und Aufgaben über denselben MCP-Zugang. Erwartete Thread-

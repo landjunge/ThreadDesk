@@ -1,11 +1,8 @@
 name: Desktop installers
 
 on:
-  pull_request:
-    paths: ['src/**', 'packaging/**', 'scripts/**', 'brand/**', 'pyproject.toml', '.github/workflows/desktop-build.yml']
-  push:
-    branches: [main]
-    paths: ['src/**', 'packaging/**', 'scripts/**', 'brand/**', 'pyproject.toml', '.github/workflows/desktop-build.yml']
+  # Native package builds are a separately scheduled acceptance step. Regular
+  # pushes and PRs keep the Linux Tests workflow; they must not fan out to ARM.
   workflow_dispatch:
 
 # Active development: macOS builds and Linux acceptance. Windows is paused.
