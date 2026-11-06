@@ -77,9 +77,12 @@ vorhandenen Prüfungen und werden nicht addiert.
 
 Auch die nach dem Merge automatisch gestartete
 [Main-TLS-/Restore-CI42223212208](https://github.com/landjunge/threaddesk/actions/runs/42223212208)
-bestand. Das tatsächliche Ergebnis der
+bestand. Auch die
 [Main-Gesamt-CI42223212219](https://github.com/landjunge/threaddesk/actions/runs/42223212219)
-wird vor dem abschließenden Dokumentationsmerge ergänzt.
+bestand am tatsächlichen Mergecommit b6774db beide vollständigen Läufe mit
+jeweils2680 Fällen,0Fehlern und0Skips. Beide neuen JUnit-Berichte wurden
+unabhängig zurückgelesen. Die automatische Pages-Auslieferung42223210326
+bestand ebenfalls. Diese Dokumentation verändert den geprüften Laufzeitcode nicht.
 
 KiraBridgeRC40 ist gesondert aus5f4dd46 nativ auf dem Intel-Mac gebaut, geprüft,
 sichtbar installiert und live bestätigt; QuellenmergePR59/Main1b77d78 und beide
@@ -96,3 +99,11 @@ Private Arbeits- und Prüfnachweise:
 `~/.local/state/current-mac-integration-20261106/`. Der Big-Plan-/Installations-
 abschluss wird im vorhandenen Entwicklungsboard188ce4729a62 und im gemeinsamen
 Koordinationsboard482f593429ad getrennt von Übergabe und Dauerbetrieb festgehalten.
+
+Der schon seit 24.10.2026 offene [Dependabot-Hinweis1](https://github.com/landjunge/threaddesk/security/dependabot/1)
+betrifft `glib 0.18.5` im unveränderten Tauri-Cargo.lock. Die
+[erste korrigierte Version ist 0.20.0](https://rustsec.org/advisories/RUSTSEC-2024-0429.html).
+Tauris GTK/WebKitGTK-Zweig ist an Linux/BSD gebunden; keine Änderung dieses
+Abhängigkeitsbaums in der aktuellen Quellenintegration. Der konkrete Linux-
+Tauri-Paketpunkt bleibt offen; Alert nicht unterdrückt, kein ungeprüfter
+GTK-Majorwechsel und keine neue Linux-Desktopabnahme daraus abgeleitet.
