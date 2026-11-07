@@ -3,9 +3,16 @@
   <img src="assets/design/icons/light/ThreadDesk-light-128.png" alt="ThreadDesk" width="96" height="96">
 </picture>
 <p align="center"><img src="brand/wordmark.svg" width="520" alt="ThreadDesk"></p>
-<p align="center"><a href="https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1"><img src="brand/download-button.svg" width="320" alt="ThreadDesk herunterladen"></a></p>
+<p align="center">
+  <a href="https://github.com/landjunge/threaddesk/releases"><img alt="Releases / RC" src="https://img.shields.io/badge/macOS-Releases%20%2F%20RC-497e86?style=flat-square"></a>
+  &nbsp;
+  <a href="https://github.com/landjunge/threaddesk/releases"><img alt="Releases / RC" src="https://img.shields.io/badge/Windows-Releases%20%2F%20RC-497e86?style=flat-square"></a>
+</p>
+
 
 <p align="center"><strong>Ein Arbeitsplatz, der den Stand deiner KI-Projekte behält.</strong></p>
+
+**Server-Version / Server edition:** Neben der lokalen Desktop-Anwendung existiert `threaddesk-server` als separates Server-Projekt. Der Server-Quellstand ist nicht automatisch ein fertiges Desktop- oder Server-Installationspaket. [Server-Quellcode / Server source](https://github.com/landjunge/threaddesk-server).
 
 ThreadDesk speichert Threads, Notizen, Dateien und Snapshots. Externe Aktionen werden nicht versteckt ausgeführt. Ein optionaler lokaler Hausmeister kann innerhalb von ThreadDesk selbstständig arbeiten; seine Grenzen sind unten dokumentiert.
 
