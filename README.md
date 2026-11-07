@@ -109,19 +109,28 @@ geprüft werden. macOS-Pakete sind ad-hoc signiert, nicht Apple-notarisiert.
 
 | Stand | Nachweis und Grenze |
 | --- | --- |
-| Desktop 0.1.1rc1, 02.10.2026 | Historischer veröffentlichter Download und seine damaligen Paket-/Testbelege; unverändert, keine rückwirkende Lizenz- oder Designumschreibung. |
-| main-Basis `bba99b0`, 18.10.2026 | TD-C01/02 übernommen: revisionsgebundene Verwaltung und ausgestellte Handoff-/Laufbindung. |
-| Diese Quelländerung TD-C03/D01/R01 | Wissensführung/Wiedereinstieg, exakter Rückgabeabruf, begrenzter neuer Wissenskontext und selektiv abgeglichene Design-PR-Teile. Gezielt isoliert geprüft, kein neuer Desktoprelease und keine Nutzerinstallation umgestellt. |
+| Veröffentlichter Desktop 0.1.1rc1, 02.10.2026 | Historischer Download, nicht der heutige Quellstand. Paketquelle `08e10b3`; vorhandene Assets `ThreadDesk-macOS.dmg` (Intel), `ThreadDesk-macOS-AppleSilicon.dmg` und `ThreadDesk-Windows.exe`. Keine rückwirkende Lizenz- oder Designumschreibung. |
+| Historische Basis `bba99b0`, 18.10.2026 | Vorfahr, nicht aktuelles main. TD-C01/02: revisionsgebundene Verwaltung und ausgestellte Handoff-/Laufbindung. TD-C03/D01/R01 (`1dc5089`) blieb gezielter Quellabgleich ohne Desktoprelease. |
+| Aktueller Quellstand `40fac38`, 06.11.2026 | `origin/main` nach PR #100. Zusätzlich integriert, aber nicht veröffentlicht: Projektgedächtnis, Planentwurf und Planrevisionen, opt-in HTTP-Handoff und Instanz-Kurzberichte. Kein neues Desktoppaket, keine umgestellte Nutzerinstallation, kein produktiver Remotedienst. |
 
-[PR #66](https://github.com/landjunge/threaddesk/pull/66) war beim Abgleich weiter
-offen. Aus `43dd13a` werden vorhandene UI- und passende Testteile übernommen;
-ältere Speicher-, Versions-, Lizenz- und Paketierungsstände werden nicht pauschal
-zurückgemischt. Die vollständige alte PR-Kette gilt dadurch nicht als übernommen.
+[PR #66](https://github.com/landjunge/threaddesk/pull/66) war beim Designabgleich
+am 18.10.2026 offen und ist es weiterhin. Aus `43dd13a` wurden vorhandene UI- und
+passende Testteile übernommen; ältere Speicher-, Versions-, Lizenz- und
+Paketierungsstände wurden nicht pauschal zurückgemischt. Die vollständige alte
+PR-Kette gilt dadurch nicht als übernommen. Dieser Satz beschreibt nicht den
+aktuellen Quellpin.
 
-Published desktop 0.1.1rc1, current source and the actually configured Bridge peer
-are different states. Use a matching source installation and operator-configured
-MCP/Bridge permissions for the new tools. No claim of Internet team deployment,
-external source verification or a newly published native package is made.
+Published desktop 0.1.1rc1 uses package source `08e10b3`. Current source is
+`40fac38` (2026-11-06). `bba99b0` (2026-10-18) is only an ancestor; TD-C03/D01/R01
+(`1dc5089`) was a targeted source reconciliation, not a desktop release.
+Project memory, plans, the opt-in remote handoff and instance short reports are
+on this source pin. They are not in the published desktop download, not an
+installed package and not a production remote service. The configured Bridge
+peer is a separate state. Use a matching source installation and
+operator-configured MCP/Bridge permissions for the newer tools. No claim of
+Internet team deployment, external source verification or a newly published
+native package is made. PR #66 remains open; only selected UI and test parts
+from `43dd13a` were carried forward.
 
 ### Lokales Fenster und Neustart
 
@@ -443,7 +452,7 @@ server are added. [Exact tools, limits and state semantics](docs/MCP.md).
 
 ### Wissen und Wiedereinstieg / Knowledge and re-entry (TD-C03 source)
 
-**Neuer Quellkandidat · Projektgedächtnis:** `/projects` bündelt Wiedereinstieg,
+**Integrierter Quellstand, kein Desktoprelease · Projektgedächtnis:** `/projects` bündelt Wiedereinstieg,
 Entscheidungen, Aufgaben, Fragen und Beiträge der ausdrücklich zugeordneten
 Projektthreads. CLI, HTTP und MCP verwenden denselben lesenden Befehl
 `project.memory`. Projektgrenzen und Änderungen zwischen Seiten werden geprüft.
@@ -454,10 +463,13 @@ aktive Threadauswahl bleibt erhalten. Die ersten Schritte bleiben Ideen.
 Der aktuelle Wiedereinstieg berücksichtigt den heutigen Zustand der Planpunkte;
 frühere Fassungen bleiben getrennt lesbar.
 Separate Demo mit Beispieldaten: `Start Projektgedaechtnis Demo.command`.
+Der opt-in HTTP-Handoff ist nur mit `handoff_rpc=True` registriert; Standard-Server,
+Server-CLI und der veröffentlichte Desktop starten ihn nicht. Instanz-Kurzberichte
+sind derselbe Quellstand und kein neues Paket.
 Kein bereits installiertes Desktoprelease.
 [Einstieg, tatsächlicher Bestand und Grenzen](docs/plans/UNIVERSAL-PLATFORM-20261106.md).
 
-**New source candidate · Project memory:** `/projects` brings together saved
+**Integrated source, not a desktop release · Project memory:** `/projects` brings together saved
 resume context, decisions, tasks, questions and recent contributions from explicitly
 assigned project threads. CLI, HTTP and MCP share the read command `project.memory`,
 with project boundaries and consistent pagination. The separate demo launcher above
@@ -465,10 +477,13 @@ uses synthetic data. **New project** prepares an editable local outline from an 
 and saves the project, assigned thread and draft together, preserving the active
 thread. Steps remain ideas. **Plan and history** saves new versions with provenance
 and a reason, preserves earlier versions and derives the current next step from
-live item states. This is not an installed desktop release.
+live item states. The opt-in HTTP handoff is registered only when `handoff_rpc=True`;
+the default server, server CLI and published desktop do not start it. Instance short
+reports are the same source pin, not a new package. This is not an installed desktop release.
 [Setup, verified inventory and limits](docs/plans/UNIVERSAL-PLATFORM-20261106.md).
 [Projektstart / Project intake](docs/plans/PROJECT-START-20261106.md).
 [Planrevisionen / Plan revisions](docs/plans/PROJECT-PLAN-20261106.md).
+[Opt-in Remote-Handoff / opt-in remote handoff](docs/plans/PROJECT-REMOTE-INTEGRATION-20261106.md).
 [Gemeinsamer Big-Plan-Quellstand / Integrated Big Plan source](docs/plans/BIGPLAN-SOURCE-INTEGRATION-20261106.md)
 verbindet diese Arbeit mit den [Instanz-Kurzberichten / instance short reports](docs/agents/SHORT-REPORTS.md).
 
