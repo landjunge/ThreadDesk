@@ -2,7 +2,7 @@
   <source media="(prefers-color-scheme: dark)" srcset="assets/design/icons/dark/ThreadDesk-dark-128.png">
   <img src="assets/design/icons/light/ThreadDesk-light-128.png" alt="ThreadDesk" width="96" height="96">
 </picture>
-<p align="center"><img src="brand/wordmark.svg" alt="ThreadDesk" width="384"></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/wordmark.svg"><img src="brand/wordmark-light.svg" alt="ThreadDesk" width="384"></picture></p>
 <p align="center">
   <a href="https://github.com/landjunge/threaddesk/releases"><img alt="Releases / RC" src="https://img.shields.io/badge/macOS-Releases%20%2F%20RC-497e86?style=flat-square"></a>
   &nbsp;
