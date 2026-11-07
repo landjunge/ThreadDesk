@@ -3,11 +3,13 @@
   <img src="assets/design/icons/light/ThreadDesk-light-128.png" alt="ThreadDesk" width="96" height="96">
 </picture>
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/wordmark.svg"><img src="brand/wordmark-light.svg" alt="ThreadDesk" width="384"></picture></p>
+<!-- AUTO-DOWNLOADS:START -->
 <p align="center">
   <a href="https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1"><img src="assets/readme/download-macos.svg" alt="macOS 0.1.1rc1" width="170"></a>
   &nbsp;
   <a href="https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1"><img src="assets/readme/download-windows.svg" alt="Windows 0.1.1rc1" width="170"></a>
 </p>
+<!-- AUTO-DOWNLOADS:END -->
 
 
 <p align="center"><strong>Ein Arbeitsplatz, der den Stand deiner KI-Projekte behält.</strong></p>
