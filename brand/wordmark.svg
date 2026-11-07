@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 230" role="img" aria-labelledby="title">
-  <title id="title">ThreadDesk</title>
-  <text x="24" y="176" font-family="Arial,Helvetica,sans-serif" font-size="170" font-weight="800" letter-spacing="-8">
-    <tspan fill="#b99cff">Thread</tspan><tspan fill="#17191f">Desk</tspan>
-  </text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="64" viewBox="0 0 480 64" role="img" aria-label="ThreadDesk"><title>ThreadDesk</title><text x="240" y="46" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="44" font-weight="700" letter-spacing="-1"><tspan fill="#ffffff">Thread</tspan><tspan fill="#b99cff">Desk</tspan></text></svg>
