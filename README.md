@@ -4,9 +4,9 @@
 </picture>
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/wordmark.svg"><img src="brand/wordmark-light.svg" alt="ThreadDesk" width="384"></picture></p>
 <p align="center">
-  <a href="https://github.com/landjunge/threaddesk/releases"><img alt="Releases / RC" src="https://img.shields.io/badge/macOS-Releases%20%2F%20RC-497e86?style=flat-square"></a>
+  <a href="https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1"><img src="assets/readme/download-macos.svg" alt="macOS 0.1.1rc1" width="170"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/threaddesk/releases"><img alt="Releases / RC" src="https://img.shields.io/badge/Windows-Releases%20%2F%20RC-497e86?style=flat-square"></a>
+  <a href="https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1"><img src="assets/readme/download-windows.svg" alt="Windows 0.1.1rc1" width="170"></a>
 </p>
 
 
