@@ -1,0 +1,28 @@
+name: Refresh README downloads
+on:
+  release:
+    types: [published, edited, deleted]
+  schedule:
+    - cron: '37 5 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: readme-downloads
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update badges from published release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/update_readme_downloads.py
+      - name: Commit changed README and badges only
+        run: |
+          git add README.md assets/readme/download-auto-*.svg
+          if ! git diff --cached --quiet; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "docs: refresh download buttons [skip ci]"
+            git push
+          fi
