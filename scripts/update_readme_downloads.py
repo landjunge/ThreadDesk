@@ -16,8 +16,8 @@ with urllib.request.urlopen(req, timeout=25) as response:
 releases = sorted((r for r in releases if not r.get("draft") and r.get("published_at")),
                   key=lambda r:r["published_at"], reverse=True)
 platforms = [
-    ("macOS Intel", r"(?:mac|darwin|osx|intel|x86_64|x64)", r"(?:windows|win32|win64|\.exe$|\.msi$)"),
-    ("macOS Apple Silicon", r"(?:mac|darwin|osx|arm64|aarch64|universal)", r"(?:windows|win32|win64|linux|\.exe$|\.msi$)"),
+    ("macOS Intel", r"(?:mac|darwin|osx|intel)", r"(?:windows|win32|win64|linux|arm64|aarch64|apple.silicon|\\.exe$|\\.msi$)"),
+    ("macOS Apple Silicon", r"(?:mac|darwin|osx)", r"(?:windows|win32|win64|linux|intel|x86_64|amd64|\\.exe$|\\.msi$)"),
     ("Windows", r"(?:windows|win32|win64|win11|\.exe$|\.msi$)", r"(?:macos|darwin|osx|linux|\.dmg$|\.pkg$|\.appimage$)"),
     ("Linux", r"(?:linux|ubuntu|debian|\.appimage$|\.deb$|\.rpm$)", r"(?:windows|win32|win64|darwin|macos|\.dmg$|\.exe$|\.msi$)"),
 ]
@@ -30,7 +30,8 @@ for label, include, exclude in platforms:
         for asset in release.get("assets",[]):
             name = asset.get("name","")
             if (asset.get("state") == "uploaded" and ext.search(name) and not bad.search(name)
-                and re.search(include,name,re.I) and not re.search(exclude,name,re.I)):
+                and re.search(include,name,re.I) and not re.search(exclude,name,re.I)
+                and (label != "macOS Apple Silicon" or re.search(r"(?:arm64|aarch64|apple.silicon|universal)",name,re.I))):
                 chosen[label] = (release["tag_name"], asset["browser_download_url"])
                 break
         if label in chosen: break
