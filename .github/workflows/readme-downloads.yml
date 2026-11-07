@@ -21,7 +21,7 @@ jobs:
         run: python3 scripts/update_readme_downloads.py
       - name: Commit changed README and badges only
         run: |
-          git add README.md assets/readme/download-auto-*.svg
+          git add -A -- README.md assets/readme
           if ! git diff --cached --quiet; then
             git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "docs: refresh download buttons [skip ci]"
             git push
