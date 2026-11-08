@@ -87,7 +87,7 @@ def button_svg(label, version, color):
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" width="190" height="52" '
         f'viewBox="0 0 190 52" role="img" aria-label="Download {label} {version}">'
-        f'<title>Download {label} {version}</title>'
+        f"<title>Download {label} {version}</title>"
         f'<rect x="1" y="1" width="188" height="50" rx="10" fill="{color}"/>'
         '<path d="M24 14v14m-6-6 6 6 6-6M17 34h14" fill="none" stroke="#14161b" '
         'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
@@ -187,7 +187,8 @@ def main():
         if START not in text or END not in text:
             raise SystemExit(f"Missing AUTO-DOWNLOADS markers in {page}")
         head, rest = text.split(START, 1)
-        page.write_text(head + START + "\n" + block + "\n" + END + rest.split(END, 1)[1], encoding="utf-8")
+        tail = rest.split(END, 1)[1]
+        page.write_text(head + START + "\n" + block + "\n" + END + tail, encoding="utf-8")
     print(f"Updated {len(links)} direct download buttons for {repo}")
 
 
