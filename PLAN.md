@@ -1,3 +1,7 @@
+> **Historisch (markiert am 08.11.2026).** Dieser Planstand ist keine Arbeitsanweisung mehr.
+> Maßgeblich ist der Fünf-Produkte-Big-Plan (`docs/plans/BIGPLAN-BAUPLAN-20261108.md`
+> im KiraBridge-Repo, nicht öffentlich); siehe [AGENTS.md](AGENTS.md). Der Inhalt unten bleibt unverändert.
+
 # ThreadDesk — der MVP-Plan vom 14.08.2026 (abgeschlossen, historisch)
 
 > **Diese Datei ist ein Rückblick, keine Arbeitsanweisung.**

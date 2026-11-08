@@ -105,7 +105,7 @@ ThreadDesk merkt sich diesen Stand. Jeder Arbeitsbereich wird zu einem eigenen T
 
 1. **Thread anlegen** – eine Idee oder Aufgabe benennen.
 2. **Stand festhalten** – Notizen, Dateien und Status ergänzen.
-3. **Weitergeben** – bei Bedarf ein Handoff für Gnom-Hub-V1 erzeugen.
+3. **Weitergeben** – bei Bedarf einen Handoff ausstellen. Übergabeweg ist [KiraBridge](https://github.com/landjunge/KiraBridge#readme): KiraBridge liest den ausgestellten Stand über MCP und prüft vor jedem Aufruf die eigene Freigabe. ThreadDesk sendet selbst nichts.
 
 ### Heutiger Stand – ehrlich
 
@@ -117,6 +117,11 @@ ohne Fehler oder übersprungene Tests bestanden. Alle drei nativen Pakete haben
 ihren Selbsttest bestanden; Quell-Commit und Prüfsummen wurden vor der
 Veröffentlichung abgeglichen.
 
+Diese Angabe stützt sich nur auf veröffentlichte GitHub-Releases. Der Quellstand
+auf `main` trägt bereits die Version 0.2.0, ist aber noch nicht veröffentlicht.
+Der Release-Entwurf 0.1.1rc2 ist ebenfalls nicht veröffentlicht. Lokal
+installierte Testpakete dieser Stände gelten nicht als Ausgabe.
+
 Die Ausgabe bleibt ein Release-Kandidat: Der erste Start auf deinem konkreten
 Mac und die Qualität deines ausgewählten lokalen LLM müssen am jeweiligen Gerät
 geprüft werden. macOS-Pakete sind ad-hoc signiert, nicht Apple-notarisiert.
@@ -127,7 +132,7 @@ geprüft werden. macOS-Pakete sind ad-hoc signiert, nicht Apple-notarisiert.
 | Kontext | Notizen, Dateien, History und Snapshots |
 | Daten | Lokal: JSON, optional SQLite; getrennt vom Programmcode |
 | Oberfläche | CLI, lokale Weboberfläche und Desktop-Pakete; UI-Bibliotheken werden lokal mitgeliefert |
-| Übergaben | Vorbereitete Pakete für Grok und Gnom-Hub-V1 |
+| Übergaben | Ausgestellte Handoffs, die KiraBridge über MCP abruft; die älteren lokalen Pakete für Grok und Gnom-Hub-V1 bleiben verfügbar |
 | Grenze | Keine versteckte externe Ausführung; lokaler Hausmeister nur innerhalb dokumentierter Grenzen |
 
 ### Quellstand und installierter Download / Source versus download
@@ -147,6 +152,9 @@ Published desktop 0.1.1rc1, current source and the actually configured Bridge pe
 are different states. Use a matching source installation and operator-configured
 MCP/Bridge permissions for the new tools. No claim of Internet team deployment,
 external source verification or a newly published native package is made.
+The version above refers only to published GitHub releases: `main` already
+reports 0.2.0, which is not yet published, and the 0.1.1rc2 release remains a
+draft. Locally installed test builds of these states are not releases.
 
 ### Lokales Fenster und Neustart
 
@@ -308,7 +316,7 @@ Klicke auf „Neuer Thread“, gib deiner Idee einen Namen und speichere den ers
 
 ## Für Entwickler
 
-ThreadDesk ist eine lokale Control-Layer vor Gnom-Hub-V1. Die Grenze ist Teil des Produkts: Übergaben werden vorbereitet, aber nicht automatisch extern gesendet oder ausgeführt. Der optionale lokale Hausmeister ist davon getrennt und darf nur innerhalb der dokumentierten lokalen Grenzen arbeiten.
+ThreadDesk ist eine lokale Control-Layer; Übergabeweg zu Agenten ist KiraBridge. Die Grenze ist Teil des Produkts: Übergaben werden vorbereitet und von KiraBridge unter deren eigener Autorisierung über MCP abgerufen. ThreadDesk sendet oder führt sie nicht automatisch extern aus. Der ältere lokale Gnom-Hub-V1-Weg bleibt dokumentiert. Der optionale lokale Hausmeister ist davon getrennt und darf nur innerhalb der dokumentierten lokalen Grenzen arbeiten.
 
 ### Wichtige Befehle
 
@@ -423,10 +431,10 @@ Produktvision, gewünschtes Verhalten und Grenzen kommen von mir. KI unterstütz
 ### Dokumentation
 
 - [Benutzeroberfläche](docs/UI.md)
-- [MCP](docs/MCP.md)
+- [MCP und Übergabeweg über KiraBridge](docs/MCP.md)
 - [Grok-Handoff](docs/GROK.md)
 - [TollGate-Grenze](docs/TOLLGATE.md)
-- [Gnom-Hub-V1-Handoff](docs/GNOM.md)
+- [Gnom-Hub-V1-Handoff (älterer lokaler Weg)](docs/GNOM.md)
 
 ---
 

@@ -1,3 +1,7 @@
+> **Historisch (markiert am 08.11.2026).** Dieser Planstand ist keine Arbeitsanweisung mehr.
+> Maßgeblich ist der Fünf-Produkte-Big-Plan (`docs/plans/BIGPLAN-BAUPLAN-20261108.md`
+> im KiraBridge-Repo, nicht öffentlich); siehe [AGENTS.md](../AGENTS.md). Der Inhalt unten bleibt unverändert.
+
 > Aktueller Auftrag vom 26.10.2026: [ThreadDesk konkret: Bedienung, Papierkorb und Graph](plans/THREADDESK-GRAPH-PAPIERKORB-BEDIENUNG-20261026.md). Die nachfolgenden älteren Planstände bleiben als Historie erhalten.
 
 # ThreadDesk – Abschlussplan, 2. Oktober 2026
