@@ -5,9 +5,9 @@
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/wordmark.svg"><img src="brand/wordmark-light.svg" alt="ThreadDesk" width="384"></picture></p>
 <!-- AUTO-DOWNLOADS:START -->
 <p align="center">
-  <a href="https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1"><img src="assets/readme/download-macos.svg" alt="macOS 0.1.1rc1" width="170"></a>
+  <a href="https://github.com/landjunge/threaddesk/releases/download/v0.1.1rc1/ThreadDesk-macOS-AppleSilicon.dmg"><img src="assets/readme/download-auto-macos-intel.svg" alt="macOS Intel v0.1.1rc1" width="174"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1"><img src="assets/readme/download-windows.svg" alt="Windows 0.1.1rc1" width="170"></a>
+  <a href="https://github.com/landjunge/threaddesk/releases/download/v0.1.1rc1/ThreadDesk-Windows.exe"><img src="assets/readme/download-auto-windows.svg" alt="Windows v0.1.1rc1" width="174"></a>
 </p>
 <!-- AUTO-DOWNLOADS:END -->
 
