@@ -1,3 +1,5 @@
+<!-- readme-header-v1: Kopf nach ThreadDesk docs/contracts/readme-header-v1.md. Nicht von Hand umgestalten; scripts/readme_header.py apply/check verwenden. -->
+
 <p align="center">
   <img src="assets/readme/normalized/ThreadDesk-large.svg" alt="ThreadDesk" width="256" height="256">
 </p>

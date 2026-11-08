@@ -36,9 +36,15 @@ NEUTRAL = {"dark": "#ffffff", "light": "#17191f"}
 BUTTON_TEXT = "#14161b"
 
 # Zeilen, die zum alten Kopf gehören dürfen und beim Übernehmen ersetzt werden.
+# Unsichtbarer Hinweis im README selbst: wer den Kopf anfasst, findet die Regel.
+MARKER = (
+    "<!-- readme-header-v1: Kopf nach ThreadDesk docs/contracts/readme-header-v1.md. "
+    "Nicht von Hand umgestalten; scripts/readme_header.py apply/check verwenden. -->"
+)
+
 HEADER_LINE = re.compile(
     r"^\s*(?:$|<picture>|</picture>|<source |<img |<p align=\"center\">\s*$"
-    r"|<p align=\"center\"><(?:picture|img)|</p>|<a href=|&nbsp;|<!-- AUTO-DOWNLOADS"
+    r"|<p align=\"center\"><(?:picture|img)|</p>|<a href=|&nbsp;|<!-- AUTO-DOWNLOADS|<!-- readme-header-v1"
     r"|<h1 align=\"center\">|#\s|\*\*English\*\*|\[English\]|\[Deutsch\])"
 )
 
@@ -144,7 +150,7 @@ def peer_url(peer, german: bool) -> str:
 
 
 def header(products, product, german: bool, block: str) -> str:
-    out = []
+    out = [MARKER, ""]
     if product["readme_de"]:
         out += [
             "[English](README.md) · **Deutsch**"
@@ -299,6 +305,10 @@ def cmd_check(args):
             or product["wordmark_light"] not in head
         ):
             problems.append(f"{page.name}: Wortmarke fehlt")
+        if not text.startswith(MARKER):
+            problems.append(
+                f"{page.name}: Hinweis readme-header-v1 in der ersten Zeile fehlt"
+            )
         if START not in text or END not in text:
             problems.append(f"{page.name}: AUTO-DOWNLOADS-Marker fehlen")
         else:

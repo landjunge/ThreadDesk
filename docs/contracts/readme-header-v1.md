@@ -8,6 +8,9 @@ Tool neue Icons, wird dieser Kopf übernommen — nicht neu erfunden.
 
 ![Referenz: TollGate-Kopf auf GitHub, dunkles Theme](../design/readme-header/reference-tollgate-dark.png)
 
+Ebenfalls festgehalten: KI-Zentrale [D-013](https://github.com/landjunge/KI-Zentralle/blob/main/DECISIONS.md),
+globale `~/.claude/CLAUDE.md` und die erste Zeile jedes Produkt-README.
+
 Live-Referenzen (Stand 08.11.2026):
 [KiraBridge](https://github.com/landjunge/KiraBridge#readme) ·
 [ThreadDesk](https://github.com/landjunge/threaddesk#readme) ·
@@ -28,6 +31,8 @@ Live-Referenzen (Stand 08.11.2026):
 
 ## Aufbau (feste Reihenfolge, alles zentriert)
 
+0. **Unsichtbarer Hinweis** in der ersten Zeile: `<!-- readme-header-v1: … -->` — verweist auf
+   diese Regel, damit jeder, der den Kopf bearbeitet, sie findet (auf GitHub nicht sichtbar).
 1. **Sprachumschalter** `**English** · [Deutsch](README.de.md)` — nur wenn es `README.de.md` gibt.
 2. **Großes Produktlogo**, 256 × 256: `assets/readme/normalized/<Prefix>-large.svg`.
 3. **Icon-Leiste** mit allen *anderen* Tools, je 48 × 48, getrennt durch `&nbsp;`,
