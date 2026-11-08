@@ -32,3 +32,7 @@ Gilt grundsätzlich für alle künftigen delegierten Aufgaben, nicht nur den akt
 ## Bibliotheksauftrag mit sofortiger Integration
 
 Der anschließende Nutzerauftrag autorisiert die schrittweise Umsetzung von Bibliotheksimport, verbindlicher lokaler Indexsuche, Dateimanager im vorhandenen Graphen, Formatadaptern und zugehöriger Dateiwiederherstellung. Der bisherige Plan wird erweitert, kein konkurrierender Plan angelegt. Jedes fertige Paket braucht sofort einen tatsächlichen KiraBridge-Aufruf mit Readback; keine spätere Sammelintegration und keine Erfolgsaussage allein aus Mock-/Unit-Tests. KiraBridge selbst bleibt unverändert. Fehlende Originalbytes, native Vertragsgrenzen und nicht geprüfte Principal-Kontexte ausdrücklich benennen. Indexsuche ist nun hohe Priorität und verbindlicher Umfang.
+
+## README-Design der Produktfamilie (verbindlich ab 08.11.2026)
+
+Jedes README eines Familien-Tools (KiraBridge, ThreadDesk, 4AllPass, TollGate, Agent Authority, BlockDesign und jedes neue Tool) bekommt den freigegebenen Kopf aus [docs/contracts/readme-header-v1.md](docs/contracts/readme-header-v1.md): großes zentrales Logo, Icon-Leiste zu allen anderen Tools, zweifarbige Wortmarke in Markenfarbe, Download-Buttons als Direktlinks auf die Installationsdatei. Neues Tool oder neue Icons: Katalog `docs/contracts/readme-header-v1.json` ergänzen und `scripts/readme_header.py` (`icons` → `apply` in allen Repos → `check`) verwenden, nicht neu gestalten.
