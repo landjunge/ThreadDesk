@@ -1,5 +1,12 @@
 # Arbeitsregeln
 
+## Rahmen: Fünf-Produkte-Big-Plan (ab 08.11.2026)
+
+- ThreadDesk-Arbeit erfolgt im Rahmen des gemeinsamen Big Plans für die fünf Produkte KiraBridge, ThreadDesk, 4AllPass, TollGate und Agent Authority. Pakete für ThreadDesk tragen dort IDs wie `BP-TD-*`, `BP-PLAN-01` oder `TD-P*`.
+- Kanonischer Plan: `docs/plans/BIGPLAN-BAUPLAN-20261108.md` im KiraBridge-Repo (nicht öffentlich). Dort lesen; Planinhalte, Serverangaben und interne Befunde nicht in dieses öffentliche Repo kopieren.
+- `PLAN.md` und `docs/TEAMPLAN.md` sind historisch. Pläne unter `docs/plans/` sind Teilpläne. Bei Widerspruch gilt der Big Plan.
+- Die Regeln unten bleiben gültig. Insbesondere werden KiraBridge-Pakete nicht in diesem Repo umgesetzt, sondern im KiraBridge-Repo geführt; KiraBridge ist für ThreadDesk die Gegenstelle und der Übergabeweg.
+
 
 ## Kira: Pflichtreferenz vor Planerstellung
 Nach jedem Brainstorming und VOR jedem Plan für andere KIs die lebende Referenz /Users/landjunge/.threaddesk/Workflow/Workflow-Planerstellung-fuer-andere-KIs.md lesen und anwenden. Noch nicht abgeschlossen: neue Erfahrungen ergänzen, nicht jedes Mal neu erfinden. Fehlt Zugriff, offen melden; nicht behaupten gelesen zu haben.
