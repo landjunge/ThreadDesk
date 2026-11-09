@@ -1,10 +1,10 @@
-# ThreadDesk 0.2.0 – Release-Notizen (Entwurf)
+# ThreadDesk 0.2.0 – Release-Notizen
 
-> **Status: vorbereitet, nicht veröffentlicht.** Diese Datei ist ein Entwurf für
-> eine spätere Veröffentlichung (Big-Plan-Paket `BP-TD-REL-01`). Es gibt dazu noch
-> kein GitHub-Release und keinen Tag `v0.2.0`. Die zuletzt veröffentlichte Ausgabe
-> bleibt [0.1.1rc1](https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1).
-> Der Release-Entwurf 0.1.1rc2 ist nicht veröffentlicht.
+> Big-Plan-Paket `BP-TD-REL-01`, Nutzerfreigabe vom 09.11.2026. Veröffentlicht als
+> GitHub-Release `v0.2.0` mit einem Paket für **macOS Intel (x86_64, Tauri)**.
+> Prüfsummen und den Quell-Commit des Pakets nennt der Release-Text auf GitHub.
+> Ältere Ausgaben bleiben unverändert: [0.1.1rc1](https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1)
+> (Pre-release) und der nie veröffentlichte Entwurf 0.1.1rc2.
 
 ## Deutsch
 
@@ -15,16 +15,17 @@ Fachhandler mit Revisions-, Konflikt- und Wiederholungsschutz.
 ### Neu seit 0.1.1rc1
 
 - **Papierkorb** – Threads und Graphbeziehungen kommen mit stabilen IDs zurück.
-  Endgültiges Löschen braucht eine Vorschau und eine ausdrückliche Freigabe
-  (PR #95).
+  Endgültiges Löschen (`trash.purge`) braucht eine Vorschau und eine
+  ausdrückliche Bestätigung; der alte direkte Löschweg ist gesperrt (PR #95).
 - **Aktivitätsgraph** – gespeicherte Graphansichten mit Zentrum, Knotenliste und
   Filtern. Echte Dateiänderungen und bewusst geöffnete Dateien werden getrennt
   erfasst (PR #93, #94, #95).
 - **Bibliothek** – vollständige Dateien aus Ordner, Auswahl oder ZIP mit
   Prüfsummen übernehmen, lokal indexieren, suchen und im Graphen verwalten
   (PR #86, #87, #88, #92).
-- **Backup v3** – Streaming/ZIP64, Integritätsmanifest, Bibliotheksdateien und
-  ausstehende Übertragungen. Backups v1 und v2 bleiben lesbar (PR #90, #95).
+- **Backup v3** – portable Sicherung als Streaming-ZIP64 mit
+  Integritätsmanifest, Bibliotheksdateien und ausstehenden Übertragungen.
+  Backups v1 und v2 bleiben lesbar (PR #90, #95).
 - **Dynamischer MCP-Katalog** – MCP-Werkzeuge entstehen direkt aus der
   Befehlsliste, mit Schema, Scopes und Operationsbeleg. Whiteboards haben einen
   vollständigen Lebenszyklus (PR #97).
@@ -43,17 +44,30 @@ Handoffs werden in ThreadDesk ausgestellt. KiraBridge liest sie über MCP und
 prüft vor jedem Aufruf die eigene Freigabe. ThreadDesk sendet nichts selbst und
 startet keine Agenten. Der ältere lokale Gnom-Hub-V1-Weg bleibt verfügbar.
 
+### Paket und Installation
+
+- **Nur macOS Intel (x86_64).** Tauri-2-Fenster mit eingebettetem lokalem
+  ThreadDesk-Server (PyInstaller); eine eigene Python-Installation ist nicht
+  nötig. Mindestversion macOS 11.
+- Download: `ThreadDesk-0.2.0-macOS-Intel.dmg` (oder dieselbe App als `.zip`).
+  DMG öffnen und `ThreadDesk.app` nach Programme ziehen.
+- **Unsigniert im Sinne von Apple:** ad-hoc signiert, nicht mit Developer-ID
+  signiert und nicht notarisiert. Gatekeeper kann beim ersten Start eine
+  Bestätigung verlangen (Finder: Kontextmenü → Öffnen).
+- Für Apple Silicon und Windows gibt es in 0.2.0 kein Paket. Windows ist
+  pausiert; für diese Plattformen bleibt 0.1.1rc1 der letzte Download.
+
 ### Grenzen
 
-- Nur macOS (Intel und Apple Silicon). Windows ist pausiert.
-- macOS-Pakete sind ad-hoc signiert, nicht mit Developer-ID signiert und nicht
-  notarisiert.
 - Der erste Start auf deinem Mac und die Qualität deines lokalen LLM lassen
-  sich durch CI nicht beweisen.
+  sich durch den Build nicht beweisen. Geprüft wurde der eingebettete Server mit
+  `--self-test` auf dem Build-Mac; das Fenster wurde beim Build nicht geöffnet.
 - Backups enthalten private Inhalte. Verlinkte Dateien außerhalb des
   Arbeitsbereichs sind nicht enthalten.
 - Daten bleiben in `~/.threaddesk` (oder `THREADDESK_HOME`). Die Installation
-  verschiebt oder löscht diesen Ordner nicht.
+  verschiebt, migriert oder löscht diesen Ordner nicht. Vor dem Ersetzen einer
+  vorhandenen App den Arbeitsbereich sichern.
+- Keine automatischen Updates.
 
 ## English
 
@@ -64,15 +78,16 @@ and replay protection.
 ### New since 0.1.1rc1
 
 - **Trash** restores threads and graph relationships with stable IDs; permanent
-  purge needs a preview and explicit approval (PR #95).
+  purge (`trash.purge`) needs a preview and explicit confirmation, the old direct
+  delete path is blocked (PR #95).
 - **Activity graph** with saved views, centres, node lists and filters; real file
   changes and deliberate opens are recorded separately (PR #93, #94, #95).
 - **Library** import of complete files with checksums, local index, search and
   graph file management (PR #86, #87, #88, #92).
-- **Backup v3** with streaming/ZIP64, integrity manifest, library files and
-  pending transfers; v1 and v2 remain readable (PR #90, #95).
-- **Dynamic MCP catalog** derived from the command registry, plus the whiteboard
-  lifecycle (PR #97).
+- **Backup v3**: portable streaming ZIP64 backup with integrity manifest, library
+  files and pending transfers; v1 and v2 remain readable (PR #90, #95).
+- **Dynamic MCP catalog** derived from the command registry, with schema, scopes
+  and operation receipts, plus the whiteboard lifecycle (PR #97).
 - **Administration, handoffs and knowledge**: revision-bound administration,
   issued handoffs with run binding, questions, knowledge and re-entry
   (PR #75, #76, #77).
@@ -87,25 +102,40 @@ Handoffs are issued in ThreadDesk. KiraBridge reads them over MCP and applies it
 own authorization before each call. ThreadDesk does not send anything or start
 agents. The older local Gnom-Hub-V1 route remains available.
 
+### Package and installation
+
+- **macOS Intel (x86_64) only.** Tauri 2 window with an embedded local ThreadDesk
+  server (PyInstaller); no separate Python installation needed. Requires macOS 11.
+- Download `ThreadDesk-0.2.0-macOS-Intel.dmg` (or the same app as `.zip`), open
+  it and drag `ThreadDesk.app` to Applications.
+- **Not Apple-signed:** ad-hoc signed only, no Developer ID, not notarized.
+  Gatekeeper may ask for confirmation on first launch (Finder: context menu → Open).
+- There is no Apple Silicon or Windows package for 0.2.0. Windows is paused;
+  0.1.1rc1 remains the latest download for those platforms.
+
 ### Limits
 
-macOS only (Intel and Apple Silicon); Windows is paused. Packages are ad-hoc
-signed, not Developer-ID signed or notarized. First launch on your Mac and local
-LLM quality cannot be proven by CI. Backups contain private content. Data stays in
-`~/.threaddesk` (or `THREADDESK_HOME`) and is neither moved nor deleted.
+First launch on your Mac and local LLM quality cannot be proven by the build. The
+embedded server passed `--self-test` on the build Mac; the window was not opened
+during the build. Backups contain private content; linked files outside the
+workspace are not included. Data stays in `~/.threaddesk` (or `THREADDESK_HOME`)
+and is neither moved, migrated nor deleted; back it up before replacing an
+existing app. No auto-update.
 
-## Vor der Veröffentlichung / Before publishing
+## Build und Prüfung / Build and verification
 
-1. Versionsquellen gleich halten: `pyproject.toml`, `src/threaddesk/__init__.py`,
+1. Versionsquellen sind gleich: `pyproject.toml`, `src/threaddesk/__init__.py`,
    `packaging/tauri/package.json`, `packaging/tauri/src-tauri/Cargo.toml`,
-   `packaging/tauri/src-tauri/tauri.conf.json` (heute überall `0.2.0`).
-2. Entscheiden, welcher Pakettyp veröffentlicht wird: Der Workflow
-   `Desktop installers` baut PyInstaller-Pakete. Die lokal installierte 0.2.0
-   ist eine Tauri-App, für die es keinen CI-Workflow gibt.
-3. Der Veröffentlichungsjob im Workflow ist abgeschaltet (`if: false`), weil
-   `scripts/verify_release.py` alle drei nativen Pakete einschließlich Windows
-   verlangt. Für ein reines macOS-Release müssen Prüfung und Job angepasst werden.
-4. Doppelte vollständige Testsuite, beide macOS-Builds mit Selbsttest,
-   Prüfsummen und Herkunftsbelege am selben Quell-Commit.
-5. Erst danach Tag `v0.2.0` und Release anlegen. Die README-Download-Knöpfe
-   folgen automatisch dem veröffentlichten Release.
+   `packaging/tauri/src-tauri/tauri.conf.json` – überall `0.2.0`.
+2. Build auf einem Intel-Mac aus einem sauberen Checkout des Release-Commits
+   nach `packaging/tauri/README.md`: PyInstaller-Server
+   (`packaging/tauri/backend/ThreadDeskServer.spec`), `--self-test`,
+   `npm ci`, `npm run build` (`tauri build --bundles app`), ad-hoc-Signatur und
+   `codesign --verify`.
+3. DMG mit `hdiutil create` (UDZO), ZIP mit `ditto`; SHA-256 beider Dateien in
+   `SHA256SUMS.txt` und im Release-Text.
+4. Nach dem Hochladen wird jedes Asset frisch heruntergeladen und sein Hash mit
+   dem lokalen Wert verglichen.
+5. Der Workflow `Desktop installers` (PyInstaller/pywebview, alle Plattformen)
+   veröffentlicht weiterhin nicht (`if: false`); dieses Release ist der manuelle
+   Tauri-Weg wie zuvor bei 0.1.1rc2.
