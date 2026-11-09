@@ -46,7 +46,7 @@ Jedes README eines Familien-Tools (KiraBridge, ThreadDesk, 4AllPass, TollGate, A
 
 ## Plan-Governance (Nutzerbeschluss 09.11.2026)
 
-- Planänderungen werden nur in ThreadDesk gemacht (Thread `188ce4729a62`). GitHub-Pläne sind Archiv bzw. technischer Spiegel und werden nicht als führende Kopie bearbeitet.
+- Planänderungen werden nur in ThreadDesk gemacht (Master `6b5b73b9de36`, Status im Board `188ce4729a62`). GitHub-Pläne sind Archiv bzw. technischer Spiegel und werden nicht als führende Kopie bearbeitet.
 - Neue Plan-Dateien (`*PLAN*.md`, `*BAUPLAN*`, `*GESAMTPLAN*`) nur mit dem Kopfhinweis: „Nicht maßgeblich. Maßgeblich ist ThreadDesk-Thread `6b5b73b9de36` (Master mit Etappen E01–E09; Status im Board `188ce4729a62`; Nutzerbeschluss 09.11.2026). Diese Datei ist Archiv bzw. technischer Spiegel.“
 - Prüfung: `python scripts/plan_notice_check.py` (meldet Plan-Dateien in den Produkt-Repos ohne Hinweis).
 - Die ChatGPT-Bibliothek bleibt als Backup unverändert. Nichts eigenmächtig löschen.
