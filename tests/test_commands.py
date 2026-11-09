@@ -48,7 +48,8 @@ def test_catalogue_pages_are_bounded_and_cover_existing_mcp(application):
         rows.extend(result["commands"])
         offset = result["next_offset"]
     names = {row["id"] for row in rows}
-    assert {row["name"] for row in TOOLS} - {"command_catalog", "command_query", "command_invoke"} <= names
+    # search_threads is local stdio only and deliberately not a shared command.
+    assert {row["name"] for row in TOOLS} - {"command_catalog", "command_query", "command_invoke", "search_threads"} <= names
     assert {"graph.node.create", "graph.node.transition", "graph.relation.create", "trash.restore", "whiteboard.append"} <= names
     assert len(names) == len(rows)
     migration = next(row for row in rows if row["id"] == "migration.stage")
