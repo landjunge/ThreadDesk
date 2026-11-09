@@ -1,0 +1,168 @@
+{
+  "schema": "status-v1",
+  "product": "ThreadDesk",
+  "repo": {
+    "name": "landjunge/threaddesk",
+    "visibility": "public",
+    "default_branch": "main"
+  },
+  "observed_at": "2026-11-09T06:54:45Z",
+  "plan": "BIGPLAN-BAUPLAN-20261108",
+  "main_pin": {
+    "commit": "4d3a1c44d4c751f3fc6e206e37afde06a97a2f7c",
+    "committed_at": "2026-11-09T03:32:53Z"
+  },
+  "source_version": "0.2.0",
+  "releases": [
+    {
+      "tag": "v0.1.1rc2",
+      "draft": true,
+      "prerelease": true,
+      "published_at": null,
+      "assets": [
+        "SHA256SUMS.txt",
+        "ThreadDesk-0.1.1-RC2-macOS-Intel.dmg",
+        "ThreadDesk-0.1.1-RC2-macOS-Intel.zip"
+      ]
+    },
+    {
+      "tag": "v0.1.1rc1",
+      "draft": false,
+      "prerelease": true,
+      "published_at": "2026-10-02T19:18:32Z",
+      "assets": [
+        "ThreadDesk-Windows.exe",
+        "ThreadDesk-Windows.exe.build.json",
+        "ThreadDesk-Windows.exe.sha256",
+        "ThreadDesk-macOS-AppleSilicon.dmg",
+        "ThreadDesk-macOS-AppleSilicon.dmg.build.json",
+        "ThreadDesk-macOS-AppleSilicon.dmg.sha256",
+        "ThreadDesk-macOS.dmg",
+        "ThreadDesk-macOS.dmg.build.json",
+        "ThreadDesk-macOS.dmg.sha256"
+      ]
+    },
+    {
+      "tag": "preview",
+      "draft": false,
+      "prerelease": true,
+      "published_at": "2026-09-10T21:33:36Z",
+      "assets": [
+        "ThreadDesk-Windows.exe",
+        "ThreadDesk-macOS.dmg"
+      ]
+    }
+  ],
+  "installed": {
+    "mac": {
+      "state": "installed",
+      "observed_at": "2026-11-09T06:54:45Z",
+      "entries": [
+        {
+          "kind": "app",
+          "path": "/Applications/ThreadDesk.app",
+          "version": "0.2.0",
+          "source_commit": "unknown",
+          "note": "0.2.0 ist nicht als Release veroeffentlicht (W10)"
+        },
+        {
+          "kind": "app",
+          "path": "~/Applications/ThreadDesk.app",
+          "version": "0.1.1-rc.2",
+          "source_commit": "unknown",
+          "note": "Altinstallation neben /Applications"
+        },
+        {
+          "kind": "app",
+          "path": "~/Applications/ThreadDesk-RC1-Test-20261024.app",
+          "version": "0.1.1",
+          "source_commit": "unknown",
+          "note": "RC1-Test-App, Info.plist nennt nur 0.1.1"
+        }
+      ]
+    },
+    "windows": "unknown",
+    "linux": "unknown"
+  },
+  "server": {
+    "source": "ops/netcup.json (KiraBridge, BP-OPS-01)",
+    "observed_at": "2026-11-08T16:59:45Z",
+    "components": [
+      {
+        "name": "threaddesk-server",
+        "unit": "threaddesk-server.service",
+        "state": "active",
+        "version": "0.2.0",
+        "source_commit": "unknown",
+        "exposure": "nicht Loopback: oeffentlich ueber den gemeinsamen Reverse-Proxy (Port 8443), Bindung an die Docker-Bridge",
+        "note": "startet ein ungeversioniertes Wrapper-Skript (serve_handoff.py), Checkout ohne Git, INSTALLED-COMMIT 2a703696 ist in diesem Repo nicht aufloesbar (W02, W04)"
+      },
+      {
+        "name": "threaddesk-server-tls",
+        "unit": "threaddesk-server-tls.service",
+        "state": "inactive",
+        "version": "unknown",
+        "source_commit": "unknown",
+        "exposure": "TLS-Proxy Loopback 8446: deaktiviert seit 2026-11-08 (W03, W04)"
+      }
+    ]
+  },
+  "open_packages": [
+    {
+      "id": "BP-TD-REL-01",
+      "title": "ThreadDesk 0.2 veroeffentlichen, README-Version, Altinstallationen",
+      "status": "open"
+    },
+    {
+      "id": "TD-P15",
+      "title": "ChatGPT-Bedienbarkeit aller Fachaktionen",
+      "status": "open"
+    },
+    {
+      "id": "BP-TD-GRAPH-01",
+      "title": "Graphansicht",
+      "status": "open"
+    },
+    {
+      "id": "BP-TD-KONSOL-01",
+      "title": "Bestandsaufnahme der Threads",
+      "status": "open"
+    },
+    {
+      "id": "BP-OPS-02",
+      "title": "ThreadDesk-Server in Ordnung bringen (Repo threaddesk-server)",
+      "status": "open"
+    },
+    {
+      "id": "BP-PLAN-01",
+      "title": "Plan-Governance, AGENTS.md und TEAMPLAN.md anpassen",
+      "status": "open"
+    },
+    {
+      "id": "BP-TRUTH-01",
+      "title": "Ist-Stand-Register (diese Datei)",
+      "status": "in-progress"
+    },
+    {
+      "id": "BP-DOC-01",
+      "title": "READMEs und Lizenzen, Angaben aus STATUS.json",
+      "status": "open"
+    },
+    {
+      "id": "BP-DESIGN-01",
+      "title": "gemeinsames Designsystem",
+      "status": "open"
+    },
+    {
+      "id": "BP-HYG-01",
+      "title": "Arbeitsstände und Worktrees aufräumen",
+      "status": "open"
+    }
+  ],
+  "notes": [
+    "W10: README nennt 0.1.1rc1, GitHub hat rc1 (Pre-release) und rc2 nur als Entwurf, installiert ist 0.2.0 (unveroeffentlicht) plus zwei aeltere Apps.",
+    "W04: Der Serverstand 'nur Loopback, TLS 8446 aktiv' ist ueberholt; belegt ist oeffentliche Bindung ueber den Reverse-Proxy, TLS-Proxy aus.",
+    "Hier stehen bewusst keine Hostnamen oder Adressen; Details im privaten KiraBridge ops/netcup.json.",
+    "Status 'open' heisst: laut Bauplan offen, in diesem Register kein Abschlussbeleg."
+  ]
+}
