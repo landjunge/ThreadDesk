@@ -20,11 +20,7 @@
 
 <!-- AUTO-DOWNLOADS:START -->
 <p align="center">
-  <a href="https://github.com/landjunge/threaddesk/releases/download/v0.1.1rc1/ThreadDesk-macOS-AppleSilicon.dmg" title="ThreadDesk-macOS-AppleSilicon.dmg herunterladen / download"><img src="assets/readme/download-macos-apple-silicon.svg" alt="Download macOS Apple Silicon 0.1.1rc1" width="190" height="52"></a>
-  &nbsp;
-  <a href="https://github.com/landjunge/threaddesk/releases/download/v0.1.1rc1/ThreadDesk-macOS.dmg" title="ThreadDesk-macOS.dmg herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.1.1rc1" width="190" height="52"></a>
-  &nbsp;
-  <a href="https://github.com/landjunge/threaddesk/releases/download/v0.1.1rc1/ThreadDesk-Windows.exe" title="ThreadDesk-Windows.exe herunterladen / download"><img src="assets/readme/download-windows.svg" alt="Download Windows 0.1.1rc1" width="190" height="52"></a>
+  <a href="https://github.com/landjunge/threaddesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg" title="ThreadDesk-0.2.0-macOS-Intel.dmg herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.2.0" width="190" height="52"></a>
 </p>
 <!-- AUTO-DOWNLOADS:END -->
 
@@ -109,22 +105,23 @@ ThreadDesk merkt sich diesen Stand. Jeder Arbeitsbereich wird zu einem eigenen T
 
 ### Heutiger Stand – ehrlich
 
-**Aktuelle Desktop-Ausgabe: [0.1.1rc1](https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1)**,
-veröffentlicht am 2. Oktober 2026. Der Download oben führt zu dieser geprüften
-Ausgabe für Intel-Mac, Apple Silicon und Windows. [PR #63](https://github.com/landjunge/threaddesk/pull/63)
-ist nach `main` übernommen. Die vollständige Testsuite hat 554 Prüfungen zweimal
-ohne Fehler oder übersprungene Tests bestanden. Alle drei nativen Pakete haben
-ihren Selbsttest bestanden; Quell-Commit und Prüfsummen wurden vor der
-Veröffentlichung abgeglichen.
+**Aktuelle Desktop-Ausgabe: [0.2.0](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0)**,
+veröffentlicht am 9. November 2026, nur für **macOS Intel** (Tauri, x86_64).
+Der Download oben führt direkt zu `ThreadDesk-0.2.0-macOS-Intel.dmg`; Prüfsummen
+und Quell-Commit `fc0bef9` stehen im Release. Neu sind unter anderem
+Papierkorb, Aktivitätsgraph, Backup v3 und der dynamische MCP-Katalog – siehe
+[Release-Notizen](docs/RELEASE-NOTES-0.2.0.md). Vor der Veröffentlichung hat die
+vollständige Testsuite zweimal ohne Fehler bestanden; der eingebettete Server hat
+seinen Selbsttest im Paket bestanden.
 
-Diese Angabe stützt sich nur auf veröffentlichte GitHub-Releases. Der Quellstand
-auf `main` trägt bereits die Version 0.2.0, ist aber noch nicht veröffentlicht.
-Der Release-Entwurf 0.1.1rc2 ist ebenfalls nicht veröffentlicht. Lokal
-installierte Testpakete dieser Stände gelten nicht als Ausgabe.
+Für Apple Silicon und Windows gibt es in 0.2.0 kein Paket; dort bleibt
+[0.1.1rc1](https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1) vom
+2. Oktober 2026 der letzte Download. Der Release-Entwurf 0.1.1rc2 wurde nie
+veröffentlicht. Lokal installierte Testpakete gelten nicht als Ausgabe.
 
-Die Ausgabe bleibt ein Release-Kandidat: Der erste Start auf deinem konkreten
-Mac und die Qualität deines ausgewählten lokalen LLM müssen am jeweiligen Gerät
-geprüft werden. macOS-Pakete sind ad-hoc signiert, nicht Apple-notarisiert.
+Der erste Start auf deinem konkreten Mac und die Qualität deines ausgewählten
+lokalen LLM müssen am jeweiligen Gerät geprüft werden. macOS-Pakete sind
+ad-hoc signiert, nicht mit Developer-ID signiert und nicht Apple-notarisiert.
 
 | Bereich | Aktueller Stand |
 |---|---|
@@ -139,6 +136,7 @@ geprüft werden. macOS-Pakete sind ad-hoc signiert, nicht Apple-notarisiert.
 
 | Stand | Nachweis und Grenze |
 | --- | --- |
+| Desktop 0.2.0, 09.11.2026 | Veröffentlichter Download für macOS Intel (Tauri), gebaut aus `fc0bef9`; ad-hoc signiert, nicht notarisiert. |
 | Desktop 0.1.1rc1, 02.10.2026 | Historischer veröffentlichter Download und seine damaligen Paket-/Testbelege; unverändert, keine rückwirkende Lizenz- oder Designumschreibung. |
 | main-Basis `bba99b0`, 18.10.2026 | TD-C01/02 übernommen: revisionsgebundene Verwaltung und ausgestellte Handoff-/Laufbindung. |
 | Diese Quelländerung TD-C03/D01/R01 | Wissensführung/Wiedereinstieg, exakter Rückgabeabruf, begrenzter neuer Wissenskontext und selektiv abgeglichene Design-PR-Teile. Gezielt isoliert geprüft, kein neuer Desktoprelease und keine Nutzerinstallation umgestellt. |
@@ -148,13 +146,13 @@ offen. Aus `43dd13a` werden vorhandene UI- und passende Testteile übernommen;
 ältere Speicher-, Versions-, Lizenz- und Paketierungsstände werden nicht pauschal
 zurückgemischt. Die vollständige alte PR-Kette gilt dadurch nicht als übernommen.
 
-Published desktop 0.1.1rc1, current source and the actually configured Bridge peer
-are different states. Use a matching source installation and operator-configured
-MCP/Bridge permissions for the new tools. No claim of Internet team deployment,
-external source verification or a newly published native package is made.
-The version above refers only to published GitHub releases: `main` already
-reports 0.2.0, which is not yet published, and the 0.1.1rc2 release remains a
-draft. Locally installed test builds of these states are not releases.
+Published desktop 0.2.0 (macOS Intel only, built from `fc0bef9`), current
+source and the actually configured Bridge peer are different states. Use
+operator-configured MCP/Bridge permissions for the tools. No claim of Internet
+team deployment or external source verification is made. Apple Silicon and
+Windows have no 0.2.0 package; 0.1.1rc1 remains their latest download, and the
+0.1.1rc2 draft was never published. Locally installed test builds are not
+releases.
 
 ### Lokales Fenster und Neustart
 
@@ -454,7 +452,7 @@ keine Agenten. [Vertrag und vollständige MCP-Fähigkeitstabelle](docs/MCP.md).
 The current source provides revision-bound local administration through
 `thread_manage`, while preserving the existing MCP tools. Organizational links
 are metadata, not filesystem moves. Context management never starts agents.
-This source capability is separate from the published desktop 0.1.1rc1 download,
+This source capability is separate from the historical desktop 0.1.1rc1 download,
 the full historical design PR #66, and an actually configured KiraBridge peer.
 Internet team operation remains a separate server/identity deployment decision.
 
