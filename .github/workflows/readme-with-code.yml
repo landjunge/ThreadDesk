@@ -1,0 +1,49 @@
+name: README with code
+# Checks product source updates include README text in the same changeset.
+# No generated claims, layout change, push, or extra PR.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  documentation:
+    name: README with code
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Check README alongside product changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          python3 - <<'PY'
+          import os, subprocess, sys
+          sources = ('src/', 'packaging/', 'site/', 'start.py', 'pyproject.toml')
+          required = ('README.md',)
+          base = os.environ.get("BASE_SHA","")
+          if not base or set(base) == {"0"}:
+              print("Missing comparison base; no source changes asserted.")
+              sys.exit(0)
+          try:
+              subprocess.run(["git","cat-file","-e",base+"^{commit}"],check=True,capture_output=True)
+              changed = subprocess.check_output(["git","diff","--name-only",base,"HEAD"],text=True).splitlines()
+          except (subprocess.CalledProcessError, OSError) as e:
+              print("Cannot verify README drift:",e)
+              sys.exit(1)
+          product = [p for p in changed if any(p == x or (x.endswith("/") and p.startswith(x)) for x in sources)]
+          if not product:
+              print("No product source changed; no README update required.")
+              sys.exit(0)
+          missing = [p for p in required if p not in changed]
+          if missing:
+              print("::error::Code changed without README update: "+", ".join(missing))
+              print("Update relevant feature/status descriptions in the SAME code change, preserving design.")
+              print("Source files:", ", ".join(product[:20]))
+              sys.exit(1)
+          print("README files accompanied this code change; semantic accuracy requires review.")
+          PY
