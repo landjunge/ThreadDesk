@@ -1,10 +1,21 @@
 name: Refresh README downloads
+# Keeps the AUTO-DOWNLOADS buttons in README.md / README.de.md pointing at the
+# newest published release files. Same script in KiraBridge, ThreadDesk and
+# 4AllPass; only the runner and the way the change reaches main differ.
+#  - release events: immediate refresh after publishing, editing or deleting
+#  - schedule: safety net for files uploaded after the release was published
+#  - push of the updater itself: proves a changed updater on main right away
 on:
   release:
     types: [published, edited, deleted]
   schedule:
-    - cron: '37 5 * * *'
+    - cron: '23 */6 * * *'
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/update_readme_downloads.py
+      - .github/workflows/readme-downloads.yml
 permissions:
   contents: write
 concurrency:
@@ -13,16 +24,45 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Update badges from published release assets
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check the updater rules
+        run: python3 -I scripts/update_readme_downloads.py --self-test
+      - name: Refresh, verify and push to main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 scripts/update_readme_downloads.py
-      - name: Commit changed README and badges only
+          # Scheduled events carry no repository payload; main is the default branch.
+          BASE_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
         run: |
-          git add -A -- README.md assets/readme
-          if ! git diff --cached --quiet; then
-            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "docs: refresh download buttons [skip ci]"
-            git push
-          fi
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # main may move while this job runs: regenerate on the newest main
+          # and retry instead of rebasing a stale result.
+          for attempt in 1 2 3; do
+            git fetch --quiet origin "$BASE_BRANCH"
+            git reset --quiet --hard "origin/$BASE_BRANCH"
+            python3 -I scripts/update_readme_downloads.py
+            git add -A
+            # Only generated files may be committed; anything else stops the job.
+            unexpected=$(git diff --cached --name-only \
+              | grep -v -E '^(README(\.de)?\.md|assets/readme/download-[a-z0-9-]+\.svg)$' || true)
+            if [ -n "$unexpected" ]; then
+              echo "Unexpected changes, nothing committed: $unexpected" >&2
+              exit 1
+            fi
+            if git diff --cached --quiet; then
+              echo "Download buttons are already current."
+              exit 0
+            fi
+            git commit --quiet -m "docs: refresh download buttons [skip ci]"
+            if git push --quiet origin "HEAD:$BASE_BRANCH"; then
+              echo "Pushed refreshed download buttons."
+              exit 0
+            fi
+            echo "main moved during attempt $attempt; retrying on the new main."
+            sleep $((attempt * 10))
+          done
+          echo "Could not push after 3 attempts." >&2
+          exit 1
