@@ -24,7 +24,8 @@ def specifications():
     from threaddesk.services.mcp import TOOLS, McpBridge
     for tool in TOOLS:
         name = tool["name"]
-        if name in {"command_catalog", "command_invoke", "command_query"}:
+        # Owner search stays off HTTP/Room: only the unscoped local stdio bridge offers it.
+        if name in {"command_catalog", "command_invoke", "command_query", "search_threads"}:
             continue
         if name not in _DATA | _NATIVE | _READ | _EXTERNAL:
             raise RuntimeError("Legacy command needs an effect review: " + name)

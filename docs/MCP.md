@@ -331,6 +331,7 @@ overwrite fallback.
 | Issued source / ausgestellter Stand | `issue_handoff`, `get_issued_handoff`, `bind_handoff_run` | No |
 | Bound questions / Rückfragen | `record_handoff_question`, `answer_handoff_question` | No; recorded answer is not agent resume |
 | Knowledge / Wiedereinstieg | `knowledge_manage`, `get_reentry` | No |
+| Owner search / Suche | read-only `search_threads` | No; owner-enabled local search (`threaddesk search --enable`), local stdio only |
 | Return inbox / Nutzerentscheidung | `import_return`, `list_returns`, `get_return`, `review_return` | No |
 | Existing Gnom binding / callback | `bind_gnom_job`, `receive_gnom_callback`, `list_gnom_jobs` | No |
 | Local gate / board | `check_gate`, `dashboard` | No; ThreadDesk LocalGate is not the TollGate product |
