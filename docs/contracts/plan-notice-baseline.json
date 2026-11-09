@@ -1,0 +1,54 @@
+{
+  "KiraBridge": [
+    "docs/BRAILLE-INSTALLER-PLAN-20261026.md",
+    "docs/DEVELOPMENT_PLAN.md",
+    "docs/MACOS-PLAN-COMPLETION-20261031.md",
+    "docs/NATIVE-KEYBOARD-PLAN-20261102.md",
+    "docs/UNIVERSAL-BRIDGE-PLAN-20261026.md",
+    "docs/plans/KIRABRIDGE-ABSCHLUSSPLAN-20261022.md",
+    "docs/seven-tools-build-20261018-1833/MASTERPLAN.md"
+  ],
+  "threaddesk": [
+    "docs/plans/PROJECT-PLAN-20261106.md",
+    "docs/plans/THREADDESK-KIRABRIDGE-PLAN-20261026.md"
+  ],
+  "4AllPass": [
+    "docs/grok-build-plan.md",
+    "docs/licensing-plan.md",
+    "docs/plan-rest.md"
+  ],
+  "tollgate": [
+    "docs/TEAM_PLAN_MODULAR_REWORK.md"
+  ],
+  "agent-authority-lab": [
+    "docs/OBSERVER-REAL-RUN-PROTOTYPE-PLAN-2026-10-07.md",
+    "docs/PLAN-A1-LINUX-EXPERIMENT-RESULT-20261012.md",
+    "docs/PLAN-A1-LINUX-EXPERIMENT-SPEC-20261012.md",
+    "docs/PLAN-A1-LINUX-PREFLIGHT-RESULT-20261012.md",
+    "docs/PLAN-A1-LINUX-PREFLIGHT-SPEC-20261012.md",
+    "docs/PLAN-A1-LINUX-PROTOKOLL-ENTWURF-20261012.md",
+    "docs/PLAN-A1-LINUX-VM-AUFTRAG-20261012.md",
+    "docs/PLAN-A1-NATIVE-RESULT-20261011.md",
+    "docs/PLAN-A1-NATIVE-SPEC-20261011.md",
+    "docs/PLAN-A1-SPEC-20261011.md",
+    "docs/PLAN-A2-LINUX-IDENTITY-RESULT-20261012.md",
+    "docs/PLAN-A2-LINUX-IDENTITY-SPEC-20261012.md",
+    "docs/PLAN-A2-STATUS-20261011.md",
+    "docs/PLAN-A3-LINUX-REAL-AGENTS-RESULT-20261012.md",
+    "docs/PLAN-A3-LINUX-REAL-AGENTS-SPEC-20261012.md",
+    "docs/PLAN-A31-SESSION-JOB-RESULT-20261012.md",
+    "docs/PLAN-A31-SESSION-JOB-SPEC-20261012.md",
+    "docs/PLAN-A4-COMPLETION-RESULT-20261012.md",
+    "docs/PLAN-A4-COMPLETION-SPEC-20261012.md",
+    "docs/PLAN-A4-DELEGATION-RESULT-20261012.md",
+    "docs/PLAN-A4-DELEGATION-SPEC-20261012.md",
+    "docs/PLAN-A4-FINAL-RESULT-20261012.md",
+    "docs/PLAN-ABC-AUSFUEHRUNG-20261011.md",
+    "docs/PLAN-ABC-FORSCHUNGSPLAN-20261011.md",
+    "docs/PLAN-B1-SPEC-20261011.md",
+    "docs/PLAN-B2-ABNAHME-KLARSTELLUNG-20261011.md",
+    "docs/PLAN-B2-SPEC-20261011.md",
+    "docs/PLAN-C1-SPEC-20261011.md",
+    "docs/PLAN-P1-FIELD-MAP-2026-10-09.md"
+  ]
+}

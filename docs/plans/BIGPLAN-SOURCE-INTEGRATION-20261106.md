@@ -1,3 +1,5 @@
+> **Nicht maßgeblich. Maßgeblich ist ThreadDesk-Thread `188ce4729a62` (Nutzerbeschluss 09.11.2026). Diese Datei ist Archiv bzw. technischer Spiegel.**
+
 # Big-Plan-Quellenintegration / Big Plan source integration
 
 6. November 2026. Nutzerauftrag: GitHub mit den vorhandenen Big-Plan-Arbeitsständen

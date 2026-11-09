@@ -3,7 +3,7 @@
 ## Rahmen: Fünf-Produkte-Big-Plan (ab 08.11.2026)
 
 - ThreadDesk-Arbeit erfolgt im Rahmen des gemeinsamen Big Plans für die fünf Produkte KiraBridge, ThreadDesk, 4AllPass, TollGate und Agent Authority. Pakete für ThreadDesk tragen dort IDs wie `BP-TD-*`, `BP-PLAN-01` oder `TD-P*`.
-- Kanonischer Plan: `docs/plans/BIGPLAN-BAUPLAN-20261108.md` im KiraBridge-Repo (nicht öffentlich). Dort lesen; Planinhalte, Serverangaben und interne Befunde nicht in dieses öffentliche Repo kopieren.
+- Kanonischer Plan: ThreadDesk-Thread `188ce4729a62` (Nutzerbeschluss 09.11.2026; ersetzt die frühere Angabe `docs/plans/BIGPLAN-BAUPLAN-20261108.md` im KiraBridge-Repo, die nur noch Archiv bzw. Spiegel ist). Dort lesen; Planinhalte, Serverangaben und interne Befunde nicht in dieses öffentliche Repo kopieren.
 - `PLAN.md` und `docs/TEAMPLAN.md` sind historisch. Pläne unter `docs/plans/` sind Teilpläne. Bei Widerspruch gilt der Big Plan.
 - Die Regeln unten bleiben gültig. Insbesondere werden KiraBridge-Pakete nicht in diesem Repo umgesetzt, sondern im KiraBridge-Repo geführt; KiraBridge ist für ThreadDesk die Gegenstelle und der Übergabeweg.
 
@@ -43,3 +43,10 @@ Der anschließende Nutzerauftrag autorisiert die schrittweise Umsetzung von Bibl
 ## README-Design der Produktfamilie (verbindlich ab 08.11.2026)
 
 Jedes README eines Familien-Tools (KiraBridge, ThreadDesk, 4AllPass, TollGate, Agent Authority, BlockDesign und jedes neue Tool) bekommt den freigegebenen Kopf aus [docs/contracts/readme-header-v1.md](docs/contracts/readme-header-v1.md): großes zentrales Logo, Icon-Leiste zu allen anderen Tools, zweifarbige Wortmarke in Markenfarbe, Download-Buttons als Direktlinks auf die Installationsdatei. Neues Tool oder neue Icons: Katalog `docs/contracts/readme-header-v1.json` ergänzen und `scripts/readme_header.py` (`icons` → `apply` in allen Repos → `check`) verwenden, nicht neu gestalten.
+
+## Plan-Governance (Nutzerbeschluss 09.11.2026)
+
+- Planänderungen werden nur in ThreadDesk gemacht (Thread `188ce4729a62`). GitHub-Pläne sind Archiv bzw. technischer Spiegel und werden nicht als führende Kopie bearbeitet.
+- Neue Plan-Dateien (`*PLAN*.md`, `*BAUPLAN*`, `*GESAMTPLAN*`) nur mit dem Kopfhinweis: „Nicht maßgeblich. Maßgeblich ist ThreadDesk-Thread `188ce4729a62` (Nutzerbeschluss 09.11.2026). Diese Datei ist Archiv bzw. technischer Spiegel.“
+- Prüfung: `python scripts/plan_notice_check.py` (meldet Plan-Dateien in den Produkt-Repos ohne Hinweis).
+- Die ChatGPT-Bibliothek bleibt als Backup unverändert. Nichts eigenmächtig löschen.
