@@ -28,9 +28,11 @@
 
 **ThreadDesk hilft dir, bei deinen Ideen und Projekten den Überblick zu behalten.** Zu Hause kannst du bereits mit der KI sprechen und dabei Gedanken, Notizen, Dateien und Aufgaben für deine Projekte festhalten. Wenn du später weitermachst, findest du deinen bisherigen Stand wieder, statt von vorn beginnen zu müssen.
 
-ThreadDesk hält den Stand deiner Projekte fest. Wenn mehrere KIs beteiligt sind, bleiben Aufgaben und Ergebnisse geordnet; über KiraBridge lassen sich Arbeiten an passende KI-Werkzeuge weitergeben. Eine allgemeine Zusammenarbeit mehrerer Menschen ist damit noch nicht als fertig getestete Funktion belegt.
+ThreadDesk hält den Stand deiner Projekte fest. Wenn mehrere KIs beteiligt sind, bleiben Aufgaben und Ergebnisse geordnet; über KiraBridge lassen sich Arbeiten an passende KI-Werkzeuge weitergeben.
 
-**Als Nächstes kommt das Gespräch unterwegs dazu.** Die Erweiterung wird gerade aufgebaut: Unterwegs Ideen besprechen oder festhalten und zu Hause am selben Projekt weiterarbeiten, mit der vorgesehenen Verbindung und Synchronisierung. **Die Sprachbedienung zu Hause funktioniert bereits; das Unterwegs-Gespräch mit durchgängiger Synchronisierung ist noch nicht als fertige Funktion freigegeben.**
+**Als Nächstes wird das Gespräch unterwegs ausgebaut.** Du sollst unterwegs Ideen besprechen und festhalten können und später zu Hause am selben Projekt weiterarbeiten. Die dafür nötige Verbindung und Synchronisierung sind noch im Aufbau.
+
+**Erst danach ist Teamarbeit geplant:** Mehrere Menschen sollen gemeinsam an einem Projekt arbeiten können. Diese Funktion ist noch nicht fertiggestellt.
 
 **Server-Version / Server edition (Stand 10. November 2026):** Neben der lokalen Desktop-Anwendung existiert `threaddesk-server` als separates, privates Server-Projekt. Laut dem in ThreadDesk dokumentierten Abnahmebericht vom **7. November** wurde es auf dem Debian-V-Server lokal an Loopback betrieben (Dienste auf `127.0.0.1:8766` und `127.0.0.1:8446`); Authentifizierung, Benutzertrennung, bidirektionaler Dateisync, Konfliktbehandlung, Fortsetzen sowie Backup/Wiederherstellung wurden dort gezielt geprüft. Das ist **kein Beleg für einen öffentlich erreichbaren Dienst**, einen neuen Desktop-Download oder die vollständige Live-Kopplung mit KiraBridge. Offen sind unter anderem öffentliche DNS-/HTTPS-Anbindung, grafischer Fernzugang, neues Desktop-Paket und KiraBridge-Livekopplung. [Server-Repository (privat; Zugriff erforderlich)](https://github.com/landjunge/threaddesk-server).
 
