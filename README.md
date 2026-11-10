@@ -28,7 +28,7 @@
 
 **ThreadDesk hilft dir, bei deinen Ideen und Projekten den Überblick zu behalten.** Zu Hause kannst du bereits mit der KI sprechen und dabei Gedanken, Notizen, Dateien und Aufgaben für deine Projekte festhalten. Wenn du später weitermachst, findest du deinen bisherigen Stand wieder, statt von vorn beginnen zu müssen.
 
-Du kannst Projekte auch mit anderen Menschen besprechen und gemeinsam daran arbeiten. Wenn mehrere KIs beteiligt sind, hält ThreadDesk Aufgaben und Ergebnisse geordnet; über KiraBridge lassen sich Arbeiten an passende KI-Werkzeuge weitergeben.
+ThreadDesk hält den Stand deiner Projekte fest. Wenn mehrere KIs beteiligt sind, bleiben Aufgaben und Ergebnisse geordnet; über KiraBridge lassen sich Arbeiten an passende KI-Werkzeuge weitergeben. Eine allgemeine Zusammenarbeit mehrerer Menschen ist damit noch nicht als fertig getestete Funktion belegt.
 
 **Als Nächstes kommt das Gespräch unterwegs dazu.** Die Erweiterung wird gerade aufgebaut: Unterwegs Ideen besprechen oder festhalten und zu Hause am selben Projekt weiterarbeiten, mit der vorgesehenen Verbindung und Synchronisierung. **Die Sprachbedienung zu Hause funktioniert bereits; das Unterwegs-Gespräch mit durchgängiger Synchronisierung ist noch nicht als fertige Funktion freigegeben.**
 
