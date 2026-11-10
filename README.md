@@ -26,11 +26,11 @@
 
 <p align="center"><strong>Ein Arbeitsplatz, der den Stand deiner KI-Projekte behält.</strong></p>
 
-**ThreadDesk hilft dir, bei deinen Ideen und Projekten den Überblick zu behalten.** Du kannst Gedanken, Gespräche, Notizen, Dateien und Aufgaben an einem Ort sammeln. Auch wenn du unterwegs bist oder mit anderen Menschen über eine Idee sprichst, kannst du Gedanken festhalten und später wieder aufgreifen.
+**ThreadDesk hilft dir, bei deinen Ideen und Projekten den Überblick zu behalten.** Zu Hause kannst du bereits mit der KI sprechen und dabei Gedanken, Notizen, Dateien und Aufgaben für deine Projekte festhalten. Wenn du später weitermachst, findest du deinen bisherigen Stand wieder, statt von vorn beginnen zu müssen.
 
-Du kannst gemeinsam mit anderen an Projekten arbeiten und den Stand nachvollziehen. Auch bei der Zusammenarbeit mit mehreren KIs bleiben Aufgaben und Ergebnisse geordnet. Über KiraBridge lassen sich Aufträge an passende KI-Werkzeuge weitergeben. **ThreadDesk hilft dir, dort weiterzumachen, wo du aufgehört hast.**
+Du kannst Projekte auch mit anderen Menschen besprechen und gemeinsam daran arbeiten. Wenn mehrere KIs beteiligt sind, hält ThreadDesk Aufgaben und Ergebnisse geordnet; über KiraBridge lassen sich Arbeiten an passende KI-Werkzeuge weitergeben.
 
-Die Zusammenarbeit mit anderen Geräten und Menschen hängt von der eingerichteten Verbindung ab; ein unterwegs verfügbares, öffentliches Cloud-Angebot ist noch nicht allgemein freigeschaltet.
+**Als Nächstes kommt das Gespräch unterwegs dazu.** Die Erweiterung wird gerade aufgebaut: Unterwegs Ideen besprechen oder festhalten und zu Hause am selben Projekt weiterarbeiten, mit der vorgesehenen Verbindung und Synchronisierung. **Die Sprachbedienung zu Hause funktioniert bereits; das Unterwegs-Gespräch mit durchgängiger Synchronisierung ist noch nicht als fertige Funktion freigegeben.**
 
 **Server-Version / Server edition (Stand 10. November 2026):** Neben der lokalen Desktop-Anwendung existiert `threaddesk-server` als separates, privates Server-Projekt. Laut dem in ThreadDesk dokumentierten Abnahmebericht vom **7. November** wurde es auf dem Debian-V-Server lokal an Loopback betrieben (Dienste auf `127.0.0.1:8766` und `127.0.0.1:8446`); Authentifizierung, Benutzertrennung, bidirektionaler Dateisync, Konfliktbehandlung, Fortsetzen sowie Backup/Wiederherstellung wurden dort gezielt geprüft. Das ist **kein Beleg für einen öffentlich erreichbaren Dienst**, einen neuen Desktop-Download oder die vollständige Live-Kopplung mit KiraBridge. Offen sind unter anderem öffentliche DNS-/HTTPS-Anbindung, grafischer Fernzugang, neues Desktop-Paket und KiraBridge-Livekopplung. [Server-Repository (privat; Zugriff erforderlich)](https://github.com/landjunge/threaddesk-server).
 
