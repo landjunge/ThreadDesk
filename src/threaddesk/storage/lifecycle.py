@@ -27,6 +27,15 @@ class LifecycleStore:
         entry = self.get_object_lifecycle(kind, object_id)
         return entry is not None and entry["state"] in {"trashed", "purged"}
 
+    def trashed_ids(self, kind: str) -> set[str]:
+        """Every ``object_in_trash`` id of one kind from a single lifecycle read."""
+        newest = {}
+        for item in self.list_trash_entries():
+            current = newest.get(item["object_id"])
+            if item["kind"] == kind and (current is None or current["generation"] < item["generation"]):
+                newest[item["object_id"]] = item
+        return {key for key, item in newest.items() if item["state"] in {"trashed", "purged"}}
+
     def require_live_object(self, kind: str, object_id: str) -> None:
         if self.object_in_trash(kind, object_id):
             raise ManagementError("object_in_trash", "Objekt befindet sich im Papierkorb.",

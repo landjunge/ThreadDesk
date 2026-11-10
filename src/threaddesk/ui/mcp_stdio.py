@@ -72,6 +72,9 @@ def serve(svc: ThreadService | None = None) -> None:
     bridge = McpBridge(svc or ThreadService())
     from threaddesk.services.library_runtime import LibraryRuntime
     runtime = LibraryRuntime(lambda: type(bridge.svc.store)(bridge.svc.store.workspace_path))
+    from threaddesk.services.library_refresh import deferred_to_runtime
+    deferral = deferred_to_runtime(bridge.svc.store.workspace_path)
+    deferral.__enter__()
     runtime.start()
     # Only the main thread touches the bridge/store (SQLite connections are
     # thread-bound). A bounded reader queue allows live catalogue checks while
@@ -137,6 +140,7 @@ def serve(svc: ThreadService | None = None) -> None:
                 write({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
     finally:
         runtime.stop()
+        deferral.__exit__(None, None, None)
 
 
 def main() -> None:

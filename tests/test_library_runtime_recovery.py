@@ -157,3 +157,62 @@ def test_runtime_does_not_follow_linked_records_directory(existing_library):
     assert {path.name: path.read_bytes() for path in preserved.iterdir()} == before
     with pytest.raises(NotFound):
         store.get_node(record["id"])
+
+
+def test_serial_mcp_write_defers_full_rebuild_to_runtime(existing_library, monkeypatch):
+    """A stdio write answers without a full index rebuild; the runtime repairs it."""
+    from threaddesk.services.library_refresh import deferred_to_runtime
+
+    backend, store, _, record = existing_library
+    index = LibraryIndex(store.workspace_path / "library-files")
+    index.rebuild([record], index.root / "blobs", store=store)
+    thread = ThreadService(store).create("Deferred index")
+    calls = []
+    original = LibraryIndex.rebuild
+    monkeypatch.setattr(
+        LibraryIndex, "rebuild", lambda self, *a, **k: calls.append(1) or original(self, *a, **k)
+    )
+    bridge = McpBridge(ThreadService(store))
+    with deferred_to_runtime(store.workspace_path):
+        for number in range(3):
+            current = bridge.call("get_thread", {"id": thread.id})["result"]
+            written = bridge.call("thread_manage", {
+                "operation_id": f"deferred-{number}", "action": "set_note", "id": thread.id,
+                "expected_revision": current["revision"],
+                "data": {"append": True, "text": f"marker-{number}"},
+            })
+            assert written["ok"], written
+        assert calls == [] and index.status()["status"] == "stale"
+        LibraryRuntime(lambda: backend(store.workspace_path)).tick()
+    # Three writes, one coalesced rebuild, and the index is current again.
+    assert calls == [1] and index.status()["status"] == "ready"
+    notes = bridge.call("get_thread", {"id": thread.id})["result"]["notes"]
+    assert [notes.count(f"marker-{n}") for n in range(3)] == [1, 1, 1]
+    # Without a runtime the write path still rebuilds synchronously.
+    current = bridge.call("get_thread", {"id": thread.id})["result"]
+    bridge.call("thread_manage", {
+        "operation_id": "direct", "action": "set_note", "id": thread.id,
+        "expected_revision": current["revision"], "data": {"append": True, "text": "x"},
+    })
+    assert calls == [1, 1] and index.status()["status"] == "ready"
+
+
+def test_thread_listing_reads_lifecycle_once(tmp_path, monkeypatch):
+    store = JsonStore(tmp_path / "workspace")
+    service = ThreadService(store)
+    kept, hidden = service.create("kept"), service.create("hidden")
+    for _ in range(3):
+        service.create("filler")
+    from threaddesk.services.trash import TrashService
+
+    current = store.get_thread(hidden.id)
+    TrashService(store).move(kind="thread", object_id=hidden.id,
+                             expected_revision=current.revision, operation_id="hide")
+    reads = []
+    original = type(store).list_trash_entries
+    monkeypatch.setattr(
+        type(store), "list_trash_entries", lambda self: reads.append(1) or original(self)
+    )
+    listed = {thread.id for thread in store.list_threads()}
+    assert kept.id in listed and hidden.id not in listed and len(reads) == 1
+    assert listed == {t.id for t in store.list_threads()} and len(reads) == 2
