@@ -26,9 +26,11 @@
 
 <p align="center"><strong>Ein Arbeitsplatz, der den Stand deiner KI-Projekte behält.</strong></p>
 
-**ThreadDesk hilft dir, bei deinen Ideen und Projekten den Überblick zu behalten.** Du kannst Gedanken, Notizen, Dateien und Aufgaben an einem Ort sammeln. Wenn du später weitermachst, findest du schnell wieder, was schon erledigt wurde und was als Nächstes ansteht.
+**ThreadDesk hilft dir, bei deinen Ideen und Projekten den Überblick zu behalten.** Du kannst Gedanken, Gespräche, Notizen, Dateien und Aufgaben an einem Ort sammeln. Auch wenn du unterwegs bist oder mit anderen Menschen über eine Idee sprichst, kannst du Gedanken festhalten und später wieder aufgreifen.
 
-Auch wenn du mit mehreren KIs arbeitest, bleibt der gemeinsame Projektstand nachvollziehbar. Über KiraBridge kannst du Aufgaben an passende KI-Werkzeuge weitergeben. **ThreadDesk merkt sich den Stand, damit du nicht jedes Mal von vorn anfangen musst.**
+Du kannst gemeinsam mit anderen an Projekten arbeiten und den Stand nachvollziehen. Auch bei der Zusammenarbeit mit mehreren KIs bleiben Aufgaben und Ergebnisse geordnet. Über KiraBridge lassen sich Aufträge an passende KI-Werkzeuge weitergeben. **ThreadDesk hilft dir, dort weiterzumachen, wo du aufgehört hast.**
+
+Die Zusammenarbeit mit anderen Geräten und Menschen hängt von der eingerichteten Verbindung ab; ein unterwegs verfügbares, öffentliches Cloud-Angebot ist noch nicht allgemein freigeschaltet.
 
 **Server-Version / Server edition (Stand 10. November 2026):** Neben der lokalen Desktop-Anwendung existiert `threaddesk-server` als separates, privates Server-Projekt. Laut dem in ThreadDesk dokumentierten Abnahmebericht vom **7. November** wurde es auf dem Debian-V-Server lokal an Loopback betrieben (Dienste auf `127.0.0.1:8766` und `127.0.0.1:8446`); Authentifizierung, Benutzertrennung, bidirektionaler Dateisync, Konfliktbehandlung, Fortsetzen sowie Backup/Wiederherstellung wurden dort gezielt geprüft. Das ist **kein Beleg für einen öffentlich erreichbaren Dienst**, einen neuen Desktop-Download oder die vollständige Live-Kopplung mit KiraBridge. Offen sind unter anderem öffentliche DNS-/HTTPS-Anbindung, grafischer Fernzugang, neues Desktop-Paket und KiraBridge-Livekopplung. [Server-Repository (privat; Zugriff erforderlich)](https://github.com/landjunge/threaddesk-server).
 
