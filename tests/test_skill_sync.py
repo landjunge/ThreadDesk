@@ -121,3 +121,21 @@ def test_invalid_frontmatter_is_refused(env):
     with pytest.raises(sync.SyncError, match="beta"):
         sync.publish(src, ws, root, home)
     assert not (root / "current").exists()
+
+
+def test_dropped_target_entry_is_stashed_and_rollback_restores_it(env):
+    ws, home, root, src = env
+    sync.publish(src, ws, root, home)
+    targets = json.loads((src / "targets.json").read_text())
+    targets["codex"]["skills"] = ["beta"]
+    (src / "targets.json").write_text(json.dumps(targets), encoding="utf-8")
+    (home / ".codex/skills/foreign").mkdir()
+    result = sync.publish(src, ws, root, home)
+    assert result["release"] == 2 and result["changed"] == ["-codex/alpha"]
+    assert not (home / ".codex/skills/alpha").exists()
+    assert (home / ".codex/skills/foreign").is_dir()
+    assert sync.status(root, home)["problems"] == []
+    sync.rollback(root, home)
+    assert os.readlink(home / ".codex/skills/alpha") == str(root / "current/alpha")
+    assert sync.status(root, home)["problems"] == []
+    assert sync.export(ws, root, home, 2)["changed"] == ["-codex/alpha"]
