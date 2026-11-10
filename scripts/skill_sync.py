@@ -11,7 +11,9 @@ ROOT/backups/STAMP first; `restore STAMP` puts it back.
 
 Entries per CLI come from targets.json in the source: mode "link" is a
 directory symlink (Codex, Grok load it), mode "entry" a generated small
-SKILL.md with the canonical frontmatter (Claude).
+SKILL.md with the canonical frontmatter (Claude). An entry this script placed
+whose skill targets.json no longer lists for that directory is moved to the
+backup as well (rollback to a release that lists it places it again).
 
     PYTHONPATH=src python scripts/skill_sync.py publish DIR   # import + export
     python scripts/skill_sync.py export [--release N]
@@ -247,9 +249,34 @@ def _backup_dir(root: Path) -> Path:
     return root / "backups" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
 
 
+def _orphans(root: Path, home: Path, targets: dict) -> list[tuple[str, Path]]:
+    """Entries this script placed (pointing at ROOT/current) that targets.json no longer lists."""
+    listed: dict[Path, set] = {}
+    for spec in targets.values():
+        listed.setdefault(home / spec["dir"], set()).update(spec["skills"])
+    found = []
+    for cli, spec in targets.items():
+        base = home / spec["dir"]
+        for path in sorted(base.iterdir()) if base.is_dir() else []:
+            if path.name in listed[base]:
+                continue
+            if path.is_symlink():
+                managed = os.readlink(path) == str(root / "current" / path.name)
+            else:
+                entry = path / "SKILL.md"
+                managed = (path.is_dir() and os.listdir(path) == ["SKILL.md"]
+                           and f"`{root}/current/{path.name}/SKILL.md`" in entry.read_text(encoding="utf-8"))
+            if managed:
+                found.append((f"{cli}/{path.name}", path))
+    return found
+
+
 def install(root: Path, home: Path) -> list[str]:
     targets = json.loads((root / "current" / "targets.json").read_text(encoding="utf-8"))
     backup, changed = _backup_dir(root), []
+    for key, path in _orphans(root, home, targets):  # dropped from targets.json: stash, restorable
+        _stash(path, backup, key)
+        changed.append(f"-{key}")
     for cli, spec in targets.items():
         base = home / spec["dir"]
         base.mkdir(parents=True, exist_ok=True)
@@ -304,6 +331,7 @@ def status(root: Path, home: Path) -> dict:
                     problems.append(f"{cli}/{skill}: SKILL.md unreadable")
             except (SyncError, OSError) as exc:
                 problems.append(f"{cli}/{skill}: {exc}")
+    problems += [f"{key}: not in targets.json" for key, _ in _orphans(root, home, targets)]
     return {"current": current, "problems": problems}
 
 
