@@ -32,25 +32,15 @@
 
 Zur Familie gehören **KiraBridge** (Verbindung und direkte Computersteuerung), **ThreadDesk** (Projekte und Arbeitsstände), **4AllPass** (Zugänge und Schlüssel), **TollGate** (Nutzungsgrenzen und Budgets) und **Agent Authority** (ausschließlich lesende Beobachtung und Nachweise). Die Werkzeuge bleiben eigenständig. Ihre gemeinsame Bedienung durch Sprache ist ein Entwicklungsziel, keine Behauptung, dass heute schon jede Verbindung vollständig funktioniert.
 
-## Warum ThreadDesk auch für barrierearme Bedienung wichtig ist
+## Projekte und Wissen über Sprache zugänglich machen
 
-Wer eine Maus oder Tastatur nur eingeschränkt bedienen kann, soll Gedanken und Aufgaben möglichst einfach per Sprache festhalten und später wiederfinden können. Zusammen mit KiraBridge kann der Weg von einer gesprochenen Idee zur dokumentierten Notiz oder Projektaufgabe kürzer werden. Besonders wichtig sind dabei nachvollziehbare Rückmeldungen: Was wurde gespeichert, was ist noch offen und an welcher Stelle soll die Arbeit weitergehen? ThreadDesk bewahrt den Kontext; KiraBridge vermittelt die Bedienung. Eine erfolgreiche Ende-zu-Ende-Bedienung hängt von den tatsächlich eingerichteten Integrationen und Berechtigungen ab.
+**Im Mittelpunkt steht die natürliche Sprachbedienung der gesamten Werkzeugfamilie für alle Nutzenden.** ThreadDesk bewahrt Gedanken, Dokumente, Aufgaben, Arbeitsstände und ihre Zusammenhänge, damit sich Projekte später ohne Kontextverlust fortsetzen lassen. Zusammen mit KiraBridge soll aus einem gesprochenen Gedanken eine dokumentierte Notiz oder Aufgabe werden. Entscheidend sind verständliche Rückmeldungen: Was ist gespeichert, was bleibt offen und wo geht es weiter? KiraBridge vermittelt die Steuerung; ThreadDesk hält den Kontext fest.
 
-Die Entwicklung ist nicht abgeschlossen: Sprachabläufe, Zuverlässigkeit, Geschwindigkeit, Synchronisation und spätere Zusammenarbeit mehrerer Menschen werden schrittweise verbessert. Teamarbeit ist ein Ausbauziel; dokumentierte lokale und Serverfunktionen dürfen nicht mit einer bereits fertig ausgerollten Teamplattform verwechselt werden. Wichtig bleibt, dass auch bei längeren Projekten das Ergebnis prüfbar ist und der Mensch die Kontrolle behält.
+**Barrierearme Bedienung ist dabei ein mitgedachter zusätzlicher Nutzen, nicht das alleinige Hauptziel.** Wer Maus oder Tastatur nur eingeschränkt nutzen kann, profitiert besonders von Sprache, ebenso Menschen, die einfach effizienter oder freihändig arbeiten möchten. Die tatsächliche Ende-zu-Ende-Bedienung hängt von eingerichteten Integrationen und Berechtigungen ab.
 
-**ThreadDesk hilft dir, bei deinen Ideen und Projekten den Überblick zu behalten.** Zu Hause kannst du bereits mit der KI sprechen und dabei Gedanken, Notizen, Dateien und Aufgaben für deine Projekte festhalten. Wenn du später weitermachst, findest du deinen bisherigen Stand wieder, statt von vorn beginnen zu müssen.
+Sprachabläufe, Zuverlässigkeit, Geschwindigkeit und Synchronisation werden weiter verbessert. Die Zusammenarbeit mehrerer Menschen ist geplant, aber noch keine vollständig ausgerollte Teamplattform. Ergebnisse müssen überprüfbar bleiben und die menschliche Kontrolle erhalten.
 
-ThreadDesk hält den Stand deiner Projekte fest. Wenn mehrere KIs beteiligt sind, bleiben Aufgaben und Ergebnisse geordnet; über KiraBridge lassen sich Arbeiten an passende KI-Werkzeuge weitergeben.
-
-**Als Nächstes wird das Gespräch unterwegs ausgebaut.** Du sollst unterwegs Ideen besprechen und festhalten können und später zu Hause am selben Projekt weiterarbeiten. Die dafür nötige Verbindung und Synchronisierung sind noch im Aufbau.
-
-**Erst danach ist Teamarbeit geplant:** Mehrere Menschen sollen gemeinsam an einem Projekt arbeiten können. Diese Funktion ist noch nicht fertiggestellt.
-
-**Server-Version / Server edition (Stand 10. November 2026):** Neben der lokalen Desktop-Anwendung existiert `threaddesk-server` als separates, privates Server-Projekt. Laut dem in ThreadDesk dokumentierten Abnahmebericht vom **7. November** wurde es auf dem Debian-V-Server lokal an Loopback betrieben (Dienste auf `127.0.0.1:8766` und `127.0.0.1:8446`); Authentifizierung, Benutzertrennung, bidirektionaler Dateisync, Konfliktbehandlung, Fortsetzen sowie Backup/Wiederherstellung wurden dort gezielt geprüft. Das ist **kein Beleg für einen öffentlich erreichbaren Dienst**, einen neuen Desktop-Download oder die vollständige Live-Kopplung mit KiraBridge. Offen sind unter anderem öffentliche DNS-/HTTPS-Anbindung, grafischer Fernzugang, neues Desktop-Paket und KiraBridge-Livekopplung. [Server-Repository (privat; Zugriff erforderlich)](https://github.com/landjunge/threaddesk-server).
-
-ThreadDesk speichert Threads, Notizen, Dateien und Snapshots. Externe Aktionen werden nicht versteckt ausgeführt. Ein optionaler lokaler Hausmeister kann innerhalb von ThreadDesk selbstständig arbeiten; seine Grenzen sind unten dokumentiert.
-
-### 👤 [Für Nutzer – einen Thread beginnen](#für-nutzer)
+## 👤 [Für Nutzer – einen Thread beginnen](#für-nutzer)
 
 ### 🛠️ [Für Entwickler – CLI, MCP und Aufbau](#für-entwickler)
 
