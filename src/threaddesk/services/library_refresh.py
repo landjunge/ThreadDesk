@@ -1,8 +1,28 @@
 """Refresh derived projections after writes or explicit runtime recovery only."""
 
+from contextlib import contextmanager
+
 from threaddesk.services.library_files.state import check_path
 from threaddesk.services.library_import import LibraryImporter
 from threaddesk.services.library_index import LibraryIndex
+
+# Workspaces whose running LibraryRuntime owns the rebuild after a write.
+_DEFERRED: set[str] = set()
+
+
+@contextmanager
+def deferred_to_runtime(workspace):
+    """A serial caller marks the index stale only; its runtime rebuilds it.
+
+    One full rebuild reads every thread and record. Doing it inside a serial
+    request loop delays every following receipt by that rebuild.
+    """
+    key = str(workspace)
+    _DEFERRED.add(key)
+    try:
+        yield
+    finally:
+        _DEFERRED.discard(key)
 
 
 def refresh_existing(store, *, initialize=False):
@@ -28,6 +48,8 @@ def refresh_existing(store, *, initialize=False):
         prior = index._read()
         if prior:
             index._replace({**prior, "status": "stale", "error": "canonical_change"})
+        if not initialize and str(store.workspace_path) in _DEFERRED:
+            return {"status": "stale", "error": "canonical_change"}
         # Old CAS libraries and restored profiles may predate file-node support.
         # Commit their reconstructible graph projection before its index snapshot.
         from threaddesk.services.library_links import sync_file_nodes

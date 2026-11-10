@@ -470,10 +470,12 @@ class JsonStore(JsonLifecycleStore):
 
     def _list_threads(self, include_archived: bool = False, *, include_trashed: bool = False) -> list[Thread]:
         items: list[Thread] = []
+        # One lifecycle read per listing, not two per thread (same locked view).
+        hidden = set() if include_trashed else self.trashed_ids("thread")
         for path in sorted(self.threads_dir.glob("*.json")):
-            if not include_trashed and self.object_in_trash("thread", path.stem):
+            if path.stem in hidden:
                 continue
-            thread = self.get_thread(path.stem, include_trashed=include_trashed)
+            thread = self.get_thread(path.stem, include_trashed=True)
             if include_archived or thread.status != "archived":
                 items.append(thread)
         items.sort(key=lambda t: (t.updated_at, t.id), reverse=True)
