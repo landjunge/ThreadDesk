@@ -26,7 +26,7 @@
 
 <p align="center"><strong>Ein Arbeitsplatz, der den Stand deiner KI-Projekte behält.</strong></p>
 
-**Server-Version / Server edition:** Neben der lokalen Desktop-Anwendung existiert `threaddesk-server` als separates Server-Projekt. Der Server-Quellstand ist nicht automatisch ein fertiges Desktop- oder Server-Installationspaket. [Server-Quellcode / Server source](https://github.com/landjunge/threaddesk-server).
+**Server-Version / Server edition (Stand 10. November 2026):** Neben der lokalen Desktop-Anwendung existiert `threaddesk-server` als separates, privates Server-Projekt. Laut dem in ThreadDesk dokumentierten Abnahmebericht vom **7. November** wurde es auf dem Debian-V-Server lokal an Loopback betrieben (Dienste auf `127.0.0.1:8766` und `127.0.0.1:8446`); Authentifizierung, Benutzertrennung, bidirektionaler Dateisync, Konfliktbehandlung, Fortsetzen sowie Backup/Wiederherstellung wurden dort gezielt geprüft. Das ist **kein Beleg für einen öffentlich erreichbaren Dienst**, einen neuen Desktop-Download oder die vollständige Live-Kopplung mit KiraBridge. Offen sind unter anderem öffentliche DNS-/HTTPS-Anbindung, grafischer Fernzugang, neues Desktop-Paket und KiraBridge-Livekopplung. [Server-Repository (privat; Zugriff erforderlich)](https://github.com/landjunge/threaddesk-server).
 
 ThreadDesk speichert Threads, Notizen, Dateien und Snapshots. Externe Aktionen werden nicht versteckt ausgeführt. Ein optionaler lokaler Hausmeister kann innerhalb von ThreadDesk selbstständig arbeiten; seine Grenzen sind unten dokumentiert.
 
@@ -187,13 +187,17 @@ Inhaltskonflikt bleiben beide Fassungen erhalten. Wiederholter Sync darf keine
 zusätzlichen Kopien erzeugen. Die Desktop-Adresse bleibt nach Neustarts gleich;
 ist ihr Port belegt, erscheint ein Fehler statt einer Verbindung zu einer fremden App.
 
-**Aktuelle Grenzen:** Die Abnahme prüft zwei getrennte lokale Serverprozesse, nicht
-die Zusammenarbeit über einen Internet-Server. Die Oberfläche ist keine öffentlich
-abgesicherte Server-Anwendung und darf nicht unverändert ins Internet gestellt werden.
-Der lokale Austausch verwendet HTTP; er ist keine Ende-zu-Ende-Verschlüsselung.
-Ein Sync-Paket ist auf 1.000.000 Bytes begrenzt. Zu große oder fehlerhafte Pakete
-werden abgewiesen, nicht als erfolgreich abgeschnitten. Externer Server-Sync bleibt
-ein eigener, noch abzunehmender Ausbau.
+**Aktuelle Grenzen:** Die hier beschriebene Raumkopplung wurde mit zwei lokalen
+Serverprozessen geprüft, nicht als öffentlich erreichbarer Internet-Raumdienst.
+Die Oberfläche darf nicht unverändert ins Internet gestellt werden. Der lokale
+Raumaustausch verwendet HTTP ohne Ende-zu-Ende-Verschlüsselung; ein Sync-Paket
+ist auf 1.000.000 Bytes begrenzt. Zu große oder fehlerhafte Pakete werden
+abgewiesen. **Davon getrennt** existiert seit dem dokumentierten Debian-Test
+vom 7. November ein eigener `threaddesk-server` mit geprüftem bidirektionalem
+Dateisync, Konfliktbehandlung, Authentifizierung und Wiederaufnahme. Dieser
+läuft laut damaligem Bericht nur auf Loopback; öffentliche Bereitstellung,
+Desktop-Integration und vollständige KiraBridge-Livekopplung bleiben offen.
+Ein historischer Server-Test ersetzt keine neue End-to-End-Abnahme.
 
 ### Deine Daten sichern
 
@@ -295,8 +299,11 @@ Falls macOS den Doppelklick blockiert: Rechtsklick auf die Datei → **Öffnen**
 
 ### Windows
 
-1. Oben auf **ThreadDesk herunterladen** klicken.
-2. **ThreadDesk-Windows.exe** laden und doppelklicken. Die native Oberfläche benötigt eine funktionierende WebView2-Laufzeit; deren Einrichtung ist nicht durch einen bestandenen Paket-Build bewiesen.
+Für **ThreadDesk 0.2.0** ist kein Windows-Download veröffentlicht. Für Windows
+bleibt laut Releaseübersicht die ältere **0.1.1rc1** vom 2. Oktober 2026 der
+letzte veröffentlichte Stand. Nicht von einer aktuellen `ThreadDesk-Windows.exe`
+für 0.2.0 ausgehen. Die native Oberfläche benötigt WebView2; ein Paket-Build
+allein beweist keinen Start auf dem jeweiligen Windows-Rechner.
 
 ### Ein Terminal-Befehl
 
