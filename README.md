@@ -26,7 +26,17 @@
 
 <p align="center"><strong>Ein Arbeitsplatz, der den Stand deiner KI-Projekte behält.</strong></p>
 
-**Teil der NetzwerkPunkt-Werkzeugfamilie:** KiraBridge verbindet ChatGPT mit den Werkzeugen auf deinem Rechner und ist der zentrale Weg für die Bedienung per Sprache oder Chat. Zur Familie gehören **KiraBridge** (Verbindung und Steuerung), **ThreadDesk** (Projekte und Arbeitsstände), **4AllPass** (Zugänge und Schlüssel), **TollGate** (Nutzungsgrenzen und Budgets) und **Agent Authority** (ausschließlich Beobachtung und Nachweise). Die Werkzeuge bleiben eigenständig. **Die Verbindung aller fünf Werkzeuge über Sprache ist unser gemeinsames Ausbauziel:** Vorhandene Anbindungen und geplante Funktionen werden jeweils getrennt dokumentiert, nicht als schon vollständig fertig dargestellt.
+## Die Werkzeugfamilie und ThreadDesks Aufgabe
+
+**KiraBridge ist die zentrale Sprach- und Computersteuerung der NetzwerkPunkt-Werkzeugfamilie.** Über ChatGPT und natürliche Sprache können damit auf dem eigenen Rechner Programme geöffnet, Fenster gewechselt, Notizen geschrieben, Text direkt eingegeben und Shortcuts ausgeführt werden, soweit Berechtigungen, Anwendung und Verbindung dies zulassen. **ThreadDesk ist das Projektgedächtnis dieser Familie:** Es hält Gedanken, Dokumente, Aufgaben, Arbeitsstände und Zusammenhänge fest, damit eine Arbeit später wieder aufgenommen werden kann.
+
+Zur Familie gehören **KiraBridge** (Verbindung und direkte Computersteuerung), **ThreadDesk** (Projekte und Arbeitsstände), **4AllPass** (Zugänge und Schlüssel), **TollGate** (Nutzungsgrenzen und Budgets) und **Agent Authority** (ausschließlich lesende Beobachtung und Nachweise). Die Werkzeuge bleiben eigenständig. Ihre gemeinsame Bedienung durch Sprache ist ein Entwicklungsziel, keine Behauptung, dass heute schon jede Verbindung vollständig funktioniert.
+
+## Warum ThreadDesk auch für barrierearme Bedienung wichtig ist
+
+Wer eine Maus oder Tastatur nur eingeschränkt bedienen kann, soll Gedanken und Aufgaben möglichst einfach per Sprache festhalten und später wiederfinden können. Zusammen mit KiraBridge kann der Weg von einer gesprochenen Idee zur dokumentierten Notiz oder Projektaufgabe kürzer werden. Besonders wichtig sind dabei nachvollziehbare Rückmeldungen: Was wurde gespeichert, was ist noch offen und an welcher Stelle soll die Arbeit weitergehen? ThreadDesk bewahrt den Kontext; KiraBridge vermittelt die Bedienung. Eine erfolgreiche Ende-zu-Ende-Bedienung hängt von den tatsächlich eingerichteten Integrationen und Berechtigungen ab.
+
+Die Entwicklung ist nicht abgeschlossen: Sprachabläufe, Zuverlässigkeit, Geschwindigkeit, Synchronisation und spätere Zusammenarbeit mehrerer Menschen werden schrittweise verbessert. Teamarbeit ist ein Ausbauziel; dokumentierte lokale und Serverfunktionen dürfen nicht mit einer bereits fertig ausgerollten Teamplattform verwechselt werden. Wichtig bleibt, dass auch bei längeren Projekten das Ergebnis prüfbar ist und der Mensch die Kontrolle behält.
 
 **ThreadDesk hilft dir, bei deinen Ideen und Projekten den Überblick zu behalten.** Zu Hause kannst du bereits mit der KI sprechen und dabei Gedanken, Notizen, Dateien und Aufgaben für deine Projekte festhalten. Wenn du später weitermachst, findest du deinen bisherigen Stand wieder, statt von vorn beginnen zu müssen.
 
