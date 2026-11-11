@@ -26,6 +26,14 @@
 
 <p align="center"><strong>Ein Arbeitsplatz, der den Stand deiner KI-Projekte behält.</strong></p>
 
+## ThreadDesk in 30 Sekunden / In 30 seconds
+
+**Das Problem:** Ein KI-Auftrag ist beendet, aber Notizen, Entscheidungen und der letzte Arbeitsstand liegen verstreut. **ThreadDesk** bewahrt Threads, Notizen und Projektzusammenhänge lokal, damit du den Faden wieder aufnehmen kannst.
+
+**Direkt ansehen:** [ThreadDesk 0.2.0 für macOS Intel](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0) · [Einstieg für Nutzer](#für-nutzer) · [Entwickler-Einstieg](#für-entwickler). Die Desktop-Ausgabe hat einen eigenen, begrenzten Funktionsstand; neuere Quellfunktionen sind nicht automatisch darin enthalten.
+
+**English:** Keep the context of AI projects locally—threads, notes and work history—so you can pick up where you left off. [Current macOS Intel release](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0). ThreadDesk stores context; it does **not** execute external agents. New source changes are not automatically included in published downloads.
+
 ## Die Werkzeugfamilie und ThreadDesks Aufgabe
 
 **KiraBridge ist die zentrale Sprach- und Computersteuerung der NetzwerkPunkt-Werkzeugfamilie.** Über ChatGPT und natürliche Sprache können damit auf dem eigenen Rechner Programme geöffnet, Fenster gewechselt, Notizen geschrieben, Text direkt eingegeben und Shortcuts ausgeführt werden, soweit Berechtigungen, Anwendung und Verbindung dies zulassen. **ThreadDesk ist das Projektgedächtnis dieser Familie:** Es hält Gedanken, Dokumente, Aufgaben, Arbeitsstände und Zusammenhänge fest, damit eine Arbeit später wieder aufgenommen werden kann.
