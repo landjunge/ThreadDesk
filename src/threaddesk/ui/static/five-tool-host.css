@@ -1,0 +1,43 @@
+/* ThreadDesk family host; shared renderer stays byte-identical across products. */
+.np-ui { --np-divider:rgba(180,190,205,.16); --border:var(--np-divider); }
+.shell.np-desktop { min-width:0; min-height:0; height:100dvh; }
+.topbar { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:0 12px; min-height:0; padding:8px 16px 0; }
+.topbar .brand { grid-column:1; grid-row:1; min-width:0; }
+.brand-name { font-size:20px; color:#edf0f4; }
+.brand-thread { color:#b99cff; }
+.brand-build { font-size:12px; margin-top:0; }
+.np-appbar-host { grid-column:2; grid-row:1; justify-self:center; }
+.topbar-language { grid-column:3; grid-row:1; justify-self:end; }
+.topbar-language .lang-switch { display:flex; gap:4px; }
+.topbar-language .btn { min-width:44px; height:44px; }
+.topbar-actions { grid-column:1 / -1; grid-row:2; min-width:0; justify-content:space-between; gap:8px; }
+.topbar-actions .view-nav { display:flex; flex:1; gap:4px; min-width:0; }
+.topbar-actions .view-nav .btn { padding-inline:8px; }
+.topbar-actions .preferences { margin-left:auto; }
+.topbar-actions .preferences > summary { white-space:nowrap; }
+.workspace { grid-template-columns:232px minmax(0,1fr); flex:1; min-height:0; }
+.sidebar { padding:16px; gap:16px; }
+.main { padding:16px; }
+.detail { grid-template-columns:minmax(0,1fr) 264px; gap:16px; }
+.desk-head { max-height:38vh; padding-bottom:12px; }
+.desk-side { padding-left:16px; min-height:0; overflow:auto; }
+.tool-disclosure > summary { padding-block:8px; }
+.tools-hint { margin-bottom:12px; }
+.sidebar, .desk-side, .desk-head { scrollbar-width:none; }
+.sidebar::-webkit-scrollbar, .desk-side::-webkit-scrollbar, .desk-head::-webkit-scrollbar { width:0; }
+@media (max-width:1100px) {
+  .workspace { grid-template-columns:208px minmax(0,1fr); }
+  .detail { grid-template-columns:minmax(0,1fr) 232px; gap:12px; }
+  .main { padding:12px; }
+  .sidebar { padding:12px; }
+  .desk-side { padding-left:12px; }
+  .topbar-actions .view-nav .btn { padding-inline:4px; }
+}
+@media (max-width:760px) {
+  .topbar { grid-template-columns:minmax(0,1fr) auto; }
+  .topbar-language { grid-column:2; }
+  .np-appbar-host { grid-column:1 / -1; grid-row:2; }
+  .topbar-actions { grid-row:3; flex-wrap:wrap; }
+  .topbar-actions .view-nav { flex-wrap:wrap; }
+  .workspace { overflow:auto; grid-template-columns:180px minmax(420px,1fr); }
+}

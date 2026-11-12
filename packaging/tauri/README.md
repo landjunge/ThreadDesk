@@ -6,7 +6,7 @@ The window opens the existing workspace at `~/.threaddesk` or the explicitly sel
 
 To build on an x86_64 macOS host:
 
-1. Install the ThreadDesk development dependencies including PyInstaller.
+1. Use the existing ThreadDesk build environment including PyInstaller and Pillow. Run `python scripts/build_icons.py --tauri` from the repository root; this generates the native icons from the existing approved family PNG and updates the actual Tauri icon paths.
 2. From repository root, run `python -m PyInstaller --clean --noconfirm --distpath packaging/tauri/backend/dist --workpath packaging/tauri/backend/build packaging/tauri/backend/ThreadDeskServer.spec`.
 3. Run `packaging/tauri/backend/dist/ThreadDeskServer --self-test`.
 4. From `packaging/tauri`, run `npm ci` and `npm run build`.
@@ -26,3 +26,41 @@ Before replacing an installation, preserve the previous app and workspace, run t
 
 Independent editor forms may finish in a different order from their requests. The UI suppresses superseded workspace responses so that an older note-save response cannot replace a later snapshot restore or thread selection. Requests still finish normally and write failures remain visible. The browser regression delays a real note-save reply until after the restore swap and verifies the restored note again after a server restart.
 
+
+## Family window adapter / Familienfensteradapter
+
+The native `family_switch` command accepts only one of the five catalog IDs. It is
+allowed only in the owned `main` webview at the exact backend origin established
+by the native ready handshake. Navigation to other origins is rejected. No shell
+plugin, generic process command or broad loopback capability is exposed.
+
+The native host invokes `~/.local/bin/kirabridge --principal local family switch
+TARGET --source-pid PID` directly; PID is the Tauri host's own PID. The existing
+broker binds the registered installation, process/start identity and UID again at
+the effect boundary. Exit zero alone is insufficient: top-level JSON must contain
+`success:true`, matching `active_product`, finite `actual_outer_bounds` with
+positive width/height, and `visible_family_windows:1`. Invalid replies or unknown
+execution outcomes never trigger an automatic retry. Only the broker transfers
+outer bounds and hides/shows registered family windows. The host does not issue
+Close/Quit or reload the webview when switching. 4AllPass lock policy is unchanged.
+
+Closing `main` hides it; macOS Reopen shows/focuses the same window. Explicit Quit
+still destroys the app and ends its own backend. Browser-only use remains separate
+and reports unavailable native targets. Two installed ThreadDesk copies are not
+interchangeable: the broker's default target is `~/Applications/ThreadDesk.app`;
+`/Applications/ThreadDesk.app` must not be silently substituted or terminated.
+
+Deutsch: Der Browser übergibt ausschließlich eine feste Produkt-ID. Pfad, argv und
+PID entstehen im nativen Host; der Broker prüft den tatsächlichen Aufrufer und die
+Fensterwirkung. Fehler bleiben Fehler, UNKNOWN wird nicht blind wiederholt.
+Schließen blendet das eigene Fenster aus, Reopen erhält UI/Backend. Installation,
+Fünfer-Laufzeitabnahme und Freigabe der Pakete erfolgen separat beim Koordinator.
+
+For a local test bundle, commit the intended source, perform steps 1–3, then use
+`tauri build --debug --bundles app` from `packaging/tauri` with the existing pinned
+CLI 2.11.4. Record Git pin, embedded `_build_info.json`, executable/icon SHA-256
+and architecture. This produces an isolated build artifact; do not copy it over
+an installed app or launch against the production workspace. A debug bundle is
+not a release artifact. The static documentation has no separate compiler: check
+`python scripts/readme_header.py check --product threaddesk --repo .` and the
+changed relative links; no website deployment is needed for this change.
