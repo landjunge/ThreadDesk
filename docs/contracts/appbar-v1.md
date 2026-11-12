@@ -1,4 +1,4 @@
-# UI-01 · portabler Renderer 1.2.0
+# UI-01 · portabler Renderer 1.2.1
 
 ThreadDesk ist die gemeinsame Quelle des bestehenden `networkpunkt-appbar`.
 Der feste Katalog enthält KiraBridge, ThreadDesk, 4AllPass, TollGate und Agent

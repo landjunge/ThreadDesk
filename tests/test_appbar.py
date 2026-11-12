@@ -210,6 +210,8 @@ def test_fixed_icon_geometry_and_only_ring_motion(appbar, width):
     assert before == after
     assert all(r[2:] == [44, 44] and r[0] >= 0 and r[0] + r[2] <= width for r in after)
     assert after[1][0] - after[0][0] == 48
+    art = page.locator('.np-appbar-art').evaluate_all('es=>es.map(e=>{const r=e.getBoundingClientRect();return Math.max(r.width,r.height);})')
+    assert all(abs(size - 32) < 0.1 for size in art), art
     assert ring(page).evaluate('e => getComputedStyle(e,"::before").animationDuration') == "12s"
     assert ring(page).locator("img").evaluate("e => getComputedStyle(e).opacity") == "1"
     page.emulate_media(reduced_motion="reduce")
