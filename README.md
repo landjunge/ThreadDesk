@@ -560,15 +560,21 @@ writer/source pin; these changes do not migrate the real user workspace for a te
 
 ### Gemeinsame App-Leiste / Shared app bar
 
-Die gemeinsame `networkpunkt-appbar` 1.2.1 verwendet die fünf vorhandenen
+Die gemeinsame `networkpunkt-appbar` 1.2.2 verwendet die fünf vorhandenen
 Originalicons mit 44-px-Bedienzielen und zugänglichen Statusdetails. Öffnen oder
 Fokussieren bedeutet keine bestätigte Peer-Verbindung. Quellenpins, Prüfsummen
 und der begrenzte Hostadapter stehen im [Appbar-Vertrag](docs/contracts/appbar-v1.md).
+Native Wechsel warten bis zu 31 Sekunden auf denselben Versuch (30 Sekunden
+Brokerfrist plus Host-Overhead); UNKNOWN bleibt ohne automatische Wiederholung
+gesperrt. Eine rechtzeitig bestätigte Antwort gibt das Bedienziel wieder frei.
 
-The shared `networkpunkt-appbar` 1.2.1 reuses all five original icons with 44 px
+The shared `networkpunkt-appbar` 1.2.2 reuses all five original icons with 44 px
 controls and accessible status details. Opening or focusing an app does not
 confirm a peer connection. Source pins, checksums and the bounded host adapter
 are described in the [app bar contract](docs/contracts/appbar-v1.md).
+Native switches wait up to 31 seconds for the same attempt (30 seconds at the
+broker plus host overhead). UNKNOWN stays blocked without automatic retries;
+a valid receipt within that deadline makes the control available again.
 
 Im aktuellen Quellstand steht die Leiste zentriert zwischen zweifarbiger Wortmarke
 und DE/EN. Drei Arbeitsspalten bleiben auch bei 940 px Breite nutzbar; die Oberfläche

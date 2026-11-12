@@ -16,7 +16,7 @@ const context = {window: {}}; vm.createContext(context);
 for (const name of ['map-layout.js', 'map-viewport.js', 'map-shapes.js']) {
   vm.runInContext(fs.readFileSync(path.join(process.argv[1], name), 'utf8'), context);
 }
-const api = context.window, width = 1146, height = 464;
+const api = context.window, width = 1146, height = Number(process.argv[2]);
 const shapes = api.ThreadDeskMapShapes(() => ({width, height}));
 const nodes = Array.from({length: 25}, (_, number) => ({
   title: `Bereich ${String(number).padStart(2, '0')} – Langer fachlicher Titel für Planung, Quellen und überprüfbare Ergebnisse`,
@@ -59,9 +59,9 @@ console.log(JSON.stringify([1,150,413].map(run)));
 """
 
 
-@pytest.fixture(scope="module")
-def geometry_cases():
-    result = subprocess.run(["node", "-e", PROBE, str(STATIC)], capture_output=True,
+@pytest.fixture(scope="module", params=[431, 464], ids=["compact-family", "previous-desktop"])
+def geometry_cases(request):
+    result = subprocess.run(["node", "-e", PROBE, str(STATIC), str(request.param)], capture_output=True,
                             text=True, check=True, timeout=15)
     return json.loads(result.stdout)
 

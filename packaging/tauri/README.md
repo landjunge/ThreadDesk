@@ -44,6 +44,12 @@ execution outcomes never trigger an automatic retry. Only the broker transfers
 outer bounds and hides/shows registered family windows. The host does not issue
 Close/Quit or reload the webview when switching. 4AllPass lock policy is unchanged.
 
+The shared 1.2.2 native host waits 31 seconds in the UI, covering the Rust bridge's
+30-second receipt deadline plus one second of dispatch/delivery overhead. A valid
+receipt from that same attempt after two seconds still resolves the pending UI.
+Only a later explicit click starts another switch. UNKNOWN and expiry keep the
+target blocked; there is no automatic retry or time-based recovery.
+
 Closing `main` hides it; macOS Reopen shows/focuses the same window. Explicit Quit
 still destroys the app and ends its own backend. Browser-only use remains separate
 and reports unavailable native targets. Two installed ThreadDesk copies are not

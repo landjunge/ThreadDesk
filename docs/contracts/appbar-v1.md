@@ -1,4 +1,4 @@
-# UI-01 · portabler Renderer 1.2.1
+# UI-01 · portabler Renderer 1.2.2
 
 ThreadDesk ist die gemeinsame Quelle des bestehenden `networkpunkt-appbar`.
 Der feste Katalog enthält KiraBridge, ThreadDesk, 4AllPass, TollGate und Agent
@@ -33,6 +33,21 @@ Der bisherige HTTP-Adapter bleibt für ausdrücklich konfigurierte Browserziele
 bestehen; er belegt keinen nativen Fenstermodus.
 
 Native Fünferintegration und installierte Laufzeit sind separat abzunehmen.
+
+## Öffnungsfrist und ursprünglicher Versuch (1.2.2)
+
+`mountProductHeader` gibt einem nativen `openTarget` 31 Sekunden: maximal
+30 Sekunden Brokerwartezeit plus eine Sekunde Host-/Receipt-Overhead. Ein
+gültiges Ergebnis desselben Versuchs nach mehr als zwei Sekunden wird innerhalb
+dieser Frist übernommen; erst eine weitere ausdrückliche Nutzeraktion darf
+einen neuen Wechsel starten. `mountAppBar` verwendet dafür `openTimeoutMs`
+(ganze Millisekunden von 2000 bis 31000). Ohne nativen Host bleibt der bisherige
+Standard von zwei Sekunden erhalten. Die Status-/Peer-Prüffrist bleibt separat.
+
+Bei Fristablauf oder `uncertain` bleibt das Ziel gesperrt. Kein automatischer
+Retry, kein `clearOpen` allein durch Zeitablauf, kein Erfolg aus einer verspäteten
+Antwort nach Fristablauf. Ein Host darf erst nach tatsächlicher Klärung des
+ursprünglichen Ausgangs ausdrücklich über `clearOpen` freigeben.
 
 ## Öffentliche API
 

@@ -18,11 +18,15 @@ def test_pure_state_contract():
 
 def test_approved_asset_hashes_and_no_bridge_substitute():
     manifest = json.loads((STATIC / "networkpunkt-appbar-assets.json").read_text())
+    bundle = json.loads((STATIC / "networkpunkt-appbar-bundle.json").read_text())
+    assert bundle["version"] == manifest["version"] == "1.2.2"
     assert manifest["blocked"] == {}
     assert [x["appId"] for x in manifest["files"]] == ["kirabridge", "threaddesk", "4allpass", "tollgate", "agent-authority"]
     for asset in manifest["files"]:
         assert hashlib.sha256((STATIC / asset["file"]).read_bytes()).hexdigest() == asset["sha256"]
-    for line in (STATIC / "networkpunkt-appbar-SHA256SUMS").read_text().splitlines():
+    checksums = (STATIC / "networkpunkt-appbar-SHA256SUMS").read_text().splitlines()
+    assert {line.split("  ", 1)[1] for line in checksums} == set(bundle["files"]) | {"networkpunkt-appbar-bundle.json"}
+    for line in checksums:
         digest, name = line.split("  ", 1)
         assert hashlib.sha256((STATIC / name).read_bytes()).hexdigest() == digest
 
@@ -246,6 +250,60 @@ def test_host_native_hook_only_receives_catalog_id_and_never_connects_peer(appba
     page.wait_for_function("nativeIds.length === 1")
     assert page.evaluate("nativeIds") == ["kirabridge"]
     assert ring(page, "kirabridge").get_attribute("data-connected") == "false"
+    page.evaluate("host.destroy()")
+
+
+@pytest.mark.parametrize("elapsed_ms", [2500, 30000])
+def test_native_receipt_after_two_seconds_allows_a_new_user_switch(appbar, elapsed_ms):
+    page = appbar
+    page.clock.install()
+    page.evaluate("""async () => {
+      bar.destroy(); const {mountProductHeader}=await import('/static/networkpunkt-product-header.js');
+      window.nativeIds=[]; window.nativeReplies=[];
+      window.host=mountProductHeader(document.querySelector('#slot'), {selfId:'threaddesk',
+        openTarget:id=>{nativeIds.push(id);return new Promise(resolve=>nativeReplies.push(resolve));},
+        navigate:()=>{throw Error('Native switch must not navigate');}});
+    }""")
+    button = page.locator('[data-app-id="kirabridge"]')
+    button.click()
+    page.clock.fast_forward(elapsed_ms)
+    button.dispatch_event("click")
+    assert page.evaluate("nativeIds") == ["kirabridge"]
+    assert button.get_attribute("aria-disabled") == "true"
+    page.evaluate("nativeReplies[0]('focused')")
+    expect = 'document.querySelector("[data-app-id=kirabridge]").getAttribute("aria-disabled") === "false"'
+    page.wait_for_function(expect, timeout=1000)
+    assert ring(page, "kirabridge").get_attribute("data-connected") == "false"
+    assert page.evaluate("nativeIds") == ["kirabridge"]
+    # Only this subsequent explicit user action starts the second broker turn.
+    button.click()
+    assert page.evaluate("nativeIds") == ["kirabridge", "kirabridge"]
+    page.evaluate("nativeReplies[1]('focused')")
+    page.wait_for_function(expect, timeout=1000)
+    page.evaluate("host.destroy()")
+
+
+@pytest.mark.parametrize("outcome", ["uncertain", "late-focused"])
+def test_native_unknown_or_expired_attempt_never_replays(appbar, outcome):
+    page = appbar
+    page.clock.install()
+    page.evaluate("""async () => {
+      bar.destroy(); const {mountProductHeader}=await import('/static/networkpunkt-product-header.js');
+      window.nativeIds=[];
+      window.host=mountProductHeader(document.querySelector('#slot'), {selfId:'threaddesk',
+        openTarget:id=>{nativeIds.push(id);return new Promise(resolve=>window.nativeReply=resolve);}});
+    }""")
+    button = page.locator('[data-app-id="kirabridge"]')
+    button.click()
+    if outcome == "uncertain":
+        page.evaluate("nativeReply('uncertain')")
+    page.clock.fast_forward(31000)
+    if outcome == "late-focused":
+        page.evaluate("nativeReply('focused')")
+    page.clock.fast_forward(1000)
+    button.dispatch_event("click")
+    assert button.get_attribute("aria-disabled") == "true"
+    assert page.evaluate("nativeIds") == ["kirabridge"]
     page.evaluate("host.destroy()")
 
 
