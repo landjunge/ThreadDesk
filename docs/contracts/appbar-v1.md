@@ -1,61 +1,38 @@
-# UI-01 · portabler Renderer 1.0.0
+# UI-01 · portabler Renderer 1.2.0
 
-Dies ist die reine gemeinsame Grundlage des bestehenden E05-Auftrags, keine
-fertige Verbindung oder App-Einbindung. Quelle ist vorläufig ThreadDesk wie beim
-NP-Kern (§19 GOLDENRULES). **Zuerst folgt KiraBridge; ThreadDesk/4AllPass sind
-noch nicht eingebunden.** Kein bestehender Header, Markenname oder Markenfarbwert
-wird durch diese Dateien verändert. Es gibt keinen verpflichtenden ThreadDesk-Hub.
+ThreadDesk ist die gemeinsame Quelle des bestehenden `networkpunkt-appbar`.
+Der feste Katalog enthält KiraBridge, ThreadDesk, 4AllPass, TollGate und Agent
+Authority in dieser Reihenfolge. Alle fünf PNGs sind unveränderte Originalderivate;
+`networkpunkt-appbar-assets.json` hält Quellenpins und SHA-256 fest.
 
-## Versionierte lokale Übernahme
+## Gepinnte lokale Übernahme
 
-`src/threaddesk/ui/static/networkpunkt-appbar-bundle.json` nennt den kleinen
-Dateisatz; `networkpunkt-appbar-SHA256SUMS` enthält vollständige Fingerprints.
-Die benötigten Dateien einer konkreten Git-Version bewusst bytegleich lokal
-kopieren, Hashes prüfen und den Quellpin im jeweiligen Host festhalten. Keine
-CDN, automatische Repo-Aktualisierung, neue Dependency, Framework- oder
-Pluginplattform. Der bestehende NP-CSS-Kern0.1 ist die Gestaltungsabhängigkeit;
-seine vorhandenen Marken-/Schriftregeln werden nicht umgeschrieben.
+Den vollständigen Dateisatz aus `src/threaddesk/ui/static/networkpunkt-appbar-bundle.json`
+einer konkreten Commitversion bytegleich übernehmen und gegen
+`networkpunkt-appbar-SHA256SUMS` prüfen. Kein CDN, zweites Modul oder automatisches
+Update. Der KiraBridge-1.1.1-Fokuspatch ist enthalten: ein verspätetes Dialog-Close
+zieht den Tastaturfokus nicht vom inzwischen gewählten Steuerelement zurück.
 
-Der Katalog1.0.0 enthält feste App-IDs, DE/EN-Namen, vorhandene Bilddateien,
-eigene Toolfarbe und den Weg `host-adapter`. Die Installation liefert den
-zugehörigen erlaubten Status-/Öffnungsadapter. Statuswerte können weder Icon,
-Farbe, Reihenfolge noch ein Startziel bestimmen. Nur bekannte Suite-IDs sind
-zugelassen; weitere Fachmodule sind keine zusätzlichen App-Icons.
+Originalmotive wirken 32 px groß innerhalb von 44×44-px-Bedienzielen. Version und
+Status sind bei Hover und Tastaturfokus zugänglich. Konturen bleiben dezent,
+Fokus sichtbar; nur ein bestätigter erlaubter 4AllPass-Unlock darf pulsieren.
+Öffnen/Fokussieren bestätigt keine Peer-Verbindung und entsperrt keinen Tresor.
 
-- ThreadDesk: freigegebener48px-Dark-Export aus assets/design, bytegleich.
-  Ringfarbe #b99cff aus bestehendem brand/README.
-- 4AllPass: aktueller freigegebener AP4-Dark-Export aus brand/ap4, bytegleich;
-  keine historische Elster. Kein belegter aktueller Ring-Brandtoken in
-  brand/README.md, brand/ap4/containers.json oder frontend/src/tokens.css;
-  Pixelheuristiken werden nicht als Markenentscheidung übernommen. Der
-  Standardkatalog hält die Farbe deshalb null und die Statusanzeige neutral.
-- KiraBridge: weiterhin kein zugeordnetes freigegebenes Bild. Kein Buchstabe,
-  Fremdicon oder neu gezeichnetes Ersatzlogo. Deshalb noch kein Katalogeintrag.
-- TollGate: Asset noch nicht diesem Modul zugeordnet; kein behauptetes Fehlen
-  im Gesamtbestand. Später fester Eintrag plus erlaubter Adapter.
+`mountProductHeader(..., {selfId, openTarget})` übergibt an `openTarget` ausschließlich
+eine der fünf Katalog-IDs. Der Host liefert `opened`, `focused`, `missing`, `failed`
+oder `uncertain`. Native Hosts dürfen nur ihren eigenen PID mit festem argv an
+`~/.local/bin/kirabridge --principal local family switch TARGET --source-pid PID`
+übergeben; Pfade, PID, argv oder URLs kommen nicht aus dem Browser. Der Broker
+prüft Installation, Caller, Startidentität und tatsächlichen Fenstereffekt.
+Erfolg erfordert Exit 0 und top-level JSON `{"success":true,"active_product":"TARGET",
+"actual_outer_bounds":{"x":0,"y":0,"width":1360,"height":780},"visible_family_windows":1}`
+mit endlichen Zahlen und positiven Abmessungen. Fehler liefern Exit ungleich 0,
+`success:false`, `error:{code,message}` und `execution_outcome_unknown:boolean`.
+Fehler/unklare JSON-Antworten sind kein Erfolg, kein Navigieren oder Blind-Replay.
+Der bisherige HTTP-Adapter bleibt für ausdrücklich konfigurierte Browserziele
+bestehen; er belegt keinen nativen Fenstermodus.
 
-## Hostslot und Darstellung
-
-Der Host reserviert später denselben Headerplatz nach seiner Produktmarke und
-vor den eigenen Aktionen. Die Grundlage montiert **keinen** Host selbst.
-Vorbereitete Fixturemaße:24px-Bild aus48px-Datei,32px-Ring,40px-NP-Bedienfläche,
-4px-Abstand. Das ist ein technischer Prüfstand, keine sichtbare Nutzerabnahme;
-Daniels aktuelles Feedback zur Icongröße ist noch einer Oberfläche zuzuordnen.
-Eine daraus folgende Maßänderung wird zentral vorgenommen, nicht pro Host
-anders erfunden. Keine automatische Touch-/Mobilgestaltung entgegen der
-aktuellen NP-Präzisierung. Auch im schmalen Fixtureausschnitt bleibt der Zugang
-erreichbar; dies ist keine Abnahme tatsächlicher Hostheader.
-
-Die Katalogreihenfolge KiraBridge/ThreadDesk/4AllPass/TollGate ist unabhängig vom
-Status; nur verfügbare konfigurierte Einträge erscheinen. Nativer Button mit
-Textname/Status/Öffnungsaktion als aria-label, Tab/ShiftTab/Enter/Space, sichtbarem
-Fokus und Tooltip bei Fokus/Hover, mit Escape schließbar. Der Tooltip wird
-bei Anzeige, Text- und Viewportänderung innerhalb der sichtbaren Breite gehalten.
-Kein Zusatzschloss.
-Die Live-Region meldet semantische Änderungen, nicht jeden lokalen250ms-Tick.
-Nur der AP4-Ring darf bei erlaubtem aktuellem Unlock langsam pulsieren:
-12s, Deckkraft1.00…0.90, Glow10% Toolfarbe. Bild/Hitarea werden nicht animiert.
-Reduced motion schaltet die Ringanimation aus; der Text bleibt eindeutig.
+Native Fünferintegration und installierte Laufzeit sind separat abzunehmen.
 
 ## Öffentliche API
 

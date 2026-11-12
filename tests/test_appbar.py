@@ -18,12 +18,13 @@ def test_pure_state_contract():
 
 def test_approved_asset_hashes_and_no_bridge_substitute():
     manifest = json.loads((STATIC / "networkpunkt-appbar-assets.json").read_text())
-    assert manifest["blocked"]["kirabridge"] == "approved-icon-missing"
-    assert [x["appId"] for x in manifest["files"]] == ["threaddesk", "4allpass"]
+    assert manifest["blocked"] == {}
+    assert [x["appId"] for x in manifest["files"]] == ["kirabridge", "threaddesk", "4allpass", "tollgate", "agent-authority"]
+    for asset in manifest["files"]:
+        assert hashlib.sha256((STATIC / asset["file"]).read_bytes()).hexdigest() == asset["sha256"]
     for line in (STATIC / "networkpunkt-appbar-SHA256SUMS").read_text().splitlines():
         digest, name = line.split("  ", 1)
         assert hashlib.sha256((STATIC / name).read_bytes()).hexdigest() == digest
-    assert not list(STATIC.glob("np-appbar-kirabridge*"))
 
 
 @pytest.fixture()
@@ -101,7 +102,7 @@ def test_keyboard_tooltip_open_dedup_and_no_false_connection(appbar, locale):
     label = button.get_attribute("aria-label")
     assert ("App geöffnet, Verbindung fehlt" if locale == "de" else "App opened, connection missing") in label
     page.keyboard.press("Tab")
-    assert page.locator("#after").evaluate("e => e === document.activeElement")
+    assert page.locator('[data-app-id="tollgate"]').evaluate("e => e === document.activeElement")
 
 
 def test_unknown_open_result_late_response_and_remount_are_safe(appbar):
@@ -192,12 +193,11 @@ def test_success_cooldown_clock_rollback_needs_host_recovery_and_new_full_cooldo
     assert page.evaluate("openCalls.length") == 2
 
 
-def test_missing_approved_tool_color_keeps_default_catalog_neutral(appbar):
+def test_catalog_colors_are_available_without_host_overrides(appbar):
     page = appbar
     page.evaluate('options.colors={};mountAgain();check("4allpass", {vault:{userRef:"fixture-user",vaultRef:"fixture-vault",allowed:true,state:"unlocked",ttlMs:1000}})')
-    assert ring(page).get_attribute("data-connected") == "false"
-    assert ring(page).get_attribute("data-pulse") == "false"
-    assert "Statusanzeige nicht eingerichtet" in page.locator('[data-app-id="4allpass"]').get_attribute("aria-label")
+    assert ring(page).get_attribute("data-connected") == "true"
+    assert ring(page).get_attribute("data-pulse") == "true"
 
 
 @pytest.mark.parametrize("width", [1440, 320])
@@ -208,8 +208,8 @@ def test_fixed_icon_geometry_and_only_ring_motion(appbar, width):
     page.evaluate('check("4allpass", {vault:{userRef:"fixture-user",vaultRef:"fixture-vault",allowed:true,state:"unlocked",ttlMs:15000}})')
     after = page.locator(".np-appbar-button").evaluate_all("es => es.map(e => {const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]})")
     assert before == after
-    assert all(r[2:] == [40, 40] and r[0] >= 0 and r[0] + r[2] <= width for r in after)
-    assert after[1][0] - after[0][0] == 44
+    assert all(r[2:] == [44, 44] and r[0] >= 0 and r[0] + r[2] <= width for r in after)
+    assert after[1][0] - after[0][0] == 48
     assert ring(page).evaluate('e => getComputedStyle(e,"::before").animationDuration') == "12s"
     assert ring(page).locator("img").evaluate("e => getComputedStyle(e).opacity") == "1"
     page.emulate_media(reduced_motion="reduce")
@@ -229,3 +229,35 @@ def test_fixed_icon_geometry_and_only_ring_motion(appbar, width):
     }""", arg=button.get_attribute("aria-describedby"))
     box = page.locator(f'#{button.get_attribute("aria-describedby")}').bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= 320
+
+
+def test_host_native_hook_only_receives_catalog_id_and_never_connects_peer(appbar):
+    page = appbar
+    page.evaluate("""async () => {
+      bar.destroy(); const {mountProductHeader}=await import('/static/networkpunkt-product-header.js');
+      window.nativeIds=[];
+      window.host=mountProductHeader(document.querySelector('#slot'), {selfId:'threaddesk',
+        openTarget:async id=>{nativeIds.push(id);return 'focused';},
+        navigate:()=>{throw Error('Native switch must not navigate');}});
+    }""")
+    page.locator('[data-app-id="kirabridge"]').click()
+    page.wait_for_function("nativeIds.length === 1")
+    assert page.evaluate("nativeIds") == ["kirabridge"]
+    assert ring(page, "kirabridge").get_attribute("data-connected") == "false"
+    page.evaluate("host.destroy()")
+
+
+def test_delayed_dialog_close_does_not_steal_new_keyboard_focus(appbar):
+    page = appbar
+    page.evaluate("""async () => {
+      bar.destroy(); const {mountProductHeader}=await import('/static/networkpunkt-product-header.js');
+      window.host=mountProductHeader(document.querySelector('#slot'), {selfId:'threaddesk'});
+    }""")
+    page.locator('[data-app-id="kirabridge"]').click()
+    assert page.locator('dialog').is_visible()
+    page.evaluate("""() => {
+      const dialog=document.querySelector('dialog'); dialog.close();
+      document.querySelector('#after').focus(); dialog.dispatchEvent(new Event('close'));
+    }""")
+    assert page.locator('#after').evaluate('e=>e===document.activeElement')
+    page.evaluate("host.destroy()")

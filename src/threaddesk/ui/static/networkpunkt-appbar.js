@@ -1,11 +1,11 @@
-/* NetzwerkPunkt appbar 1.0.0 — portable DOM renderer, no transport or host launch. */
+/* NetzwerkPunkt appbar 1.2.0 — portable DOM renderer, no transport or host launch. */
 import { APPBAR_VERSION, APP_ORDER, createElapsed, createPeerState } from "./networkpunkt-appbar-state.js";
 import { APP_CATALOG } from "./networkpunkt-appbar-catalog.js";
 export { APPBAR_VERSION };
 const mounts = new WeakMap();
 let mounted = 0;
 const COPY = {
-  de: { bar: "Verbundene Apps", open: "Öffnen oder fokussieren", confirmed: "Verbunden",
+  de: { bar: "Verbundene Apps", open: "Öffnen oder fokussieren", confirmed: "Verbunden", busy: "Beschäftigt", versionUnknown: "Version unbekannt", version: "Version", self: "Diese Oberfläche",
     connecting: "Verbindet …", disconnected: "Nicht verbunden", unknown: "Status unbekannt",
     error: "Verbindungsfehler · Verbindung prüfen", unlocked: "Tresor entsperrt", locked: "Tresor gesperrt",
     vaultUnknown: "Tresorstatus unbekannt", opening: "App wird geöffnet …",
@@ -13,7 +13,7 @@ const COPY = {
     failed: "Öffnen fehlgeschlagen · Ziel prüfen und erneut versuchen",
     missing: "Öffnen nicht verfügbar · App-Ziel einrichten",
     uncertain: "Öffnung unklar · App prüfen, nicht erneut starten", unconfigured: "Statusanzeige nicht eingerichtet" },
-  en: { bar: "Connected apps", open: "Open or focus", confirmed: "Connected",
+  en: { bar: "Connected apps", open: "Open or focus", confirmed: "Connected", busy: "Busy", versionUnknown: "Version unknown", version: "Version", self: "This interface",
     connecting: "Connecting …", disconnected: "Not connected", unknown: "Status unknown",
     error: "Connection error · Check connection", unlocked: "Vault unlocked", locked: "Vault locked",
     vaultUnknown: "Vault status unknown", opening: "Opening app …",
@@ -29,11 +29,12 @@ function catalogEntries(catalog) {
       || (entry.color !== null && !/^#[0-9a-f]{6}$/i.test(entry.color)) || ![entry.name?.de, entry.name?.en].every(x => typeof x === "string" && x.length > 0 && x.length <= 80)
       || !Array.isArray(entry.routes) || !entry.routes.every(x => x === "host-adapter")) throw new TypeError("Invalid app catalog entry");
     seen.add(entry.id);
-    return { id: entry.id, name: { de: entry.name.de, en: entry.name.en }, icon: entry.icon, color: entry.color };
+    if (entry.art && (!Array.isArray(entry.art) || entry.art.length !== 4 || !entry.art.every(x => Number.isFinite(x) && x >= 0 && x <= 256) || entry.art[2] < 1 || entry.art[3] < 1 || entry.art[0] + entry.art[2] > 256 || entry.art[1] + entry.art[3] > 256)) throw new TypeError("Invalid original asset viewport");
+    return { art:entry.art, id: entry.id, name: { de: entry.name.de, en: entry.name.en }, icon: entry.icon, color: entry.color };
   }).sort((a, b) => APP_ORDER.indexOf(a.id) - APP_ORDER.indexOf(b.id));
 }
 
-export function mountAppBar(element, { catalog = APP_CATALOG, peers = {}, colors = {}, locale = "de", onOpen,
+export function mountAppBar(element, { catalog = APP_CATALOG, peers = {}, colors = {}, locale = "de", onOpen, selfId = null,
   clock = () => performance.now(), wallClock = () => Date.now() } = {}) {
   mounts.get(element)?.destroy();
   const doc = element.ownerDocument, win = doc.defaultView, mountId = ++mounted;
@@ -57,7 +58,16 @@ export function mountAppBar(element, { catalog = APP_CATALOG, peers = {}, colors
     if (color) ring.style.setProperty("--np-appbar-color", color);
     const image = doc.createElement("img"); image.alt = ""; image.width = image.height = 24;
     image.src = new URL(entry.icon, import.meta.url).href;
-    ring.append(image); button.append(ring);
+    const art = doc.createElement("span"); art.className = "np-appbar-art";
+    if (entry.art) {
+      const [x, y, width, height] = entry.art, scale = 28 / Math.max(width, height);
+      art.style.width = `${width * scale}px`; art.style.height = `${height * scale}px`;
+      image.style.width = image.style.height = `${256 * scale}px`;
+      image.style.left = `${-x * scale}px`; image.style.top = `${-y * scale}px`;
+    }
+    art.append(image); ring.append(art);
+    const version = doc.createElement("span"); version.className = "np-appbar-version"; version.setAttribute("aria-hidden", "true");
+    button.append(ring, version);
     const tooltip = doc.createElement("span"); tooltip.className = "np-appbar-tooltip";
     tooltip.id = `np-appbar-tip-${mountId}-${entry.id}`; tooltip.setAttribute("role", "tooltip"); tooltip.hidden = true;
     button.setAttribute("aria-describedby", tooltip.id);
@@ -66,7 +76,7 @@ export function mountAppBar(element, { catalog = APP_CATALOG, peers = {}, colors
     button.addEventListener("focus", show); button.addEventListener("blur", hide);
     button.addEventListener("mouseenter", show); wrapper.addEventListener("mouseleave", hide);
     button.addEventListener("keydown", event => { if (event.key === "Escape") { hide(); event.preventDefault(); } });
-    const item = { entry, peer, color, wrapper, button, ring, tooltip, open: null, lastOpen: null, abort: null, serial: 0 };
+    const item = { entry, peer, color, wrapper, button, ring, tooltip, version, open: null, lastOpen: null, abort: null, serial: 0 };
     button.addEventListener("click", () => open(item));
     wrapper.append(button, tooltip); root.append(wrapper); items.set(entry.id, item);
   }
@@ -93,11 +103,16 @@ export function mountAppBar(element, { catalog = APP_CATALOG, peers = {}, colors
       if (item.open?.state === "opening" && item.open.age() >= 2000) {
         item.open.state = "uncertain"; item.abort?.abort();
       }
-      item.ring.dataset.connected = String(state.state === "confirmed");
+      item.ring.dataset.connected = String(["confirmed", "busy"].includes(state.state));
+      item.ring.dataset.state = state.state;
+      item.button.dataset.state = state.state;
+      item.version.textContent = state.version ? `v${state.version}` : "v?";
       item.ring.dataset.pulse = String(state.pulse);
       const vault = item.entry.id === "4allpass" && state.state === "confirmed"
         ? ` · ${text[state.vault === "unknown" ? "vaultUnknown" : state.vault]}` : "";
       let status = text[state.state] + vault;
+      if (item.entry.id === selfId) status += ` · ${text.self}`;
+      status += ` · ${state.version ? `${text.version} ${state.version}` : text.versionUnknown}`;
       if (!item.color) status += ` · ${text.unconfigured}`;
       if (typeof onOpen !== "function") status += ` · ${text.missing}`;
       else if (item.open && !(["opened", "focused"].includes(item.open.state) && state.state === "confirmed")) status += ` · ${text[item.open.state]}`;
@@ -122,7 +137,7 @@ export function mountAppBar(element, { catalog = APP_CATALOG, peers = {}, colors
       const result = await onOpen({ appId: item.entry.id, actionId, signal: item.abort.signal });
       paint(); // enforce the deadline before accepting a late completion
       if (destroyed || item.open?.actionId !== actionId || item.open.state !== "opening") return;
-      item.open.state = result?.actionId === actionId && ["opened", "focused", "failed"].includes(result.outcome) ? result.outcome : "uncertain";
+      item.open.state = result?.actionId === actionId && ["opened", "focused", "failed", "missing"].includes(result.outcome) ? result.outcome : "uncertain";
     } catch { if (!destroyed && item.open?.actionId === actionId && item.open.state === "opening") item.open.state = "uncertain"; }
     paint();
   }

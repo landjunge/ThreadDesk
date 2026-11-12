@@ -557,3 +557,15 @@ Existing setup: install the source as described above, run `td mcp` (or
 requests cannot choose an executable, store or wider rights. Older desktop writers
 are not a schema-6 SQLite compatibility guarantee. Keep a backup and the correct
 writer/source pin; these changes do not migrate the real user workspace for a test.
+
+### Gemeinsame App-Leiste / Shared app bar
+
+Die gemeinsame `networkpunkt-appbar` 1.2.0 verwendet die fünf vorhandenen
+Originalicons mit 44-px-Bedienzielen und zugänglichen Statusdetails. Öffnen oder
+Fokussieren bedeutet keine bestätigte Peer-Verbindung. Quellenpins, Prüfsummen
+und der begrenzte Hostadapter stehen im [Appbar-Vertrag](docs/contracts/appbar-v1.md).
+
+The shared `networkpunkt-appbar` 1.2.0 reuses all five original icons with 44 px
+controls and accessible status details. Opening or focusing an app does not
+confirm a peer connection. Source pins, checksums and the bounded host adapter
+are described in the [app bar contract](docs/contracts/appbar-v1.md).

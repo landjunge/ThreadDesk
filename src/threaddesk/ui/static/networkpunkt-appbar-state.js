@@ -1,7 +1,7 @@
-/* NetzwerkPunkt appbar 1.0.0 — metadata projection, not authentication. */
-export const APPBAR_VERSION = "1.0.0";
-export const APP_ORDER = Object.freeze(["kirabridge", "threaddesk", "4allpass", "tollgate"]);
-const STATES = ["confirmed", "connecting", "disconnected", "unknown", "error"];
+/* NetzwerkPunkt appbar 1.2.0 — metadata projection, not authentication. */
+export const APPBAR_VERSION = "1.2.0";
+export const APP_ORDER = Object.freeze(["kirabridge", "threaddesk", "4allpass", "tollgate", "agent-authority"]);
+const STATES = ["confirmed", "connecting", "disconnected", "unknown", "error", "busy"];
 const ref = value => typeof value === "string" && /^[\w.:-]{1,128}$/.test(value);
 const ttl = value => Number.isFinite(value) && value > 0 && value <= 15000;
 const keys = (value, allowed) => value && typeof value === "object" && !Array.isArray(value)
@@ -44,12 +44,12 @@ export function createPeerState(initial, { clock = () => performance.now(), wall
     const state = accepted.state;
     const vault = state === "confirmed" && accepted.vault && accepted.age() < accepted.vault.ttlMs
       ? accepted.vault.state : "unknown";
-    return { state, vault, pulse: expected.appId === "4allpass" && state === "confirmed" && vault === "unlocked" };
+    return { state, vault, ...(accepted.version ? {version:accepted.version} : {}), pulse: expected.appId === "4allpass" && state === "confirmed" && vault === "unlocked" };
   }
   function begin() {
     snapshot();
     if (pending) return pending.ticket; // at most one outstanding check per peer
-    if (accepted?.state !== "confirmed") accepted = null;
+    if (!["confirmed", "busy"].includes(accepted?.state)) accepted = null;
     const ticket = Object.freeze({ generation, check: ++serial });
     pending = { ticket, age: createElapsed(clock, wallClock) };
     if (!accepted) neutral = "connecting";
@@ -68,10 +68,11 @@ export function createPeerState(initial, { clock = () => performance.now(), wall
   function receive(ticket, value) {
     if (!current(ticket)) return false;
     const age = pending.age;
-    const valid = keys(value, ["v", "appId", "connectionRef", "peerRef", "peerEpoch", "seq", "state", "ttlMs", "vault"])
+    const valid = keys(value, ["v", "appId", "connectionRef", "peerRef", "peerEpoch", "seq", "state", "ttlMs", "vault", "version"])
       && value.v === 1 && value.appId === expected.appId && value.connectionRef === expected.connectionRef
       && value.peerRef === expected.peerRef && value.peerEpoch === expected.peerEpoch
-      && Number.isSafeInteger(value.seq) && value.seq > seq && STATES.includes(value.state) && ttl(value.ttlMs);
+      && Number.isSafeInteger(value.seq) && value.seq > seq && STATES.includes(value.state) && ttl(value.ttlMs)
+      && (value.version === undefined || (typeof value.version === "string" && /^[a-zA-Z0-9][a-zA-Z0-9.+_-]{0,79}$/.test(value.version)));
     if (!valid) { fail(ticket); return false; }
     let vault = null;
     if (expected.appId === "4allpass" && value.state === "confirmed" && expected.unlockScope) {
@@ -83,7 +84,7 @@ export function createPeerState(initial, { clock = () => performance.now(), wall
       }
     }
     seq = value.seq; pending = null;
-    accepted = { state: value.state, ttlMs: value.ttlMs, age, vault };
+    accepted = { state: value.state, ttlMs: value.ttlMs, age, vault, version: value.version ?? null };
     return true;
   }
   function invalidate() { generation++; pending = null; accepted = null; neutral = "unknown"; }
