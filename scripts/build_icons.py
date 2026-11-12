@@ -21,7 +21,8 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=True)
     image = Image.open(source).convert("RGBA")
     assert image.size == (1024, 1024)
-    shutil.copyfile(source, output / "icon.png")
+    # Tauri's embedded icon decoder requires RGBA, even for an opaque original.
+    image.save(output / "icon.png")
     image.save(output / "icon.ico", format="ICO", sizes=[(n, n) for n in (16, 24, 32, 48, 64, 128, 256)])
     image.save(output / "icon.icns", format="ICNS")
     evidence = {"source": source_path, "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
