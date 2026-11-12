@@ -16,7 +16,7 @@
   <section class="data-card">
   <h2>{{ t("data.download") }}</h2>
   <p class="muted">{{ t("data.private") }}</p>
-  <form method="post" action="/data/download">
+  <form method="post" action="/data/download?lang={{ lang }}&amp;mode={{ register }}">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}" />
     <button class="btn btn-primary" type="submit">{{ t("data.download") }}</button>
   </form>

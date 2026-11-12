@@ -557,3 +557,40 @@ Existing setup: install the source as described above, run `td mcp` (or
 requests cannot choose an executable, store or wider rights. Older desktop writers
 are not a schema-6 SQLite compatibility guarantee. Keep a backup and the correct
 writer/source pin; these changes do not migrate the real user workspace for a test.
+
+### Gemeinsame App-Leiste / Shared app bar
+
+Die gemeinsame `networkpunkt-appbar` 1.2.2 verwendet die fünf vorhandenen
+Originalicons mit 44-px-Bedienzielen und zugänglichen Statusdetails. Öffnen oder
+Fokussieren bedeutet keine bestätigte Peer-Verbindung. Quellenpins, Prüfsummen
+und der begrenzte Hostadapter stehen im [Appbar-Vertrag](docs/contracts/appbar-v1.md).
+Native Wechsel warten bis zu 31 Sekunden auf denselben Versuch (30 Sekunden
+Brokerfrist plus Host-Overhead); UNKNOWN bleibt ohne automatische Wiederholung
+gesperrt. Eine rechtzeitig bestätigte Antwort gibt das Bedienziel wieder frei.
+
+The shared `networkpunkt-appbar` 1.2.2 reuses all five original icons with 44 px
+controls and accessible status details. Opening or focusing an app does not
+confirm a peer connection. Source pins, checksums and the bounded host adapter
+are described in the [app bar contract](docs/contracts/appbar-v1.md).
+Native switches wait up to 31 seconds for the same attempt (30 seconds at the
+broker plus host overhead). UNKNOWN stays blocked without automatic retries;
+a valid receipt within that deadline makes the control available again.
+
+Im aktuellen Quellstand steht die Leiste zentriert zwischen zweifarbiger Wortmarke
+und DE/EN. Drei Arbeitsspalten bleiben auch bei 940 px Breite nutzbar; die Oberfläche
+erzwingt keine 760 px Mindesthöhe mehr. Der Tauri-Host wechselt über den vorhandenen
+nativen KiraBridge-Familienbroker ohne Navigation, Reload oder Beenden der anderen
+Apps. Fehlt der Broker oder bestätigt er Ziel, Außenmaße und genau ein sichtbares
+Familienfenster nicht, bleibt der Wechsel fehlgeschlagen oder unklar. 4AllPass wird
+dadurch nicht entsperrt. Fenster schließen blendet ThreadDesk aus; erneutes Öffnen
+zeigt dieselbe Oberfläche. Ein ausdrückliches Beenden bleibt möglich. Diese
+Quellfunktionen ändern die bestehenden Downloads oder Installationen nicht.
+
+In current source, the centered bar sits between the original two-color wordmark
+and DE/EN controls. Three work columns remain usable at 940 px without a forced
+760 px minimum height. The Tauri host uses the existing native KiraBridge family
+broker without navigation, reloads or terminating other apps. Missing or incomplete
+broker evidence is reported as failed or uncertain, never connected. Switching does
+not unlock 4AllPass. Closing the window hides ThreadDesk; reopening shows the same
+interface. Explicit application quit remains available. Existing downloads and
+installations are unchanged by these source changes.

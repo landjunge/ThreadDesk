@@ -212,7 +212,7 @@ def test_user_keeps_notes_and_snapshot_across_restart(tmp_path: Path) -> None:
             expect(page.locator('.desk-description input[name="text"]')).to_have_value(
                 DESCRIPTION
             )
-            expect(page.get_by_role("status")).to_contain_text(TITLE)
+            expect(page.locator('#workspace .banner-ok[role="status"]')).to_contain_text(TITLE)
             _shot(page, "02-angelegt.png")
 
             _open_section(page, "notes")
@@ -221,7 +221,7 @@ def test_user_keeps_notes_and_snapshot_across_restart(tmp_path: Path) -> None:
             page.locator("#notes").get_by_role(
                 "button", name="Notiz speichern", exact=True
             ).click()
-            expect(page.get_by_role("status")).to_have_text("Notiz gespeichert")
+            expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text("Notiz gespeichert")
             expect(notes).to_have_value(NOTE)
 
             page.reload(wait_until="networkidle")
@@ -451,7 +451,7 @@ def test_user_renames_switches_archives_and_keeps_file_paths(tmp_path: Path) -> 
             ).click()
             expect(model).to_have_value("")
             expect(page.locator("[data-hausmeister]")).to_contain_text("Kein lokales Modell gewählt")
-            expect(page.get_by_role("status")).to_have_text("Kein lokales Modell gewählt")
+            expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text("Kein lokales Modell gewählt")
             expect(page.locator(".banner-error:visible")).to_have_count(0)
 
             page.locator("[data-help-open]").click()
@@ -517,7 +517,7 @@ def _append(page, actor: str, content: str, kind: str, next_step: str = "") -> N
     # The notice can already be present from the previous append. Wait for
     # this submission to replace the form before filling the next entry.
     previous_form.wait_for_element_state("hidden")
-    expect(page.get_by_role("status")).to_have_text("Beitrag angehängt")
+    expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text("Beitrag angehängt")
 
 
 def test_user_edits_description_status_and_whiteboard_order(tmp_path: Path) -> None:
@@ -559,7 +559,7 @@ def test_user_edits_description_status_and_whiteboard_order(tmp_path: Path) -> N
             page.locator(".desk-description").get_by_role(
                 "button", name="Speichern", exact=True
             ).click()
-            expect(page.get_by_role("status")).to_have_text("Beschreibung gespeichert")
+            expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text("Beschreibung gespeichert")
             expect(description).to_have_value("Neuer Zweck mit ÄÖÜ")
 
             for name in ("active", "paused", "done"):
@@ -567,7 +567,7 @@ def test_user_edits_description_status_and_whiteboard_order(tmp_path: Path) -> N
                 expect(page.locator(".desk-status button.is-on")).to_have_text(name)
                 expect(page.locator(".detail-head .status")).to_have_text(name)
                 expect(page.locator(".thread-item.is-current .status")).to_have_text(name)
-                expect(page.get_by_role("status")).to_have_text(f"Status: {name}")
+                expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text(f"Status: {name}")
             previous_status = page.locator(".desk-status").element_handle()
             page.locator(".desk-status").get_by_role("button", name="done", exact=True).click()
             # Re-selecting done leaves all visible assertions unchanged until
@@ -848,7 +848,7 @@ def test_user_switches_the_housekeeper_without_a_model(tmp_path: Path) -> None:
             section.get_by_role("button", name="Einschalten", exact=True).click()
             expect(section.get_by_role("button", name="Ausschalten", exact=True)).to_be_visible()
             expect(page.locator("[data-hausmeister-order]")).to_be_visible()
-            expect(page.get_by_role("status")).to_have_text("Einschalten")
+            expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text("Einschalten")
             page.locator("[data-hausmeister-run]").click()
             expect(page.get_by_role("alert")).to_have_text("Auftrag nicht ausgeführt")
             expect(page.locator("[data-hausmeister-entry]")).to_have_count(0)
@@ -858,7 +858,7 @@ def test_user_switches_the_housekeeper_without_a_model(tmp_path: Path) -> None:
             expect(page.locator("h1")).to_have_text("Hausmeister")
             page.locator("[data-hausmeister-order]").fill(order)
             page.locator("[data-hausmeister-later]").click()
-            expect(page.get_by_role("status")).to_have_text("Auftrag wartet")
+            expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text("Auftrag wartet")
             queued = (home / "hausmeister-queue.json").read_text(encoding="utf-8")
             assert order in queued
             page.locator("[data-hausmeister]").get_by_role(
@@ -868,7 +868,7 @@ def test_user_switches_the_housekeeper_without_a_model(tmp_path: Path) -> None:
             expect(page.locator("[data-hausmeister]").get_by_role(
                 "button", name="Einschalten", exact=True
             )).to_be_visible()
-            expect(page.get_by_role("status")).to_have_text("Ausschalten")
+            expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text("Ausschalten")
             _raise_chrome(before, "fenster-hausmeister.png")
             _shot(page, "13-hausmeister.png")
             browser.close()

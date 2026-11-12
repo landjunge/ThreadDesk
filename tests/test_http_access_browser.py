@@ -51,6 +51,8 @@ def test_real_browser_can_save_and_download_but_foreign_form_cannot_write(tmp_pa
             try:
                 context = browser.new_context(accept_downloads=True, locale="en-US")
                 page = context.new_page()
+                page_errors = []
+                page.on("pageerror", lambda error: page_errors.append(str(error)))
                 page.goto(url + "/?lang=de")
                 expect(page.locator("html")).to_have_attribute("lang", "de")
                 expect(page.locator(".preferences > summary")).to_contain_text("DE")
@@ -97,11 +99,16 @@ def test_real_browser_can_save_and_download_but_foreign_form_cannot_write(tmp_pa
                         page.locator(f'form[action^="/mode/{mode}"] button').click()
                     expect(page.locator("body")).to_have_attribute("data-register", mode)
                     expect(page.locator("html")).to_have_attribute("lang", "de")
+                # Download context must survive a click before deferred app.js
+                # loads; do not rely on the script's submit listener for it.
+                page.route("**/static/app.js", lambda route: route.abort())
                 page.get_by_role("link", name="Daten", exact=True).click()
+                assert not page_errors, page_errors
                 with page.expect_download() as download:
                     page.get_by_role("button", name="Sicherung herunterladen", exact=True).click()
                 saved = tmp_path / "synthetic-backup.zip"
                 download.value.save_as(saved)
+                page.unroute("**/static/app.js")
                 assert parse_qs(urlsplit(download.value.url).query) == {"lang": ["de"], "mode": ["plain"]}
                 assert saved.stat().st_size > 0
                 assert svc.get(thread.id).context.notes == "legitimate HTMX note"

@@ -1,6 +1,8 @@
 /* Screen geometry shared by the SVG camera and its readable label layer. */
 (() => {
-  const fit = (points, width, height, padding = 76) => {
+  // A two-line selected caption needs 40 px plus its 12 px gap. Leave that
+  // space without squeezing compact family canvases below readable density.
+  const fit = (points, width, height, padding = 56) => {
     if (!points.length) return null;
     const left = Math.min(...points.map(p => p.x - p.r));
     const right = Math.max(...points.map(p => p.x + p.r));

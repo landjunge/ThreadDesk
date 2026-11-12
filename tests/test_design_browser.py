@@ -117,7 +117,7 @@ def test_desktop_edit_and_error_remain_usable(design_browser):
         _open_section(page, "thread-edit")
         page.locator('.desk-description input[name="text"]').fill("Beschreibung " * 25)
         page.locator('.desk-description button').click()
-        expect(page.locator('[role="status"]')).to_contain_text("Beschreibung gespeichert")
+        expect(page.locator('#workspace .banner-ok[role="status"]')).to_contain_text("Beschreibung gespeichert")
         page.reload(wait_until="networkidle")
         expect(page.locator('.desk-description input[name="text"]')).to_have_value(("Beschreibung " * 25).strip())
         assert_layout(page)
@@ -161,7 +161,7 @@ def test_disclosed_tools_remain_usable(design_browser, width):
         expect(page.locator('details[data-disclosure="snapshots"]')).to_have_attribute("open", "")
         page.locator('[data-whiteboard-content]').fill("Die neue Ordnung bleibt nach dem Speichern benutzbar.")
         page.locator('[data-whiteboard-submit]').click()
-        expect(page.locator('[role="status"]')).to_have_text("Beitrag angehängt")
+        expect(page.locator('#workspace .banner-ok[role="status"]')).to_have_text("Beitrag angehängt")
         expect(page.locator('details[data-disclosure="snapshots"]')).to_have_attribute("open", "")
         page.locator('details[data-disclosure="snapshots"] > summary').click()
         page.locator('h1').click()
@@ -206,7 +206,9 @@ def test_smaller_viewport_keeps_desktop_order_and_access(design_browser):
             columns:sidebar.right<=main.left && notes.right<=side.left,
             scrollable:getComputedStyle(document.documentElement).overflowX};
         }""")
-        assert sizes["width"] >= 1180 and sizes["height"] >= 760, sizes
+        # The family layout fits this viewport instead of forcing the old
+        # 1180x760 minimum; all three columns and keyboard access stay intact.
+        assert sizes["width"] == 1024 and sizes["height"] == 700, sizes
         assert sizes["columns"] and sizes["scrollable"] == "auto", sizes
         _open_section(page, "packet")
         page.locator('details[data-disclosure="packet"] .btn').last.focus()
