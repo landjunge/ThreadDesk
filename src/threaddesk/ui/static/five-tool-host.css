@@ -9,7 +9,7 @@
 .np-appbar-host { grid-column:2; grid-row:1; justify-self:center; }
 .topbar-language { grid-column:3; grid-row:1; justify-self:end; }
 .topbar-language .lang-switch { display:flex; gap:4px; }
-.topbar-language .btn { min-width:44px; height:44px; }
+.topbar-language .btn { min-width:44px; height:40px; }
 .topbar-actions { grid-column:1 / -1; grid-row:2; min-width:0; justify-content:space-between; gap:8px; }
 .topbar-actions .view-nav { display:flex; flex:1; gap:4px; min-width:0; }
 .topbar-actions .view-nav .btn { padding-inline:8px; }
