@@ -62,6 +62,10 @@ PIN_DOWNLOAD = re.compile(
 PIN_CHANNEL = re.compile(
     r"""(?:FOURALLPASS_RELEASE:-|CHANNEL=\{?\$\{[^}]+:-|else\s*\{\s*")(v?[0-9][^"'\s}]+)""",
 )
+PIN_RELEASE_URL = re.compile(
+    r"github\.com/[^/\s]+/[^/\s]+/releases/(?:download|tag)/([^/\s\"'?]+)",
+    re.IGNORECASE,
+)
 
 
 def lane(tag: str):
@@ -123,26 +127,43 @@ def newest_kept(releases):
     return kept
 
 
+def _pin_tag(raw: str):
+    tag = (raw or "").strip("\"'").rstrip(").,;:")
+    if not tag or tag.startswith("-") or tag.startswith("$"):
+        return None
+    return tag
+
+
 def pinned_tags(root="."):
-    """Tags still named by install scripts or workflow fixture downloads."""
+    """Tags still named by install scripts, product site, or workflow fixtures."""
     tags = set()
     root = Path(root)
     paths = (
         list(root.glob("scripts/install*"))
         + list(root.glob(".github/workflows/*.yml"))
         + list(root.glob("docs/INSTALL*.md"))
+        + list(root.glob("site/*.html"))
     )
     for path in paths:
+        if ".test." in path.name:
+            continue
         try:
             text = path.read_text(encoding="utf-8")
         except OSError:
             continue
         for match in PIN_DOWNLOAD.finditer(text):
-            tag = match.group(1).strip("\"'")
-            if tag and not tag.startswith("-") and not tag.startswith("$"):
+            tag = _pin_tag(match.group(1))
+            if tag:
                 tags.add(tag)
         for match in PIN_CHANNEL.finditer(text):
-            tags.add(match.group(1))
+            tag = _pin_tag(match.group(1))
+            if tag:
+                tags.add(tag)
+        if path.parent.name == "site":
+            for match in PIN_RELEASE_URL.finditer(text):
+                tag = _pin_tag(match.group(1))
+                if tag:
+                    tags.add(tag)
     return tags
 
 
@@ -165,7 +186,7 @@ def plan(releases, extra_keep_tags=()):
                 "draft": bool(release.get("draft")),
             }
             if is_installer(name):
-                if tag in keep_tags:
+                if tag in keep_tags or release.get("draft"):
                     keep_installers.append(row)
                 else:
                     delete.append(row)
@@ -356,8 +377,16 @@ def self_test():
             "KiraBridge keeps desktop plus linux independently",
             [desktop_new, linux_new, linux_old, windows, draft, wheel_old],
             ["linux-v0.8.0rc41", "v0.1.2-rc.3"],
-            [31, 41, 51, 61],
-            [1, 21],
+            [31, 41, 61],
+            [1, 21, 51],
+            (),
+        ),
+        (
+            "draft installers are not deleted",
+            [desktop_new, draft],
+            ["v0.1.2-rc.3"],
+            [],
+            [1, 51],
             (),
         ),
         (
@@ -456,8 +485,13 @@ def self_test():
         (root / ".github" / "workflows" / "macos-package.yml").write_text(
             "gh release download v0.8.0rc49 -p '*.whl'\n", encoding="utf-8"
         )
+        (root / "site").mkdir()
+        (root / "site" / "index.html").write_text(
+            'href="https://github.com/landjunge/threaddesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg"',
+            encoding="utf-8",
+        )
         got_pins = pinned_tags(root)
-        want_pins = {"v0.1.2-rc.3", "v0.8.0rc49", "linux-v0.8.0rc41"}
+        want_pins = {"v0.1.2-rc.3", "v0.8.0rc49", "linux-v0.8.0rc41", "v0.2.0"}
         if got_pins != want_pins:
             failed.append(f"pinned_tags {sorted(got_pins)} != {sorted(want_pins)}")
 
