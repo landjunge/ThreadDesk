@@ -6,9 +6,12 @@ never to a release page, so one click starts the download. Drafts are ignored;
 prereleases count because the products currently ship previews only.
 
 Shared by KiraBridge, ThreadDesk and 4AllPass; the three copies are identical
-(see TOOL_VERSION). Only the block between the AUTO-DOWNLOADS markers in
-README.md / README.de.md and the generated ``assets/readme/download-<platform>.svg``
-buttons are touched. Other ``download-*.svg`` files are never removed.
+(see TOOL_VERSION). Desktop buttons come from the newest unprefixed ``v*``
+release. KiraBridge's Debian server track (``linux-*`` tags) is a second lane
+and shows as optional ``Debian Remote``. ``windows-*`` tags stay unused.
+Only the block between the AUTO-DOWNLOADS markers in README.md / README.de.md
+and the generated ``assets/readme/download-<platform>.svg`` buttons are
+touched. Other ``download-*.svg`` files are never removed.
 
 Before anything is written, every chosen asset is confirmed through the
 Releases API and, for public repositories, the download URL itself must answer.
@@ -31,7 +34,7 @@ import urllib.request
 from html import escape
 from pathlib import Path
 
-TOOL_VERSION = "2.1.0"
+TOOL_VERSION = "2.2.0"
 START, END = "<!-- AUTO-DOWNLOADS:START -->", "<!-- AUTO-DOWNLOADS:END -->"
 BUTTON_DIR = Path("assets/readme")
 API = "https://api.github.com"
@@ -47,8 +50,8 @@ BRAND = {
     "blockdesign": "#ebc33f",
 }
 
-# Display order of the buttons.
-ORDER = ["macOS Apple Silicon", "macOS Intel", "Windows", "Linux"]
+# Display order of the buttons. "Debian Remote" is filled only from linux-* tags.
+ORDER = ["macOS Apple Silicon", "macOS Intel", "Windows", "Linux", "Debian Remote"]
 
 PACKAGE = re.compile(r"\.(?:dmg|pkg|exe|msi|appimage|deb|rpm|zip|tar\.gz)$", re.IGNORECASE)
 NOT_PACKAGE = re.compile(
@@ -121,45 +124,75 @@ def button_svg(label, version, color):
     )
 
 
-def base_version(tag):
-    match = re.search(r"(\d+)\.(\d+)\.(\d+)", tag)
-    return match.groups() if match else None
+def lane(tag):
+    """desktop = unprefixed v*; remote = linux-*; windows-* is ignored."""
+    name = (tag or "").lower()
+    if name.startswith("linux-"):
+        return "remote"
+    if name.startswith("windows-"):
+        return None
+    return "desktop"
 
 
-def choose(releases):
-    """Only the newest published release that has installers.
-
-    Older tags are not used to fill missing platforms. A later Linux-only
-    release therefore replaces a previous macOS button until a new release
-    ships that platform again.
-    """
-    releases = sorted(
+def published(releases):
+    return sorted(
         (r for r in releases if not r.get("draft") and r.get("published_at")),
         key=lambda r: r["published_at"],
         reverse=True,
     )
-    newest = next(
-        (
-            release
-            for release in releases
-            if any(
-                asset.get("state") == "uploaded" and platforms(asset.get("name", ""))
-                for asset in release.get("assets", [])
-            )
-        ),
-        None,
-    )
-    if newest is None:
-        return {}
+
+
+def installer_labels(release):
+    labels = []
+    for asset in release.get("assets", []):
+        if asset.get("state") == "uploaded":
+            labels.extend(platforms(asset.get("name", "")))
+    return labels
+
+
+def pick_from(release):
     best = {}
-    for asset in newest.get("assets", []):
+    for asset in release.get("assets", []):
         name = asset.get("name", "")
         if asset.get("state") != "uploaded":
             continue
         for label in platforms(name):
             if label not in best or preference(name) > preference(best[label]["name"]):
                 best[label] = asset
-    return {label: (newest["tag_name"], asset) for label, asset in best.items()}
+    return {label: (release["tag_name"], asset) for label, asset in best.items()}
+
+
+def newest_lane(releases, wanted, required=None):
+    for release in published(releases):
+        if lane(release["tag_name"]) != wanted:
+            continue
+        labels = installer_labels(release)
+        if not labels:
+            continue
+        if required and required not in labels:
+            continue
+        return release
+    return None
+
+
+def choose(releases):
+    """Newest desktop release plus newest linux-* Debian Remote, independently.
+
+    Desktop (unprefixed v*) still offers only that one release: missing
+    platforms stay empty. linux-* is a second track; its Linux installer
+    becomes ``Debian Remote``. windows-* tags never fill a button. A 4AllPass
+    AppImage on v* stays ``Linux``.
+    """
+    chosen = {}
+    desktop = newest_lane(releases, "desktop")
+    if desktop:
+        chosen.update(pick_from(desktop))
+    remote = newest_lane(releases, "remote", required="Linux")
+    if remote:
+        linux = pick_from(remote).get("Linux")
+        if linux:
+            chosen["Debian Remote"] = linux
+    return chosen
 
 
 # --- network -----------------------------------------------------------------
@@ -346,10 +379,58 @@ def self_test():
     ]
     picked = {label: tag for label, (tag, _) in choose(releases).items()}
     if picked != {"Linux": "v0.8.0rc2"}:
-        failed.append(f"choose: {picked}")
+        failed.append(f"choose-desktop: {picked}")
+    dual = [
+        {
+            "tag_name": "v0.8.0rc49",
+            "draft": False,
+            "published_at": "2026-11-12",
+            "assets": [{"name": "KiraBridge-macos.tar.gz", "state": "uploaded"}],
+        },
+        {
+            "tag_name": "linux-v0.8.0rc41",
+            "draft": False,
+            "published_at": "2026-11-07",
+            "assets": [{"name": "KiraBridge-0.8.0rc41-Linux-x86_64.tar.gz", "state": "uploaded"}],
+        },
+        {
+            "tag_name": "linux-v0.8.0rc40",
+            "draft": False,
+            "published_at": "2026-11-01",
+            "assets": [{"name": "KiraBridge-0.8.0rc40-Linux-x86_64.tar.gz", "state": "uploaded"}],
+        },
+        {
+            "tag_name": "windows-v0.8.0rc37.dev1",
+            "draft": False,
+            "published_at": "2026-11-13",
+            "assets": [{"name": "KiraBridge-Windows.zip", "state": "uploaded"}],
+        },
+    ]
+    picked = {label: tag for label, (tag, _) in choose(dual).items()}
+    if picked != {"macOS Intel": "v0.8.0rc49", "Debian Remote": "linux-v0.8.0rc41"}:
+        failed.append(f"choose-lanes: {picked}")
+    if version_of("linux-v0.8.0rc41") != "0.8.0rc41":
+        failed.append(f"version_of linux tag: {version_of('linux-v0.8.0rc41')}")
+    appimage = [
+        {
+            "tag_name": "v0.1.2-rc.2",
+            "draft": False,
+            "published_at": "2026-06-01",
+            "assets": [
+                {"name": "4AllPass_0.1.2-rc.2_x64.dmg", "state": "uploaded"},
+                {"name": "4AllPass_0.1.2-rc.2_amd64.AppImage", "state": "uploaded"},
+            ],
+        }
+    ]
+    picked = {label: tag for label, (tag, _) in choose(appimage).items()}
+    if picked != {"macOS Intel": "v0.1.2-rc.2", "Linux": "v0.1.2-rc.2"}:
+        failed.append(f"choose-appimage: {picked}")
     if failed:
         raise SystemExit("Self-test failed:\n  " + "\n  ".join(failed))
-    print(f"Self-test passed ({len(cases)} names, newest-release selection), tool {TOOL_VERSION}")
+    print(
+        f"Self-test passed ({len(cases)} names, desktop plus linux-remote lanes), "
+        f"tool {TOOL_VERSION}"
+    )
 
 
 def main(argv):
