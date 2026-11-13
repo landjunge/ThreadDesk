@@ -56,3 +56,13 @@ def test_mcp_inbox_never_auto_accepts(tmp_path: Path) -> None:
     assert listed["result"][0]["return"]["return_id"] == payload["return_id"]
     reviewed = bridge.call("review_return", {"return_id": payload["return_id"], "choice": "accepted"})
     assert reviewed["result"]["decision"]["choice"] == "accepted"
+
+
+@pytest.mark.parametrize("revision", [True, False, 0, -1, 1.0, "2", None])
+def test_receive_rejects_non_integer_revision_before_persisting(tmp_path: Path, revision) -> None:
+    svc = ThreadService(store=JsonStore(tmp_path))
+    payload = returned()
+    payload["handoff_revision"] = revision
+    with pytest.raises(InvalidState, match="return_revision"):
+        svc.receive_return(payload)
+    assert svc.returns() == []

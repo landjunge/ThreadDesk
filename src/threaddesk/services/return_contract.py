@@ -55,7 +55,8 @@ def validate(value: Mapping[str, Any]) -> dict[str, Any]:
     for field in ("return_id", "handoff_id", "thread_id", "task_id", "worker", "run_id", "result", "created_at"):
         if not isinstance(payload[field], str) or not payload[field].strip():
             raise InvalidState(f"return_{field}")
-    if not isinstance(payload["handoff_revision"], int) or payload["handoff_revision"] < 1:
+    revision = payload["handoff_revision"]
+    if type(revision) is not int or revision < 1:
         raise InvalidState("return_revision")
     for field in ("files", "test_results", "open_issues"):
         payload[field] = _strings(payload[field], field)
