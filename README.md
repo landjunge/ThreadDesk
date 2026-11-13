@@ -532,7 +532,17 @@ live item states. This is not an installed desktop release.
 [Projektstart / Project intake](docs/plans/PROJECT-START-20261106.md).
 [Planrevisionen / Plan revisions](docs/plans/PROJECT-PLAN-20261106.md).
 [Gemeinsamer Big-Plan-Quellstand / Integrated Big Plan source](docs/plans/BIGPLAN-SOURCE-INTEGRATION-20261106.md)
-verbindet diese Arbeit mit den [Instanz-Kurzberichten / instance short reports](docs/agents/SHORT-REPORTS.md).
+verbindet diese Arbeit mit den [Agenten-Kurzberichten / agent short reports](docs/agents/SHORT-REPORTS.md).
+
+**Quellstand · Agentenstatus:** Neue Instanzen teilen sich eine zentrale Übersicht.
+Gleiche Statusmeldungen aktualisieren nur den aktuellen Stand; fachliche Änderungen
+und Ergebnisse bleiben als kurze Beiträge mit Details erhalten. Alte Berichtsboards
+bleiben lesbar. Keine automatische Installation in laufende Berichtsdienste.
+
+**Source change · Agent status:** New instances share one overview. Repeated status
+reports update current state; substantive changes and results retain short entries
+with their details. Existing report boards stay readable. Running report services
+require a separately verified update.
 
 `knowledge_manage` speichert referenzierte Entscheidungen, offene Fragen,
 verworfene Vorschläge und Aufgaben über denselben MCP-Zugang. Erwartete Thread-
@@ -600,3 +610,14 @@ broker evidence is reported as failed or uncertain, never connected. Switching d
 not unlock 4AllPass. Closing the window hides ThreadDesk; reopening shows the same
 interface. Explicit application quit remains available. Existing downloads and
 installations are unchanged by these source changes.
+
+**Quellkorrektur · Bibliothekssuche:** Ein unveränderter Watch-Abgleich erneuert
+weder identische Records noch einen bereits aktuellen Index. Technische
+Importquittungen machen die Suche nicht mehr vorübergehend veraltet; echte
+Inhalts-, Versions- und Zuordnungsänderungen bleiben an die Frischeprüfung gebunden.
+Diese Korrektur ist noch kein installiertes Desktoppaket.
+
+**Source fix · Library search:** An unchanged watch reconciliation preserves
+identical records and an already current index. Technical import receipts no
+longer temporarily invalidate search; actual content, version and assignment
+changes still require a fresh projection. This is not an installed desktop build.
