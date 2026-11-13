@@ -157,7 +157,8 @@ class WhiteboardService:
     def graph_nodes(self):
         result = []
         for thread in self.store.list_threads(include_archived=True):
-            if not self.exists(thread):
+            count = self.store.whiteboard_entry_count(thread.id)
+            if count == 0 and KEY not in thread.context.extra:
                 continue
             identity = PREFIX + thread.id
             try:
@@ -166,14 +167,15 @@ class WhiteboardService:
                 pass
             else:
                 raise ManagementError("graph_projection_conflict", "Whiteboardprojektion kollidiert mit gespeichertem Knoten.", object_id=identity, thread_id=thread.id)
-            board = self.get(thread.id)
+            board_state = state(thread)
+            board_status = "archived" if thread.status == "archived" else board_state
             result.append(KnowledgeNode(id=PREFIX + thread.id, kind="whiteboard", title=thread.title,
-                status="archived" if thread.status == "archived" else "paused" if board["state"] == "closed" else "active",
+                status="archived" if thread.status == "archived" else "paused" if board_state == "closed" else "active",
                 details=thread.description, created_at=thread.created_at, updated_at=thread.updated_at,
                 revision=thread.revision, source="threaddesk.whiteboard", visibility="private",
                 metadata={"thread_id": thread.id, "whiteboard_id": thread.id,
-                    "whiteboard_state": board["state"], "whiteboard_status": board["status"],
-                    "entry_count": board["entry_count"], "projection": "thread_whiteboard",
+                    "whiteboard_state": board_state, "whiteboard_status": board_status,
+                    "entry_count": count, "projection": "thread_whiteboard",
                     "lifecycle_scope": "owning_thread"}))
         return result
 
