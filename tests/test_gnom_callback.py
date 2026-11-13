@@ -57,3 +57,29 @@ def test_stale_revision_late_event_and_delivery_after_cancel_are_rejected(tmp_pa
     with pytest.raises(InvalidState, match="job_terminal"):
         svc.receive_gnom_callback(callback("delivered", event_id="delivery", occurred_at="2026-09-15T19:04:00+00:00", result="Too late"))
     assert svc.returns() == []
+
+
+@pytest.mark.parametrize("revision", [True, False, 0, -1, 1.0, "1", None])
+def test_callback_rejects_non_integer_revision_without_effects(tmp_path: Path, revision) -> None:
+    svc = ThreadService(store=JsonStore(tmp_path))
+    thread = svc.create("Callback")
+    svc.bind_gnom_job("job-1", svc.gnom())
+    before = svc.whiteboard(thread.id)
+    with pytest.raises(InvalidState, match="gnom_callback_revision"):
+        svc.receive_gnom_callback(callback(handoff_revision=revision))
+    job = svc.gnom_jobs()[0]
+    assert job["events"] == [] and job["status"] is None
+    assert svc.returns() == []
+    assert svc.whiteboard(thread.id) == before
+
+
+def test_true_delivered_revision_has_no_return_or_board_effect(tmp_path: Path) -> None:
+    svc = ThreadService(store=JsonStore(tmp_path))
+    thread = svc.create("Callback")
+    svc.bind_gnom_job("job-1", svc.gnom())
+    before = svc.whiteboard(thread.id)
+    with pytest.raises(InvalidState, match="gnom_callback_revision"):
+        svc.receive_gnom_callback(callback("delivered", result="Done", handoff_revision=True))
+    assert svc.gnom_jobs()[0]["events"] == []
+    assert svc.returns() == []
+    assert svc.whiteboard(thread.id) == before
