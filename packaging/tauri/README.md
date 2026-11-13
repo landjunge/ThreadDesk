@@ -25,12 +25,15 @@ data-ownership checks remain in the Python backend.
   (`app_log_dir()/startup.log`): directory `0700`, file `0600` (also fixed if an
   older permissive file exists), symlinks refused, **capped at 256 KiB**. The
   drain continues past the cap, so a full log can never block the backend
-  through a full pipe. Lines are sanitized before they are stored: the home
-  path is shortened, single lines are capped at 400 characters, and lines with
-  credential markers (`authorization`, `bearer`, `password`, `secret`, `token`,
-  `private key`) are dropped. The host never adds request bodies or profile
-  content. If the private log cannot be opened safely, startup fails with a
+  through a full pipe. Only a **structured allowlist** is stored: fixed startup
+  codes (workspace locked, saved address corrupt/invalid, port in use,
+  traceback, stopped-before-ready, startup timeout) plus counts of unclassified
+  lines. Raw stderr text, request bodies and profile content are **never**
+  written. If the private log cannot be opened safely, startup fails with a
   clear alert instead of writing to an unprotected path.
+- Cleanup happens **before** the alert: on timeout, early exit, protocol error
+  or a window/capability failure the host stops and reaps only its own spawned
+  process group first, then writes the reason and shows the modal message.
 - Readiness is bounded to **30 s**. On timeout, or when the backend exits before
   announcing its URL, the host stops **only its own spawned process group**
   (one-file bundles fork a child), reaps it, writes the reason plus the log path
@@ -48,13 +51,16 @@ Datenbesitzprüfung bleiben im Python-Backend. Backend-stderr landet im eigenen
 App-Logverzeichnis (`app_log_dir()/startup.log`): Verzeichnis `0700`, Datei
 `0600` (auch eine ältere permissivere Datei wird korrigiert), Symlinks werden
 abgelehnt, **maximal 256 KiB**. Auch nach der Kappung wird weitergelesen, damit
-ein voller Log das Backend nie über eine volle Pipe blockiert. Zeilen werden vor
-dem Speichern bereinigt: Home-Pfad wird verkürzt, einzelne Zeilen auf 400 Zeichen
-begrenzt, Zeilen mit Credential-Markern (`authorization`, `bearer`, `password`,
-`secret`, `token`, `private key`) werden verworfen. Der Host ergänzt keine
-Request-Bodies oder Profilinhalte. Lässt sich der private Log nicht sicher
-öffnen, bricht der Start mit klarem Hinweis ab, statt in einen ungeschützten
-Pfad zu schreiben. Die
+ein voller Log das Backend nie über eine volle Pipe blockiert. Gespeichert wird
+nur eine **strukturierte Allowlist**: feste Startup-Codes (Workspace gesperrt,
+gespeicherte Adresse beschädigt/ungültig, Port belegt, Traceback,
+vorzeitig beendet, Startup-Timeout) plus Zähler nicht klassifizierter Zeilen.
+Roher stderr-Text, Request-Bodies und Profilinhalte werden **nie** geschrieben.
+Lässt sich der private Log nicht sicher öffnen, bricht der Start mit klarem
+Hinweis ab, statt in einen ungeschützten Pfad zu schreiben. Das Aufräumen
+passiert **vor** dem Hinweis: Bei Timeout, frühem Exit, Protokollfehler oder
+Fenster-/Capability-Fehler beendet und reapet der Host zuerst nur seine eigene
+Prozessgruppe, dann werden Grund geschrieben und der modale Hinweis gezeigt. Die
 Bereitschaft ist auf **30 s** begrenzt: Bei Timeout oder vorzeitigem Backend-Exit
 beendet der Host **nur seine eigene Prozessgruppe** (Ein-Datei-Bundles forken ein
 Kind), reapet sie, schreibt Grund und Logpfad ins Log und zeigt einen nativen

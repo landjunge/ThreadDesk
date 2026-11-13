@@ -25,8 +25,6 @@ const READY_TIMEOUT: Duration = Duration::from_secs(30);
 const STDERR_LOG_CAP: u64 = 256 * 1024;
 /// A handshake line is one short URL; anything longer is not trusted.
 const MAX_HANDSHAKE_BYTES: usize = 4096;
-/// Cap one diagnostic line after sanitizing; keep the log readable.
-const MAX_LOG_LINE_CHARS: usize = 400;
 
 struct Backend(Mutex<Child>);
 mod family_switch;
@@ -120,61 +118,51 @@ fn open_private_log(path: &Path) -> io::Result<File> {
     Ok(file)
 }
 
-fn append_startup_error(path: &Path, message: &str) {
-    let mut options = OpenOptions::new();
-    options.create(true).append(true);
-    #[cfg(unix)]
-    {
-        options.mode(0o600).custom_flags(libc::O_NOFOLLOW);
-    }
-    if let Ok(mut file) = options.open(path) {
+fn write_host_line(handle: Option<&mut File>, message: &str) {
+    if let Some(file) = handle {
         let _ = writeln!(file, "[host] {message}");
+        let _ = file.flush();
     }
 }
 
-/// Keep only bounded, sanitized diagnostics: no request bodies, profile
-/// content or obvious credential material. The home path is shortened, long
-/// lines are cut, and lines with secret markers are dropped.
-fn sanitize_line(line: &str) -> Option<String> {
-    let mut value = line.replace('\r', "");
-    if let Some(home) = std::env::var_os("HOME") {
-        let home = home.to_string_lossy();
-        if !home.is_empty() {
-            value = value.replace(home.as_ref(), "~");
-        }
+/// Structured allowlist: persist only fixed startup codes, never raw backend
+/// text. Backend stderr carries Python tracebacks, uvicorn errors and the
+/// desktop-runtime startup errors; arbitrary lines (which could contain
+/// workspace/profile text) are counted but not stored.
+fn classify_backend_line(line: &str) -> Option<&'static str> {
+    let text = line.trim();
+    if text.contains("ThreadDesk läuft für diesen Arbeitsbereich bereits") {
+        return Some("backend_workspace_locked");
     }
-    let lower = value.to_ascii_lowercase();
-    const SECRET_MARKERS: [&str; 6] = [
-        "authorization:",
-        "bearer ",
-        "password",
-        "secret",
-        "token",
-        "private key",
-    ];
-    if SECRET_MARKERS.iter().any(|marker| lower.contains(marker)) {
-        return None;
+    if text.contains("gespeicherte ThreadDesk-Adresse ist beschädigt") {
+        return Some("backend_saved_address_corrupt");
     }
-    let clean: String = value
-        .chars()
-        .filter(|character| !character.is_control() || *character == '\t')
-        .take(MAX_LOG_LINE_CHARS)
-        .collect();
-    if clean.trim().is_empty() {
-        None
-    } else {
-        Some(clean)
+    if text.contains("gespeicherte ThreadDesk-Adresse ist ungültig") {
+        return Some("backend_saved_address_invalid");
     }
+    if text.contains("lokale ThreadDesk-Adresse ist belegt") {
+        return Some("backend_port_in_use");
+    }
+    if text == "Traceback (most recent call last):" {
+        return Some("backend_traceback");
+    }
+    if text.contains("ThreadDesk backend stopped before it was ready") {
+        return Some("backend_stopped_before_ready");
+    }
+    if text.contains("ThreadDesk backend startup timed out") {
+        return Some("backend_startup_timeout");
+    }
+    None
 }
 
-/// Drain the child's stderr line by line. Reading continues after the cap, so a
-/// full log can never block the backend through a full pipe (no SIGPIPE /
-/// backpressure). Only sanitized lines are persisted.
+/// Drain the child's stderr and persist only bounded classification counts.
+/// Reading continues after the cap, so a full log can never block the backend.
 fn drain_stderr(mut stderr: ChildStderr, sink: Box<dyn Write + Send>, cap: u64) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let mut sink = sink;
         let mut written: u64 = 0;
         let mut pending: Vec<u8> = Vec::new();
+        let mut other: u64 = 0;
         let mut buffer = [0u8; 8192];
         loop {
             match stderr.read(&mut buffer) {
@@ -183,33 +171,47 @@ fn drain_stderr(mut stderr: ChildStderr, sink: Box<dyn Write + Send>, cap: u64) 
                     pending.extend_from_slice(&buffer[..read]);
                     while let Some(position) = pending.iter().position(|byte| *byte == b'\n') {
                         let line: Vec<u8> = pending.drain(..=position).collect();
-                        if let Some(clean) = sanitize_line(&String::from_utf8_lossy(&line)) {
-                            if written < cap {
-                                let mut bytes = clean.into_bytes();
-                                bytes.push(b'\n');
-                                let room = (cap - written) as usize;
-                                let take = room.min(bytes.len());
-                                let _ = sink.write_all(&bytes[..take]);
-                                written += take as u64;
+                        let text = String::from_utf8_lossy(&line);
+                        match classify_backend_line(&text) {
+                            Some(code) => {
+                                if written < cap {
+                                    let record = format!("event=backend_stderr code={code}\n");
+                                    let room = (cap - written) as usize;
+                                    let take = room.min(record.len());
+                                    let _ = sink.write_all(&record.as_bytes()[..take]);
+                                    written += take as u64;
+                                }
                             }
+                            None => other += 1,
                         }
                     }
-                    if pending.len() > 8192 {
+                    // Bound the partial line; discard the tail of an oversized
+                    // line instead of holding arbitrary workspace text.
+                    if pending.len() > 4096 {
                         pending.clear();
+                        other += 1;
                     }
                 }
             }
         }
         if !pending.is_empty() {
-            if let Some(clean) = sanitize_line(&String::from_utf8_lossy(&pending)) {
-                if written < cap {
-                    let mut bytes = clean.into_bytes();
-                    bytes.push(b'\n');
-                    let room = (cap - written) as usize;
-                    let take = room.min(bytes.len());
-                    let _ = sink.write_all(&bytes[..take]);
+            match classify_backend_line(&String::from_utf8_lossy(&pending)) {
+                Some(code) => {
+                    if written < cap {
+                        let record = format!("event=backend_stderr code={code}\n");
+                        let room = (cap - written) as usize;
+                        let take = room.min(record.len());
+                        let _ = sink.write_all(&record.as_bytes()[..take]);
+                    }
                 }
+                None => other += 1,
             }
+        }
+        if other > 0 && written < cap {
+            let record = format!("event=backend_stderr_other count={other}\n");
+            let room = (cap - written) as usize;
+            let take = room.min(record.len());
+            let _ = sink.write_all(&record.as_bytes()[..take]);
         }
         let _ = sink.flush();
     })
@@ -325,6 +327,32 @@ impl OwnedChild {
     fn take(&mut self) -> Child {
         self.0.take().expect("owned child present")
     }
+
+    /// Deterministic cleanup: kill/reap now and disarm the Drop backstop.
+    fn cleanup(&mut self) {
+        if let Some(mut child) = self.0.take() {
+            stop_owned_child(&mut child);
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+}
+
+/// Cleanup happens **before** any modal notification, so a timeout/exit cannot
+/// leave the backend alive while the user reads the alert.
+fn fail_startup<F>(
+    owned: &mut OwnedChild,
+    host_log: Option<&mut File>,
+    message: &str,
+    notify: F,
+) where
+    F: FnOnce(&str),
+{
+    owned.cleanup();
+    write_host_line(host_log, message);
+    notify(message);
 }
 
 impl Drop for OwnedChild {
@@ -382,6 +410,9 @@ fn main() {
                     return Err(message.into());
                 }
             };
+            // Reuse the already validated handle for host messages; never
+            // reopen the path (same file/regular/symlink invariants).
+            let mut host_log = log_file.try_clone().ok();
             let mut command = Command::new(&binary);
             command
                 .env("THREADDESK_HOME", &data)
@@ -394,24 +425,35 @@ fn main() {
             let child = command.spawn()?;
             let mut owned = OwnedChild::new(child);
 
-            let stderr = owned
-                .child_mut()
-                .stderr
-                .take()
-                .ok_or("Backend stderr unavailable")?;
+            let stderr = match owned.child_mut().stderr.take() {
+                Some(stderr) => stderr,
+                None => {
+                    let message = format!(
+                        "Das lokale Backend lieferte keinen stderr-Kanal. Log: {}",
+                        log_path.display()
+                    );
+                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                    return Err(message.into());
+                }
+            };
             let _ = drain_stderr(stderr, Box::new(log_file), STDERR_LOG_CAP);
-            let stdout = owned
-                .child_mut()
-                .stdout
-                .take()
-                .ok_or("Backend stdout unavailable")?;
+            let stdout = match owned.child_mut().stdout.take() {
+                Some(stdout) => stdout,
+                None => {
+                    let message = format!(
+                        "Das lokale Backend lieferte keinen stdout-Kanal. Log: {}",
+                        log_path.display()
+                    );
+                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                    return Err(message.into());
+                }
+            };
             let url = match read_ready_line(stdout, READY_TIMEOUT) {
                 Ok(line) => match validate_ready_url(&line) {
                     Ok(url) => url,
                     Err(error) => {
                         let message = format!("{error}. Log: {}", log_path.display());
-                        append_startup_error(&log_path, &message);
-                        show_startup_error(&message);
+                        fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
                         return Err(message.into());
                     }
                 },
@@ -421,8 +463,7 @@ fn main() {
                         READY_TIMEOUT.as_secs(),
                         log_path.display()
                     );
-                    append_startup_error(&log_path, &message);
-                    show_startup_error(&message);
+                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
                     return Err(message.into());
                 }
                 Err(ReadyError::Exited) => {
@@ -432,8 +473,7 @@ fn main() {
                         "Das lokale Backend endete vor der Bereitschaft (Exit {status:?}). Log: {}",
                         log_path.display()
                     );
-                    append_startup_error(&log_path, &message);
-                    show_startup_error(&message);
+                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
                     return Err(message.into());
                 }
                 Err(ReadyError::Io(error)) | Err(ReadyError::Protocol(error)) => {
@@ -441,28 +481,40 @@ fn main() {
                         "Das lokale Backend lieferte keine gültige Bereitschaft ({error}). Log: {}",
                         log_path.display()
                     );
-                    append_startup_error(&log_path, &message);
-                    show_startup_error(&message);
+                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
                     return Err(message.into());
                 }
             };
             let origin = url.origin().ascii_serialization();
-            app.add_capability(tauri::ipc::CapabilityBuilder::new("local-family-switch")
-                .local(false).window("main").remote(format!("{}/*", origin))
-                .permission("allow-family-switch"))?;
-            app.manage(FamilyHost { origin: origin.clone(), home: app.path().home_dir()?, busy: Arc::new(AtomicBool::new(false)) });
-            WebviewWindowBuilder::new(app, "main", WebviewUrl::External(url))
-                .on_navigation(move |destination| destination.origin().ascii_serialization() == origin)
-                .initialization_script(r#"
-                  if (window === window.top) Object.defineProperty(window, '__THREADDESK_FAMILY__', {
-                    value:Object.freeze({switchTarget:target => window.__TAURI_INTERNALS__.invoke('family_switch', {target})})
-                  });
-                "#)
-                .title("ThreadDesk")
-                .inner_size(1360.0, 780.0)
-                .min_inner_size(940.0, 640.0)
-                .background_color(tauri::window::Color(13, 14, 19, 255))
-                .build()?;
+            let window_setup: Result<(), String> = (|| {
+                app.add_capability(tauri::ipc::CapabilityBuilder::new("local-family-switch")
+                    .local(false).window("main").remote(format!("{}/*", origin))
+                    .permission("allow-family-switch"))
+                    .map_err(|error| error.to_string())?;
+                app.manage(FamilyHost { origin: origin.clone(), home: app.path().home_dir().map_err(|error| error.to_string())?, busy: Arc::new(AtomicBool::new(false)) });
+                WebviewWindowBuilder::new(app, "main", WebviewUrl::External(url))
+                    .on_navigation(move |destination| destination.origin().ascii_serialization() == origin)
+                    .initialization_script(r#"
+                      if (window === window.top) Object.defineProperty(window, '__THREADDESK_FAMILY__', {
+                        value:Object.freeze({switchTarget:target => window.__TAURI_INTERNALS__.invoke('family_switch', {target})})
+                      });
+                    "#)
+                    .title("ThreadDesk")
+                    .inner_size(1360.0, 780.0)
+                    .min_inner_size(940.0, 640.0)
+                    .background_color(tauri::window::Color(13, 14, 19, 255))
+                    .build()
+                    .map_err(|error| error.to_string())?;
+                Ok(())
+            })();
+            if let Err(error) = window_setup {
+                let message = format!(
+                    "Fenster/Startkonfiguration fehlgeschlagen: {error}. Log: {}",
+                    log_path.display()
+                );
+                fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                return Err(message.into());
+            }
             app.manage(Backend(Mutex::new(owned.take())));
 
             Ok(())
@@ -499,8 +551,9 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::{
-        drain_stderr, open_private_log, read_ready_line, sanitize_line, stop_owned_child,
-        validate_ready_url, workspace_dir, workspace_dir_for, ReadyError,
+        classify_backend_line, drain_stderr, fail_startup, open_private_log, read_ready_line,
+        stop_owned_child, validate_ready_url, workspace_dir, workspace_dir_for, OwnedChild,
+        ReadyError,
     };
     use std::io::Write;
     use std::process::Stdio;
@@ -570,14 +623,34 @@ mod tests {
     }
 
     #[test]
-    fn diagnostics_are_sanitized_and_bounded() {
-        assert_eq!(sanitize_line("error: boom").as_deref(), Some("error: boom"));
-        assert!(sanitize_line("Authorization: Bearer abc").is_none());
-        assert!(sanitize_line("password=hunter2").is_none());
-        assert!(sanitize_line("token: abc").is_none());
-        assert!(sanitize_line("\u{7}\u{8}").is_none());
-        let long = "x".repeat(1000);
-        assert!(sanitize_line(&long).expect("line").chars().count() <= 400);
+    fn known_backend_lines_map_to_fixed_codes_only() {
+        assert_eq!(
+            classify_backend_line("RuntimeError: Die lokale ThreadDesk-Adresse ist belegt."),
+            Some("backend_port_in_use")
+        );
+        assert_eq!(
+            classify_backend_line("Traceback (most recent call last):"),
+            Some("backend_traceback")
+        );
+        assert_eq!(classify_backend_line("whiteboard note with profile text"), None);
+        assert_eq!(classify_backend_line("api_key=abc123"), None);
+        assert_eq!(classify_backend_line("{\"secret\":\"x\"}"), None);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cleanup_happens_before_notification() {
+        let mut owned = OwnedChild::new(spawn("sleep 30", Stdio::null()));
+        let pid = owned.child_mut().id() as i32;
+        let mut notified = false;
+        fail_startup(&mut owned, None, "timeout", |_message| {
+            // The child must already be dead when the modal alert would run.
+            let alive = unsafe { libc::kill(pid, 0) } == 0;
+            assert!(!alive, "backend must be cleaned up before notification");
+            notified = true;
+        });
+        assert!(notified);
+        assert!(owned.is_empty());
     }
 
     #[cfg(unix)]
@@ -674,17 +747,20 @@ mod tests {
         let path = dir.join("startup.log");
         let file = open_private_log(&path).expect("log");
         let mut child = spawn(
-            "i=0; while [ $i -lt 4000 ]; do echo 'line with diagnostics' >&2; i=$((i+1)); done",
+            "i=0; while [ $i -lt 200 ]; do echo 'Traceback (most recent call last):' >&2; echo 'secret whiteboard text' >&2; i=$((i+1)); done",
             Stdio::null(),
         );
         let stderr = child.stderr.take().expect("stderr");
-        let handle = drain_stderr(stderr, Box::new(file), 4096);
+        let handle = drain_stderr(stderr, Box::new(file), 16384);
         let status = child.wait().expect("child exit");
         handle.join().expect("drain join");
         assert!(status.success());
         let size = std::fs::metadata(&path).expect("log metadata").len();
-        assert!(size <= 4096, "log grew past cap: {size}");
-        assert!(size > 0, "log should contain the beginning of stderr");
+        assert!(size <= 16384, "log grew past cap: {size}");
+        let text = std::fs::read_to_string(&path).expect("log");
+        assert!(text.contains("code=backend_traceback"));
+        assert!(!text.contains("secret whiteboard text"));
+        assert!(text.contains("event=backend_stderr_other count="));
         let _ = std::fs::remove_dir_all(&dir);
     }
 
