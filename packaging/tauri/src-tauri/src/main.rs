@@ -781,31 +781,54 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn stderr_log_is_capped_but_fully_drained() {
-        // Fixture writes to stderr only; stdout is discarded so a full pipe
-        // cannot block the child before it exits.
-        let dir = temp_dir("stderr");
+    fn small_stderr_keeps_summary_and_hides_raw_text() {
+        let dir = temp_dir("small-stderr");
         let path = dir.join("startup.log");
         let file = open_private_log(&path).expect("log");
-        // 4000 classified codes fill the 4096-byte budget; the final summary
-        // must still be written from the reserved room. One unclassified line
-        // proves the summary path, and its text must never be persisted.
+        let log = Arc::new(Mutex::new(BoundedLog::new(file, 4096)));
         let mut child = spawn(
-            "i=0; while [ $i -lt 4000 ]; do echo 'Traceback (most recent call last):' >&2; i=$((i+1)); done; echo 'secret whiteboard text' >&2",
+            "echo 'Traceback (most recent call last):' >&2; echo 'secret whiteboard text' >&2; echo 'RuntimeError: Die lokale ThreadDesk-Adresse ist belegt.' >&2",
             Stdio::null(),
         );
-        let log = Arc::new(Mutex::new(BoundedLog::new(file, 4096)));
         let stderr = child.stderr.take().expect("stderr");
         let handle = drain_stderr(stderr, Arc::clone(&log));
         let status = child.wait().expect("child exit");
         handle.join().expect("drain join");
         assert!(status.success());
         let size = std::fs::metadata(&path).expect("log metadata").len();
+        assert!(size < 4096, "small case must stay below the cap");
+        let text = std::fs::read_to_string(&path).expect("log");
+        assert!(text.contains("code=backend_traceback"));
+        assert!(text.contains("code=backend_port_in_use"));
+        assert!(text.contains("event=backend_stderr_other count=1"));
+        assert!(!text.contains("secret whiteboard text"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn stderr_over_cap_drains_child_and_stays_bounded() {
+        // ~5000 lines (~250 KiB) is far beyond the 4096-byte budget; the child
+        // must still exit because the drain keeps reading after the cap.
+        let dir = temp_dir("overflow-stderr");
+        let path = dir.join("startup.log");
+        let file = open_private_log(&path).expect("log");
+        let log = Arc::new(Mutex::new(BoundedLog::new(file, 4096)));
+        let mut child = spawn(
+            "i=0; while [ $i -lt 5000 ]; do echo 'Traceback (most recent call last):' >&2; i=$((i+1)); done; i=0; while [ $i -lt 100 ]; do echo 'secret whiteboard text' >&2; i=$((i+1)); done",
+            Stdio::null(),
+        );
+        let stderr = child.stderr.take().expect("stderr");
+        let handle = drain_stderr(stderr, Arc::clone(&log));
+        let status = child.wait().expect("child exit");
+        handle.join().expect("drain join");
+        assert!(status.success(), "child must exit despite the full log pipe");
+        let size = std::fs::metadata(&path).expect("log metadata").len();
         assert!(size <= 4096, "log grew past cap: {size}");
         assert!(size > 0, "log should contain classified codes");
         let text = std::fs::read_to_string(&path).expect("log");
         assert!(text.contains("code=backend_traceback"));
-        assert!(text.contains("event=backend_stderr_other count="));
+        assert!(text.contains("event=backend_stderr_other count=100"));
         assert!(!text.contains("secret whiteboard text"));
         let _ = std::fs::remove_dir_all(&dir);
     }
