@@ -24,8 +24,11 @@ data-ownership checks remain in the Python backend.
 - Backend stderr is written to the app's own log directory
   (`app_log_dir()/startup.log`): directory `0700`, file `0600` (also fixed if an
   older permissive file exists), symlinks refused, **capped at 256 KiB**. The
-  drain continues past the cap, so a full log can never block the backend
-  through a full pipe. Only a **structured allowlist** is stored: fixed startup
+  cap covers **both** backend codes and host messages through one shared,
+  mutex-guarded sink; 128 bytes are reserved so the closing
+  `event=backend_stderr_other count=…` summary is always written. The drain
+  continues past the cap, so a full log can never block the backend through a
+  full pipe. Only a **structured allowlist** is stored: fixed startup
   codes (workspace locked, saved address corrupt/invalid, port in use,
   traceback, stopped-before-ready, startup timeout) plus counts of unclassified
   lines. Raw stderr text, request bodies and profile content are **never**
@@ -50,8 +53,12 @@ muss `http://127.0.0.1:<port>` sein; Port-, Workspace-Lock- und
 Datenbesitzprüfung bleiben im Python-Backend. Backend-stderr landet im eigenen
 App-Logverzeichnis (`app_log_dir()/startup.log`): Verzeichnis `0700`, Datei
 `0600` (auch eine ältere permissivere Datei wird korrigiert), Symlinks werden
-abgelehnt, **maximal 256 KiB**. Auch nach der Kappung wird weitergelesen, damit
-ein voller Log das Backend nie über eine volle Pipe blockiert. Gespeichert wird
+abgelehnt, **maximal 256 KiB**. Das Limit gilt für **beide** Quellen (Backend-Codes
+und Host-Meldungen) über einen gemeinsamen, mutex-geschützten Sink; 128 Bytes
+bleiben reserviert, damit die abschließende
+`event=backend_stderr_other count=…`-Zusammenfassung immer geschrieben wird.
+Auch nach der Kappung wird weitergelesen, damit ein voller Log das Backend nie
+über eine volle Pipe blockiert. Gespeichert wird
 nur eine **strukturierte Allowlist**: feste Startup-Codes (Workspace gesperrt,
 gespeicherte Adresse beschädigt/ungültig, Port belegt, Traceback,
 vorzeitig beendet, Startup-Timeout) plus Zähler nicht klassifizierter Zeilen.

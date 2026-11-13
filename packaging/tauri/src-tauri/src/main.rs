@@ -23,6 +23,9 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 const READY_TIMEOUT: Duration = Duration::from_secs(30);
 /// Startup diagnostics are useful, but never unbounded: cap the private log.
 const STDERR_LOG_CAP: u64 = 256 * 1024;
+/// Reserve room inside the cap so the final "other lines" summary is always
+/// written even when classified codes fill the budget.
+const SUMMARY_RESERVE: u64 = 128;
 /// A handshake line is one short URL; anything longer is not trusted.
 const MAX_HANDSHAKE_BYTES: usize = 4096;
 
@@ -118,10 +121,48 @@ fn open_private_log(path: &Path) -> io::Result<File> {
     Ok(file)
 }
 
-fn write_host_line(handle: Option<&mut File>, message: &str) {
-    if let Some(file) = handle {
-        let _ = writeln!(file, "[host] {message}");
-        let _ = file.flush();
+/// One bounded sink shared by the drain thread and host messages. A single
+/// mutex serializes writes, so the shared file offset cannot interleave, and
+/// the byte budget covers **both** sources.
+struct BoundedLog {
+    file: File,
+    written: u64,
+    cap: u64,
+}
+
+impl BoundedLog {
+    fn new(file: File, cap: u64) -> Self {
+        Self {
+            file,
+            written: 0,
+            cap,
+        }
+    }
+
+    fn write_record(&mut self, text: &str) {
+        self.write_limited(text, self.cap.saturating_sub(SUMMARY_RESERVE));
+    }
+
+    fn write_summary(&mut self, text: &str) {
+        self.write_limited(text, self.cap);
+    }
+
+    fn write_limited(&mut self, text: &str, limit: u64) {
+        if self.written >= limit {
+            return;
+        }
+        let room = (limit - self.written) as usize;
+        let take = room.min(text.len());
+        if take == 0 {
+            return;
+        }
+        if self.file.write_all(&text.as_bytes()[..take]).is_ok() {
+            self.written += take as u64;
+        }
+    }
+
+    fn flush(&mut self) {
+        let _ = self.file.flush();
     }
 }
 
@@ -157,10 +198,9 @@ fn classify_backend_line(line: &str) -> Option<&'static str> {
 
 /// Drain the child's stderr and persist only bounded classification counts.
 /// Reading continues after the cap, so a full log can never block the backend.
-fn drain_stderr(mut stderr: ChildStderr, sink: Box<dyn Write + Send>, cap: u64) -> thread::JoinHandle<()> {
+fn drain_stderr(mut stderr: ChildStderr, sink: Arc<Mutex<BoundedLog>>) -> thread::JoinHandle<()> {
     thread::spawn(move || {
-        let mut sink = sink;
-        let mut written: u64 = 0;
+        let sink = sink;
         let mut pending: Vec<u8> = Vec::new();
         let mut other: u64 = 0;
         let mut buffer = [0u8; 8192];
@@ -174,12 +214,9 @@ fn drain_stderr(mut stderr: ChildStderr, sink: Box<dyn Write + Send>, cap: u64) 
                         let text = String::from_utf8_lossy(&line);
                         match classify_backend_line(&text) {
                             Some(code) => {
-                                if written < cap {
-                                    let record = format!("event=backend_stderr code={code}\n");
-                                    let room = (cap - written) as usize;
-                                    let take = room.min(record.len());
-                                    let _ = sink.write_all(&record.as_bytes()[..take]);
-                                    written += take as u64;
+                                let record = format!("event=backend_stderr code={code}\n");
+                                if let Ok(mut log) = sink.lock() {
+                                    log.write_record(&record);
                                 }
                             }
                             None => other += 1,
@@ -197,23 +234,21 @@ fn drain_stderr(mut stderr: ChildStderr, sink: Box<dyn Write + Send>, cap: u64) 
         if !pending.is_empty() {
             match classify_backend_line(&String::from_utf8_lossy(&pending)) {
                 Some(code) => {
-                    if written < cap {
-                        let record = format!("event=backend_stderr code={code}\n");
-                        let room = (cap - written) as usize;
-                        let take = room.min(record.len());
-                        let _ = sink.write_all(&record.as_bytes()[..take]);
+                    let record = format!("event=backend_stderr code={code}\n");
+                    if let Ok(mut log) = sink.lock() {
+                        log.write_record(&record);
                     }
                 }
                 None => other += 1,
             }
         }
-        if other > 0 && written < cap {
-            let record = format!("event=backend_stderr_other count={other}\n");
-            let room = (cap - written) as usize;
-            let take = room.min(record.len());
-            let _ = sink.write_all(&record.as_bytes()[..take]);
-        }
-        let _ = sink.flush();
+        if let Ok(mut log) = sink.lock() {
+            if other > 0 {
+                let record = format!("event=backend_stderr_other count={other}\n");
+                log.write_summary(&record);
+            }
+            log.flush();
+        };
     })
 }
 
@@ -344,14 +379,19 @@ impl OwnedChild {
 /// leave the backend alive while the user reads the alert.
 fn fail_startup<F>(
     owned: &mut OwnedChild,
-    host_log: Option<&mut File>,
+    host_log: Option<&Arc<Mutex<BoundedLog>>>,
     message: &str,
     notify: F,
 ) where
     F: FnOnce(&str),
 {
     owned.cleanup();
-    write_host_line(host_log, message);
+    if let Some(log) = host_log {
+        if let Ok(mut log) = log.lock() {
+            log.write_record(&format!("[host] {message}\n"));
+            log.flush();
+        }
+    }
     notify(message);
 }
 
@@ -412,7 +452,7 @@ fn main() {
             };
             // Reuse the already validated handle for host messages; never
             // reopen the path (same file/regular/symlink invariants).
-            let mut host_log = log_file.try_clone().ok();
+            let log = Arc::new(Mutex::new(BoundedLog::new(log_file, STDERR_LOG_CAP)));
             let mut command = Command::new(&binary);
             command
                 .env("THREADDESK_HOME", &data)
@@ -432,11 +472,11 @@ fn main() {
                         "Das lokale Backend lieferte keinen stderr-Kanal. Log: {}",
                         log_path.display()
                     );
-                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                    fail_startup(&mut owned, Some(&log), &message, show_startup_error);
                     return Err(message.into());
                 }
             };
-            let _ = drain_stderr(stderr, Box::new(log_file), STDERR_LOG_CAP);
+            let _ = drain_stderr(stderr, Arc::clone(&log));
             let stdout = match owned.child_mut().stdout.take() {
                 Some(stdout) => stdout,
                 None => {
@@ -444,7 +484,7 @@ fn main() {
                         "Das lokale Backend lieferte keinen stdout-Kanal. Log: {}",
                         log_path.display()
                     );
-                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                    fail_startup(&mut owned, Some(&log), &message, show_startup_error);
                     return Err(message.into());
                 }
             };
@@ -453,7 +493,7 @@ fn main() {
                     Ok(url) => url,
                     Err(error) => {
                         let message = format!("{error}. Log: {}", log_path.display());
-                        fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                        fail_startup(&mut owned, Some(&log), &message, show_startup_error);
                         return Err(message.into());
                     }
                 },
@@ -463,7 +503,7 @@ fn main() {
                         READY_TIMEOUT.as_secs(),
                         log_path.display()
                     );
-                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                    fail_startup(&mut owned, Some(&log), &message, show_startup_error);
                     return Err(message.into());
                 }
                 Err(ReadyError::Exited) => {
@@ -473,7 +513,7 @@ fn main() {
                         "Das lokale Backend endete vor der Bereitschaft (Exit {status:?}). Log: {}",
                         log_path.display()
                     );
-                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                    fail_startup(&mut owned, Some(&log), &message, show_startup_error);
                     return Err(message.into());
                 }
                 Err(ReadyError::Io(error)) | Err(ReadyError::Protocol(error)) => {
@@ -481,7 +521,7 @@ fn main() {
                         "Das lokale Backend lieferte keine gültige Bereitschaft ({error}). Log: {}",
                         log_path.display()
                     );
-                    fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                    fail_startup(&mut owned, Some(&log), &message, show_startup_error);
                     return Err(message.into());
                 }
             };
@@ -512,7 +552,7 @@ fn main() {
                     "Fenster/Startkonfiguration fehlgeschlagen: {error}. Log: {}",
                     log_path.display()
                 );
-                fail_startup(&mut owned, host_log.as_mut(), &message, show_startup_error);
+                fail_startup(&mut owned, Some(&log), &message, show_startup_error);
                 return Err(message.into());
             }
             app.manage(Backend(Mutex::new(owned.take())));
@@ -552,12 +592,13 @@ fn main() {
 mod tests {
     use super::{
         classify_backend_line, drain_stderr, fail_startup, open_private_log, read_ready_line,
-        stop_owned_child, validate_ready_url, workspace_dir, workspace_dir_for, OwnedChild,
-        ReadyError,
+        stop_owned_child, validate_ready_url, workspace_dir, workspace_dir_for, BoundedLog,
+        OwnedChild, ReadyError,
     };
     use std::io::Write;
     use std::process::Stdio;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::{Arc, Mutex};
     use std::time::{Duration, Instant};
 
     static NEXT_DIR: AtomicUsize = AtomicUsize::new(0);
@@ -746,21 +787,59 @@ mod tests {
         let dir = temp_dir("stderr");
         let path = dir.join("startup.log");
         let file = open_private_log(&path).expect("log");
+        // 4000 classified codes fill the 4096-byte budget; the final summary
+        // must still be written from the reserved room. One unclassified line
+        // proves the summary path, and its text must never be persisted.
         let mut child = spawn(
-            "i=0; while [ $i -lt 200 ]; do echo 'Traceback (most recent call last):' >&2; echo 'secret whiteboard text' >&2; i=$((i+1)); done",
+            "i=0; while [ $i -lt 4000 ]; do echo 'Traceback (most recent call last):' >&2; i=$((i+1)); done; echo 'secret whiteboard text' >&2",
             Stdio::null(),
         );
+        let log = Arc::new(Mutex::new(BoundedLog::new(file, 4096)));
         let stderr = child.stderr.take().expect("stderr");
-        let handle = drain_stderr(stderr, Box::new(file), 16384);
+        let handle = drain_stderr(stderr, Arc::clone(&log));
         let status = child.wait().expect("child exit");
         handle.join().expect("drain join");
         assert!(status.success());
         let size = std::fs::metadata(&path).expect("log metadata").len();
-        assert!(size <= 16384, "log grew past cap: {size}");
+        assert!(size <= 4096, "log grew past cap: {size}");
+        assert!(size > 0, "log should contain classified codes");
         let text = std::fs::read_to_string(&path).expect("log");
         assert!(text.contains("code=backend_traceback"));
-        assert!(!text.contains("secret whiteboard text"));
         assert!(text.contains("event=backend_stderr_other count="));
+        assert!(!text.contains("secret whiteboard text"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn host_and_backend_records_share_one_bounded_cap() {
+        let dir = temp_dir("shared-cap");
+        let path = dir.join("startup.log");
+        let file = open_private_log(&path).expect("log");
+        let log = Arc::new(Mutex::new(BoundedLog::new(file, 512)));
+        let mut handles = Vec::new();
+        for tag in ["host", "backend"] {
+            let log = Arc::clone(&log);
+            handles.push(std::thread::spawn(move || {
+                for index in 0..50 {
+                    if let Ok(mut log) = log.lock() {
+                        let record = format!("event={tag} index={index}\n");
+                        if tag == "host" {
+                            log.write_record(&record);
+                        } else {
+                            log.write_summary(&record);
+                        }
+                    }
+                }
+            }));
+        }
+        for handle in handles {
+            handle.join().expect("writer");
+        }
+        let size = std::fs::metadata(&path).expect("log metadata").len();
+        assert!(size <= 512, "shared cap exceeded: {size}");
+        let text = std::fs::read_to_string(&path).expect("log");
+        assert!(text.starts_with("event="));
         let _ = std::fs::remove_dir_all(&dir);
     }
 
