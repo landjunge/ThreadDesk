@@ -56,9 +56,9 @@ Sprachabläufe, Zuverlässigkeit, Geschwindigkeit und Synchronisation werden wei
 
 ## Aktueller Funktionsstand / Current capabilities
 
-**Deutsch:** ThreadDesk hält Projektkontext lokal fest: Threads, Notizen, Dateiverweise, Snapshots und Wissen. CLI, MCP und die Oberfläche greifen auf diese Ablage zu. Der aktuelle Quellstand ergänzt revisionsgeprüfte Änderungen, zugeordnete Übergaben und Rückgaben sowie gespeicherte Rückfragen. Kontextverwaltung und Ausführung bleiben getrennt: Ein vorbereiteter Auftrag startet keinen externen Agenten, eine Lieferung ist noch keine Abnahme.
+**Deutsch:** ThreadDesk hält Projektkontext lokal fest: Threads, Notizen, Dateiverweise, Snapshots und Wissen. CLI, MCP und die Oberfläche greifen auf diese Ablage zu. Der aktuelle Quellstand ergänzt revisionsgeprüfte Änderungen, zugeordnete Übergaben und Rückgaben sowie gespeicherte Rückfragen. Kontextverwaltung und Ausführung bleiben getrennt: Ein vorbereiteter Auftrag startet keinen externen Agenten, eine Lieferung ist noch keine Abnahme. Die Kartenansicht zählt Whiteboard-Einträge, ohne jede Eintragsdatei zu lesen; große Bestände lösen dadurch nicht mehr den bisherigen Vollscan pro Ansicht aus.
 
-**English:** ThreadDesk keeps project context locally: threads, notes, file references, snapshots and knowledge. Its CLI, MCP tools and interface use that store. Current source adds revision-checked changes, correlated handoffs and returns, and recorded questions. Preparing work does not start an external agent; receiving a delivery does not accept it.
+**English:** ThreadDesk keeps project context locally: threads, notes, file references, snapshots and knowledge. Its CLI, MCP tools and interface use that store. Current source adds revision-checked changes, correlated handoffs and returns, and recorded questions. Preparing work does not start an external agent; receiving a delivery does not accept it. The map counts whiteboard entries without reading every entry file, so large stores no longer trigger the previous full scan per view.
 
 Die Entwicklerinstallation benötigt Python 3.9+. Neue Quellfunktionen sind nicht automatisch im vorhandenen Desktop-Download enthalten. / Developer installation requires Python 3.9+. New source features are not automatically included in existing desktop downloads.
 
@@ -314,6 +314,12 @@ Without explicit permission, the caretaker may not delete or overwrite the user'
 2. **ThreadDesk-macOS.dmg** für Intel laden und ThreadDesk nach „Programme“ ziehen. Ein Apple-Silicon-Paket ist separat gekennzeichnet. Ein erfolgreicher CI-Build ersetzt nicht den Starttest auf deinem konkreten Mac und seiner macOS-Version.
 
 Falls macOS den Doppelklick blockiert: Rechtsklick auf die Datei → **Öffnen**.
+
+### Wenn der Start fehlschlägt / If startup fails
+
+**Deutsch:** ThreadDesk wartet höchstens 30 Sekunden auf sein lokales Backend. Meldet es sich nicht, endet es vorher oder kann das Fenster nicht aufgebaut werden, beendet die App zuerst das eigene Backend, schreibt den Grund in eine private Startdiagnose und zeigt einen Hinweis mit dem Logpfad. Der Log liegt unter `~/Library/Logs/de.netzwerkpunkt.threaddesk.tauri/startup.log` (Ordner `0700`, Datei `0600`). Gespeichert werden nur feste Startcodes und Zähler, keine rohen Backend-Texte, keine Anfrageinhalte und keine Profildaten. Es gibt keinen automatischen Neuversuch; bitte den Logpfad aus dem Hinweis notieren und die App neu starten. Ein erfolgreicher CI-Build ersetzt den Starttest auf dem konkreten Mac nicht.
+
+**English:** ThreadDesk waits at most 30 seconds for its local backend. If it does not report readiness, exits early, or the window cannot be built, the app stops its own backend first, writes the reason to a private startup log, and shows a message with the log path. The log lives at `~/Library/Logs/de.netzwerkpunkt.threaddesk.tauri/startup.log` (directory `0700`, file `0600`). Only fixed startup codes and counts are stored — no raw backend text, request content or profile data. There is no automatic retry; note the log path from the message and start the app again. A successful CI build does not replace a start test on the actual Mac.
 
 ### Windows
 
