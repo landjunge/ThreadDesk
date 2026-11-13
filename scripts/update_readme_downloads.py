@@ -46,6 +46,7 @@ BRAND = {
     "threaddesk": "#b99cff",
     "4allpass": "#6be4f2",
     "tollgate": "#e77745",
+    "agentauthority": "#3b78fc",
     "agent-authority-lab": "#3b78fc",
     "blockdesign": "#ebc33f",
 }
@@ -411,6 +412,19 @@ def self_test():
         failed.append(f"choose-lanes: {picked}")
     if version_of("linux-v0.8.0rc41") != "0.8.0rc41":
         failed.append(f"version_of linux tag: {version_of('linux-v0.8.0rc41')}")
+    authority_asset = {
+        "id": 1,
+        "name": "AgentAuthority-linux.deb",
+        "browser_download_url": "https://example.invalid/AgentAuthority-linux.deb",
+    }
+    for repo_name in ("AgentAuthority", "agent-authority-lab"):
+        try:
+            rendered, _ = render(f"landjunge/{repo_name}", {"Linux": ("v1.0.0", authority_asset)})
+            svg = next(iter(rendered.values()))
+            if "#3b78fc" not in svg:
+                failed.append(f"render-brand {repo_name}: expected Agent Authority brand color")
+        except (KeyError, StopIteration) as exc:
+            failed.append(f"render-brand {repo_name}: {exc}")
     appimage = [
         {
             "tag_name": "v0.1.2-rc.2",
