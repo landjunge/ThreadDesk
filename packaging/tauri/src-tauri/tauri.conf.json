@@ -21,7 +21,8 @@
       "icons/icon.icns"
     ],
     "resources": {
-      "../backend/dist/ThreadDeskServer": "bin/ThreadDeskServer"
+      "../backend/dist/ThreadDeskServer": "bin/ThreadDeskServer",
+      "../../../LICENSE": "LICENSE"
     },
     "macOS": {
       "minimumSystemVersion": "11.0"
