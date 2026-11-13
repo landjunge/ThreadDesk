@@ -14,6 +14,67 @@ To build on an x86_64 macOS host:
 
 No Apple Developer ID signing or notarization is provided. Gatekeeper may require manual user approval. Verify the bundle, bundled backend, and local GUI with a clean test workspace before distributing. The 0.2.0 GitHub release is published this way: ad-hoc signed, not notarized. See `docs/RELEASE-NOTES-0.2.0.md`.
 
+## Startup diagnostics and readiness
+
+The Tauri host starts the bundled `bin/ThreadDeskServer`, keeps its **stderr**,
+and accepts only the first `THREADDESK_URL` line from **its own child**. The URL
+must be `http://127.0.0.1:<port>`; the existing port, workspace-lock and
+data-ownership checks remain in the Python backend.
+
+- Backend stderr is written to the app's own log directory
+  (`app_log_dir()/startup.log`): directory `0700`, file `0600` (also fixed if an
+  older permissive file exists), symlinks refused, **capped at 256 KiB**. The
+  cap covers **both** backend codes and host messages through one shared,
+  mutex-guarded sink; 128 bytes are reserved so the closing
+  `event=backend_stderr_other count=…` summary is always written. The drain
+  continues past the cap, so a full log can never block the backend through a
+  full pipe. Only a **structured allowlist** is stored: fixed startup
+  codes (workspace locked, saved address corrupt/invalid, port in use,
+  traceback, stopped-before-ready, startup timeout) plus counts of unclassified
+  lines. Raw stderr text, request bodies and profile content are **never**
+  written. If the private log cannot be opened safely, startup fails with a
+  clear alert instead of writing to an unprotected path.
+- Cleanup happens **before** the alert: on timeout, early exit, protocol error
+  or a window/capability failure the host stops and reaps only its own spawned
+  process group first, then writes the reason and shows the modal message.
+- Readiness is bounded to **30 s**. On timeout, or when the backend exits before
+  announcing its URL, the host stops **only its own spawned process group**
+  (one-file bundles fork a child), reaps it, writes the reason plus the log path
+  to the log, and shows a native alert with that log path. There is no automatic
+  retry.
+- Startup failures therefore stay diagnosable instead of silently ending the
+  app. The first unknown startup failure of the 2026-11-13 candidate is still
+  unexplained; this change removes the blind spot, it does not claim a root
+  cause.
+
+Deutsch: Der Tauri-Host startet `bin/ThreadDeskServer`, behält dessen **stderr**
+und akzeptiert die erste `THREADDESK_URL`-Zeile nur vom **eigenen Kind**. Die URL
+muss `http://127.0.0.1:<port>` sein; Port-, Workspace-Lock- und
+Datenbesitzprüfung bleiben im Python-Backend. Backend-stderr landet im eigenen
+App-Logverzeichnis (`app_log_dir()/startup.log`): Verzeichnis `0700`, Datei
+`0600` (auch eine ältere permissivere Datei wird korrigiert), Symlinks werden
+abgelehnt, **maximal 256 KiB**. Das Limit gilt für **beide** Quellen (Backend-Codes
+und Host-Meldungen) über einen gemeinsamen, mutex-geschützten Sink; 128 Bytes
+bleiben reserviert, damit die abschließende
+`event=backend_stderr_other count=…`-Zusammenfassung immer geschrieben wird.
+Auch nach der Kappung wird weitergelesen, damit ein voller Log das Backend nie
+über eine volle Pipe blockiert. Gespeichert wird
+nur eine **strukturierte Allowlist**: feste Startup-Codes (Workspace gesperrt,
+gespeicherte Adresse beschädigt/ungültig, Port belegt, Traceback,
+vorzeitig beendet, Startup-Timeout) plus Zähler nicht klassifizierter Zeilen.
+Roher stderr-Text, Request-Bodies und Profilinhalte werden **nie** geschrieben.
+Lässt sich der private Log nicht sicher öffnen, bricht der Start mit klarem
+Hinweis ab, statt in einen ungeschützten Pfad zu schreiben. Das Aufräumen
+passiert **vor** dem Hinweis: Bei Timeout, frühem Exit, Protokollfehler oder
+Fenster-/Capability-Fehler beendet und reapet der Host zuerst nur seine eigene
+Prozessgruppe, dann werden Grund geschrieben und der modale Hinweis gezeigt. Die
+Bereitschaft ist auf **30 s** begrenzt: Bei Timeout oder vorzeitigem Backend-Exit
+beendet der Host **nur seine eigene Prozessgruppe** (Ein-Datei-Bundles forken ein
+Kind), reapet sie, schreibt Grund und Logpfad ins Log und zeigt einen nativen
+Hinweis mit Logpfad. Kein automatischer Retry. Der unbekannte erste
+Startabbruch des Kandidaten vom 13.11.2026 bleibt unerklärt; diese Änderung
+beseitigt den blinden Fleck, nicht die Ursache.
+
 ## Visible version and source identity
 
 The shared header displays the package version and the first seven characters of the source commit. Both PyInstaller specifications run `scripts/write_build_info.py` before collecting resources. It records the current commit, whether the checkout contains local changes, and the UTC build identifier in an ignored package resource. The running app reads that resource without executing Git or accessing a user workspace.

@@ -594,6 +594,18 @@ class JsonStore(JsonLifecycleStore):
             raise InvalidState("whiteboard_thread")
         return folder
 
+    def whiteboard_entry_count(self, thread_id: str) -> int:
+        """Count whiteboard entries without reading or parsing their JSON.
+
+        The graph projection needs only ``entry_count`` and the thread-level
+        board state; parsing every entry file there turned one ``/api/graph``
+        request into tens of thousands of small reads on a long-lived profile.
+        """
+        folder = self._whiteboard_dir(thread_id)
+        if not folder.exists():
+            return 0
+        return len(self._graph_collection_paths(folder))
+
     def list_whiteboard(self, thread_id: str, *, include_trashed: bool = False) -> list[WhiteboardEntry]:
         if not include_trashed:
             self.require_live_object("thread", thread_id)

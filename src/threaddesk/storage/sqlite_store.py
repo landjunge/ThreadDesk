@@ -250,6 +250,15 @@ class SQLiteStore(SQLiteLifecycleStore, MigratedOwnerDocuments):
         items.sort(key=lambda item: item.created_at, reverse=True)
         return items
 
+    def whiteboard_entry_count(self, thread_id: str) -> int:
+        """Graph projection only needs the count; do not load payloads."""
+        self.get_thread(thread_id)
+        row = self.connection.execute(
+            "SELECT COUNT(*) FROM whiteboard_entries WHERE thread_id = ?",
+            (thread_id,),
+        ).fetchone()
+        return int(row[0]) if row else 0
+
     def list_whiteboard(self, thread_id: str, *, include_trashed: bool = False) -> list[WhiteboardEntry]:
         self.get_thread(thread_id, include_trashed=include_trashed)
         rows = self.connection.execute(
