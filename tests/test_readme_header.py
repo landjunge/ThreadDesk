@@ -26,3 +26,35 @@ def test_catalog_has_unique_keys_and_icons_for_every_product():
     for product in products:
         for role in ("small", "large"):
             assert (tool.ICONS / f"{product['icon_prefix']}-{role}.svg").exists()
+
+
+def test_license_template_has_placeholders():
+    tool = _tool()
+    raw = tool.LICENSE_TEMPLATE.read_text(encoding="utf-8")
+    assert raw.startswith(tool.LICENSE_TITLE)
+    assert "{{HISTORICAL_DE}}" in raw
+    assert "{{HISTORICAL_EN}}" in raw
+    filled = tool.render_license("ProbeTool")
+    assert "ProbeTool-Fassungen" in filled
+    assert "{{HISTORICAL_DE}}" not in filled
+    assert "4AllPass" not in filled
+
+
+def test_init_writes_license_and_readme_block(tmp_path):
+    tool = _tool()
+    dest = tmp_path / "new-tool"
+    assert (
+        tool.main(["init", "--product", "agent-authority", "--repo", str(dest)])
+        == 0
+    )
+    license_text = (dest / "LICENSE").read_text(encoding="utf-8")
+    assert license_text.startswith(tool.LICENSE_TITLE)
+    assert "Agent Authority-Fassungen" in license_text
+    readme = (dest / "README.md").read_text(encoding="utf-8")
+    assert tool.LICENSE_TITLE in readme
+    assert "](LICENSE)" in readme
+    assert tool.MARKER in readme
+    assert (
+        tool.main(["check", "--product", "agent-authority", "--repo", str(dest)])
+        == 0
+    )

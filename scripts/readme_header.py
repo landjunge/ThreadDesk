@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""README-Kopf der Produktfamilie erzeugen, übernehmen und prüfen (Vertrag readme-header-v1).
+"""README-Kopf und Lizenz der Produktfamilie erzeugen, übernehmen und prüfen.
 
 Quelle der Wahrheit:
-  docs/contracts/readme-header-v1.md    Gestaltungsregel (Referenz)
-  docs/contracts/readme-header-v1.json  Produktkatalog (Reihenfolge, Farben, Wortmarken)
-  docs/design/readme-header/icons/      normierte Icons aller Produkte (SVG mit Original-PNG)
+  docs/contracts/readme-header-v1.md           Gestaltungsregel (Referenz)
+  docs/contracts/readme-header-v1.json         Produktkatalog
+  docs/contracts/product-repo-v1.md            neues Repo: Kopf + LICENSE
+  docs/contracts/personal-use-license-1.0.txt  LICENSE-Vorlage
+  docs/design/readme-header/icons/             normierte Icons
 
 Befehle:
   icons  --product KEY --source DIR   normierte Icons aus den freigegebenen Dark-PNGs bauen
-                                      (DIR enthält <Prefix>-dark-128.png und -512.png)
-  apply  --product KEY --repo PATH    Kopf, Icons, Wortmarken (und ggf. Quellcode-Button)
-                                      in ein Produkt-Repository schreiben; Inhalt bleibt
-  check  --product KEY --repo PATH    Kopf eines Repositories gegen den Vertrag prüfen
-
-Nur Standardbibliothek; `icons` nutzt Pillow nur, wenn kein frame_box_256 im Katalog steht.
+  apply  --product KEY --repo PATH    Kopf in ein Produkt-Repository schreiben; Inhalt bleibt
+  init   --product KEY --repo PATH    LICENSE, README-Lizenzblock und Kopf anlegen
+  check  --product KEY --repo PATH    Kopf und Lizenz gegen den Vertrag prüfen
 """
 
 from __future__ import annotations
@@ -31,6 +30,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "docs/contracts/readme-header-v1.json"
 ICONS = ROOT / "docs/design/readme-header/icons"
+LICENSE_TEMPLATE = ROOT / "docs/contracts/personal-use-license-1.0.txt"
+LICENSE_TITLE = "Netzwerkpunkt Personal Use License 1.0"
+FOREIGN_HISTORY_NAMES = (
+    "4AllPass",
+    "TollGate",
+    "ThreadDesk",
+    "KiraBridge",
+    "Gnom-Hub",
+    "Agent Authority",
+    "BlockDesign",
+)
 START, END = "<!-- AUTO-DOWNLOADS:START -->", "<!-- AUTO-DOWNLOADS:END -->"
 NEUTRAL = {"dark": "#ffffff", "light": "#17191f"}
 BUTTON_TEXT = "#14161b"
@@ -276,6 +286,88 @@ def cmd_apply(args):
         )
 
 
+def render_license(product_name: str, history_de: str = "", history_en: str = "") -> str:
+    text = LICENSE_TEMPLATE.read_text(encoding="utf-8")
+    if not history_de.strip():
+        history_de = (
+            f" Insbesondere bleiben bereits eingeräumte Rechte an historischen "
+            f"{product_name}-Fassungen unberührt."
+        )
+    else:
+        history_de = " " + history_de.strip().rstrip(".") + "."
+    if not history_en.strip():
+        history_en = (
+            f" Historical rights already granted for {product_name} versions remain intact."
+        )
+    else:
+        history_en = " " + history_en.strip().rstrip(".") + "."
+    return text.replace("{{HISTORICAL_DE}}", history_de).replace(
+        "{{HISTORICAL_EN}}", history_en
+    )
+
+
+def readme_license_block(product_name: str, german: bool) -> str:
+    if german:
+        return (
+            f"## Lizenz\n\n"
+            f"**{LICENSE_TITLE} — individuelle Source-available-Lizenz.**\n\n"
+            "Private, nicht geschäftliche Nutzung ist kostenlos erlaubt, einschließlich "
+            "Installation, eigener privater Anpassungen und privatem Self-Hosting. Interner "
+            "Firmeneinsatz, berufliche Nutzung, Weiterverkauf und kostenpflichtige Dienste "
+            "benötigen eine vorherige schriftliche Erlaubnis beziehungsweise gesonderte "
+            "Lizenz des Rechteinhabers. Es gibt keine allgemeine Weiterverteilungserlaubnis.\n\n"
+            "Maßgeblich ist die [vollständige Lizenz auf Deutsch mit englischer Übersetzung]"
+            "(LICENSE). Dies ist keine Open-Source-Standardlizenz; eine anwaltliche Prüfung "
+            "wurde nicht durchgeführt. Bereits eingeräumte Rechte historischer Fassungen von "
+            f"{product_name} bleiben erhalten.\n"
+        )
+    return (
+        f"## License\n\n"
+        f"**{LICENSE_TITLE} — custom source-available terms.**\n\n"
+        "Private, non-business use is free, including installation, private modifications "
+        "and private self-hosting. Internal business or professional use, resale and paid "
+        "services require prior written permission or a separate license from the "
+        "rightsholder. No general redistribution permission is granted.\n\n"
+        "See the [full German license and English translation](LICENSE); the German text "
+        "governs. This is not a standard open-source license and has not undergone legal "
+        "review. Historical license grants for "
+        f"{product_name} remain intact.\n"
+    )
+
+
+def ensure_readme_license(path: Path, product_name: str, german: bool) -> None:
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    if LICENSE_TITLE in text and "](LICENSE)" in text:
+        return
+    block = readme_license_block(product_name, german)
+    new = (text.rstrip() + "\n\n" + block + "\n") if text.strip() else block + "\n"
+    path.write_text(new, encoding="utf-8")
+
+
+def cmd_init(args):
+    products, by_key = load_catalog()
+    product = by_key[args.product]
+    repo = Path(args.repo)
+    repo.mkdir(parents=True, exist_ok=True)
+    license_text = render_license(
+        product["name"], getattr(args, "history_de", "") or "", getattr(args, "history_en", "") or ""
+    )
+    (repo / "LICENSE").write_text(license_text, encoding="utf-8")
+    print(f"LICENSE geschrieben: {repo / 'LICENSE'}")
+    icons_ok = all(
+        (ICONS / f"{p['icon_prefix']}-{'large' if p is product else 'small'}.svg").exists()
+        for p in products
+    )
+    if icons_ok:
+        cmd_apply(args)
+    else:
+        print("Hinweis: Icons unvollständig, Kopf nicht geschrieben (apply später).")
+    ensure_readme_license(repo / "README.md", product["name"], german=False)
+    if product["readme_de"]:
+        ensure_readme_license(repo / "README.de.md", product["name"], german=True)
+    return 0
+
+
 def cmd_check(args):
     products, by_key = load_catalog()
     product = by_key[args.product]
@@ -329,6 +421,27 @@ def cmd_check(args):
         wm = repo / product[f"wordmark_{theme}"]
         if wm.exists() and product["color"] not in wm.read_text(encoding="utf-8"):
             problems.append(f"Wortmarke {theme}: Markenfarbe {product['color']} fehlt")
+    license_path = repo / "LICENSE"
+    if not license_path.exists():
+        problems.append("LICENSE fehlt")
+    else:
+        license_text = license_path.read_text(encoding="utf-8")
+        if not license_text.startswith(LICENSE_TITLE):
+            problems.append(f"LICENSE: erste Zeile muss {LICENSE_TITLE} sein")
+        own = product["name"]
+        for foreign in FOREIGN_HISTORY_NAMES:
+            if foreign == own:
+                continue
+            if foreign in license_text:
+                problems.append(f"LICENSE: fremder Produktname in der Historie: {foreign}")
+    for page, _german in pages:
+        if not page.exists():
+            continue
+        body = page.read_text(encoding="utf-8")
+        if LICENSE_TITLE not in body:
+            problems.append(f"{page.name}: Lizenzname fehlt")
+        if "](LICENSE)" not in body:
+            problems.append(f"{page.name}: Link auf LICENSE fehlt")
     for line in problems:
         print("FEHLER", line)
     print("OK" if not problems else f"{len(problems)} Abweichung(en)")
@@ -345,10 +458,18 @@ def main(argv=None):
         p = sub.add_parser(name)
         p.add_argument("--product", required=True)
         p.add_argument("--repo", required=True)
+    p = sub.add_parser("init")
+    p.add_argument("--product", required=True)
+    p.add_argument("--repo", required=True)
+    p.add_argument("--history-de", default="")
+    p.add_argument("--history-en", default="")
     args = parser.parse_args(argv)
-    return {"icons": cmd_icons, "apply": cmd_apply, "check": cmd_check}[args.cmd](
-        args
-    ) or 0
+    return {
+        "icons": cmd_icons,
+        "apply": cmd_apply,
+        "init": cmd_init,
+        "check": cmd_check,
+    }[args.cmd](args) or 0
 
 
 if __name__ == "__main__":

@@ -26,8 +26,9 @@ Live-Referenzen (Stand 08.11.2026):
 | `docs/contracts/readme-header-v1.md` | diese Regel |
 | `docs/contracts/readme-header-v1.json` | Produktkatalog: Reihenfolge, Namen, Repos, Markenfarben, Wortmarken, Download-Art |
 | `docs/design/readme-header/icons/` | normierte Icons aller Produkte (`<Prefix>-large.svg`, `<Prefix>-small.svg`) |
-| `scripts/readme_header.py` | `icons` bauen · `apply` in ein Repo schreiben · `check` prüfen |
+| `scripts/readme_header.py` | `icons` bauen · `apply` Kopf schreiben · `init` LICENSE+Kopf · `check` prüfen |
 | `scripts/update_readme_downloads.py` | Release-Downloads als Direktlinks (wird in Repos mit Releases mitkopiert) |
+| `docs/contracts/product-repo-v1.md` | neues Repo: Kopf und Personal-Use-Lizenz gemeinsam anlegen |
 
 ## Aufbau (feste Reihenfolge, alles zentriert)
 
