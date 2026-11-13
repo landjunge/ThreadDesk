@@ -31,7 +31,7 @@ import urllib.request
 from html import escape
 from pathlib import Path
 
-TOOL_VERSION = "2.0.0"
+TOOL_VERSION = "2.1.0"
 START, END = "<!-- AUTO-DOWNLOADS:START -->", "<!-- AUTO-DOWNLOADS:END -->"
 BUTTON_DIR = Path("assets/readme")
 API = "https://api.github.com"
@@ -127,40 +127,39 @@ def base_version(tag):
 
 
 def choose(releases):
+    """Only the newest published release that has installers.
+
+    Older tags are not used to fill missing platforms. A later Linux-only
+    release therefore replaces a previous macOS button until a new release
+    ships that platform again.
+    """
     releases = sorted(
         (r for r in releases if not r.get("draft") and r.get("published_at")),
         key=lambda r: r["published_at"],
         reverse=True,
     )
-    # Offer only the current version line: an older line (e.g. 0.7 next to 0.8)
-    # must not reappear as a platform download just because it is the last one
-    # that happened to ship that platform.
-    current = next(
+    newest = next(
         (
-            base_version(r["tag_name"])
-            for r in releases
-            if base_version(r["tag_name"])
-            and any(platforms(a.get("name", "")) for a in r.get("assets", []))
+            release
+            for release in releases
+            if any(
+                asset.get("state") == "uploaded" and platforms(asset.get("name", ""))
+                for asset in release.get("assets", [])
+            )
         ),
         None,
     )
-    chosen = {}
-    for release in releases:
-        if base_version(release["tag_name"]) != current:
+    if newest is None:
+        return {}
+    best = {}
+    for asset in newest.get("assets", []):
+        name = asset.get("name", "")
+        if asset.get("state") != "uploaded":
             continue
-        best = {}
-        for asset in release.get("assets", []):
-            name = asset.get("name", "")
-            if asset.get("state") != "uploaded":
-                continue
-            for label in platforms(name):
-                if label in chosen:
-                    continue
-                if label not in best or preference(name) > preference(best[label]["name"]):
-                    best[label] = asset
-        for label, asset in best.items():
-            chosen[label] = (release["tag_name"], asset)
-    return chosen
+        for label in platforms(name):
+            if label not in best or preference(name) > preference(best[label]["name"]):
+                best[label] = asset
+    return {label: (newest["tag_name"], asset) for label, asset in best.items()}
 
 
 # --- network -----------------------------------------------------------------
@@ -346,11 +345,11 @@ def self_test():
         },
     ]
     picked = {label: tag for label, (tag, _) in choose(releases).items()}
-    if picked != {"Linux": "v0.8.0rc2", "Windows": "v0.8.0rc1"}:
+    if picked != {"Linux": "v0.8.0rc2"}:
         failed.append(f"choose: {picked}")
     if failed:
         raise SystemExit("Self-test failed:\n  " + "\n  ".join(failed))
-    print(f"Self-test passed ({len(cases)} names, version-line selection), tool {TOOL_VERSION}")
+    print(f"Self-test passed ({len(cases)} names, newest-release selection), tool {TOOL_VERSION}")
 
 
 def main(argv):
