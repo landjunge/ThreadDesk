@@ -532,7 +532,17 @@ live item states. This is not an installed desktop release.
 [Projektstart / Project intake](docs/plans/PROJECT-START-20261106.md).
 [Planrevisionen / Plan revisions](docs/plans/PROJECT-PLAN-20261106.md).
 [Gemeinsamer Big-Plan-Quellstand / Integrated Big Plan source](docs/plans/BIGPLAN-SOURCE-INTEGRATION-20261106.md)
-verbindet diese Arbeit mit den [Instanz-Kurzberichten / instance short reports](docs/agents/SHORT-REPORTS.md).
+verbindet diese Arbeit mit den [Agenten-Kurzberichten / agent short reports](docs/agents/SHORT-REPORTS.md).
+
+**Quellstand · Agentenstatus:** Neue Instanzen teilen sich eine zentrale Übersicht.
+Gleiche Statusmeldungen aktualisieren nur den aktuellen Stand; fachliche Änderungen
+und Ergebnisse bleiben als kurze Beiträge mit Details erhalten. Alte Berichtsboards
+bleiben lesbar. Keine automatische Installation in laufende Berichtsdienste.
+
+**Source change · Agent status:** New instances share one overview. Repeated status
+reports update current state; substantive changes and results retain short entries
+with their details. Existing report boards stay readable. Running report services
+require a separately verified update.
 
 `knowledge_manage` speichert referenzierte Entscheidungen, offene Fragen,
 verworfene Vorschläge und Aufgaben über denselben MCP-Zugang. Erwartete Thread-
