@@ -318,10 +318,34 @@ def test_user_keeps_notes_and_snapshot_across_restart(tmp_path: Path) -> None:
 
 
 
+def _switch_preference(page, name: str) -> None:
+    """Submit a wording/language form and wait for the new document's disclosures.
+
+    The preference forms are plain POST/303 navigations. The disclosure state
+    is restored by the synchronous networkpunkt.js IIFE (sessionStorage, then
+    window.npReveal on htmx:afterSwap), not by Alpine. Mark the current document,
+    submit, wait until that marker is gone (a new document) and npReveal exists,
+    so the next _open_section cannot toggle a node that is about to be replaced.
+    """
+    page.evaluate("() => { window.__tdSwitchingDocument = true; }")
+    page.get_by_role("button", name=name, exact=True).click()
+    page.wait_for_function("() => window.__tdSwitchingDocument === undefined")
+    page.wait_for_function("() => window.npReveal !== undefined")
+
+
 def _open_section(page, name: str) -> None:
-    section = page.locator(f'details[data-disclosure="{name}"]')
+    page.wait_for_function("() => window.npReveal !== undefined")
+    selector = f'details[data-disclosure="{name}"]'
+    section = page.locator(selector)
     if not section.evaluate("el => el.open"):
         section.locator(":scope > summary").click()
+    # Every disclosure must end up open; only preferences has the menu class.
+    page.wait_for_function(
+        "(sel) => { const el = document.querySelector(sel); return !!el && el.open === true; }",
+        arg=selector,
+    )
+    if name == "preferences":
+        expect(section.locator(".preferences-menu")).to_be_visible()
 
 
 def test_late_note_reply_cannot_hide_a_later_write_failure(tmp_path: Path) -> None:
@@ -461,10 +485,10 @@ def test_user_renames_switches_archives_and_keeps_file_paths(tmp_path: Path) -> 
             expect(page.locator("#help")).to_be_hidden()
 
             _open_section(page, "preferences")
-            page.get_by_role("button", name="EN", exact=True).click()
+            _switch_preference(page, "EN")
             expect(page.locator("[data-new-thread]")).to_contain_text("New")
             _open_section(page, "preferences")
-            page.get_by_role("button", name="DE", exact=True).click()
+            _switch_preference(page, "DE")
             expect(page.locator("[data-new-thread]")).to_contain_text("Neu")
 
             layout = page.evaluate(
@@ -731,23 +755,23 @@ def test_user_switches_plain_and_expert_wording(tmp_path: Path) -> None:
             heading = page.locator("#snapshots h3")
             expect(heading).to_have_text("Zwischenstände")
             _open_section(page, "preferences")
-            page.get_by_role("button", name="Fachsprache", exact=True).click()
+            _switch_preference(page, "Fachsprache")
             expect(heading).to_have_text("Snapshots")
             expect(page.locator("#snapshots .muted").first).to_contain_text("Snapshot-ID")
             _open_section(page, "preferences")
-            page.get_by_role("button", name="Klartext", exact=True).click()
+            _switch_preference(page, "Klartext")
             expect(heading).to_have_text("Zwischenstände")
             _open_section(page, "preferences")
-            page.get_by_role("button", name="EN", exact=True).click()
+            _switch_preference(page, "EN")
             expect(heading).to_have_text("Saved states")
             _open_section(page, "preferences")
-            page.get_by_role("button", name="Expert", exact=True).click()
+            _switch_preference(page, "Expert")
             expect(heading).to_have_text("Snapshots")
             _open_section(page, "preferences")
-            page.get_by_role("button", name="Plain", exact=True).click()
+            _switch_preference(page, "Plain")
             expect(heading).to_have_text("Saved states")
             _open_section(page, "preferences")
-            page.get_by_role("button", name="DE", exact=True).click()
+            _switch_preference(page, "DE")
             expect(heading).to_have_text("Zwischenstände")
             expect(page.locator(".banner-error:visible")).to_have_count(0)
             _raise_chrome(before, "fenster-sprache.png")
@@ -965,7 +989,7 @@ def test_user_reads_the_main_pages_in_both_languages(tmp_path: Path) -> None:
             _shows(page, "de", *data_keys)
 
             _open_section(page, "preferences")
-            page.get_by_role("button", name="EN", exact=True).click()
+            _switch_preference(page, "EN")
             expect(page.locator("html")).to_have_attribute("lang", "en")
             _shows(page, "en", *data_keys)
             _hides(
