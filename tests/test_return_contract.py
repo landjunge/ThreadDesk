@@ -32,3 +32,18 @@ def test_untrusted_return_cannot_claim_acceptance(field, value) -> None:
     payload[field] = value
     with pytest.raises(InvalidState):
         validate(payload)
+
+
+@pytest.mark.parametrize("revision", [True, False, 0, -1, 1.0, "2", None])
+def test_handoff_revision_rejects_non_integer_or_non_positive_values(revision) -> None:
+    payload = sample()
+    payload["handoff_revision"] = revision
+    with pytest.raises(InvalidState, match="return_revision"):
+        validate(payload)
+
+
+@pytest.mark.parametrize("revision", [1, 2, 10**6])
+def test_handoff_revision_accepts_real_positive_integers(revision) -> None:
+    payload = sample()
+    payload["handoff_revision"] = revision
+    assert validate(payload)["handoff_revision"] == revision

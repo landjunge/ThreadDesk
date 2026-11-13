@@ -27,7 +27,8 @@ def receive(store: Any, value: Mapping[str, Any]) -> dict[str, Any]:
     for field in ("event_id", "job_id", "occurred_at"):
         if not isinstance(payload.get(field), str) or not payload[field].strip():
             raise InvalidState(f"gnom_callback_{field}")
-    if not isinstance(payload.get("handoff_revision"), int) or payload["handoff_revision"] < 1:
+    revision = payload.get("handoff_revision")
+    if type(revision) is not int or revision < 1:
         raise InvalidState("gnom_callback_revision")
     for field in ("details", "result", "pull_request"):
         if payload.get(field) is not None and not isinstance(payload[field], str):
@@ -43,7 +44,7 @@ def receive(store: Any, value: Mapping[str, Any]) -> dict[str, Any]:
 
     registry = GnomJobRegistry(store)
     job = registry.get(payload["job_id"])
-    if payload["handoff_revision"] != job["handoff_revision"]:
+    if revision != job["handoff_revision"]:
         raise InvalidState("gnom_callback_stale_revision")
     registry.record(
         payload["job_id"], payload["event_id"], payload["status"],
