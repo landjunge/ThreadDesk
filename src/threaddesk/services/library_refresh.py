@@ -46,6 +46,10 @@ def refresh_existing(store, *, initialize=False):
                 return {"status": "not_initialized"}
         # A failed post-commit refresh must not present old results as current.
         prior = index._read()
+        current = index.status()
+        if (current['status'] == 'ready'
+                and (prior or {}).get('workspace_projected') is True):
+            return current
         if prior:
             index._replace({**prior, "status": "stale", "error": "canonical_change"})
         if not initialize and str(store.workspace_path) in _DEFERRED:

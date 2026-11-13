@@ -20,14 +20,34 @@ def _source_receipts(library_root):
         raise ValueError("source_receipts_unreadable") from exc
 
 
-def annotate_versions(records, library_root):
+def version_state(library_root):
+    """Only current/history identities affect the indexed version projection.
+
+    Receipt checkpoints, activity evidence and observation times are technical
+    provenance; rewriting those does not change any version label.
+    """
     sources = _source_receipts(library_root)
     try:
         current = {row.get("record_id") for row in sources.values() if isinstance(row, dict)}
-        historical = {identity for row in sources.values() if isinstance(row, dict)
-                      for identity in row.get("history", []) if isinstance(identity, str)}
+        historical = set()
+        for row in sources.values():
+            if not isinstance(row, dict):
+                continue
+            history = row.get('history', [])
+            if not isinstance(history, list) or any(not isinstance(value, str) for value in history):
+                raise ValueError('source history shape')
+            historical.update(history)
+        current.discard(None)
+        if any(not isinstance(value, str) for value in current):
+            raise ValueError('source identity shape')
     except (ValueError, KeyError, TypeError, AttributeError) as exc:
         raise ValueError("source_receipts_unreadable") from exc
+    return sorted(current), sorted(historical)
+
+
+def annotate_versions(records, library_root):
+    current, historical = version_state(library_root)
+    current, historical = set(current), set(historical)
     return [{**row, "current_version": bool(row.get("copied_from"))
              or row["id"] in current or row["id"] not in historical} for row in records]
 

@@ -316,7 +316,8 @@ class LibraryBatchImporter:
             record["assignment"] = assignment
         if row.get("node_id") and not record.get("node_id"):
             record["node_id"] = row["node_id"]
-        self.importer._write_json(self.importer.records / (record["id"] + ".json"), record)
+        if record != self.importer._record_by_id(record['id']):
+            self.importer._write_json(self.importer.records / (record["id"] + ".json"), record)
         if record["id"] not in thread.context.extra.get("library_files", []):
             self.importer._link_thread(thread, record["id"])
         return record, assignment
@@ -331,8 +332,13 @@ class LibraryBatchImporter:
     def _index(self):
         try:
             from inspect import signature
+            index = LibraryIndex(self.importer.root)
+            state = index.status()
+            if (state['status'] == 'ready'
+                    and (index._read() or {}).get('workspace_projected') is True):
+                return state
             records = self.importer._read_records()
-            rebuild = LibraryIndex(self.importer.root).rebuild
+            rebuild = index.rebuild
             if "store" in signature(rebuild).parameters:
                 return rebuild(records, self.importer.blobs, store=self.store)
             return rebuild(records, self.importer.blobs)

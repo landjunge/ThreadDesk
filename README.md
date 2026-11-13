@@ -610,3 +610,14 @@ broker evidence is reported as failed or uncertain, never connected. Switching d
 not unlock 4AllPass. Closing the window hides ThreadDesk; reopening shows the same
 interface. Explicit application quit remains available. Existing downloads and
 installations are unchanged by these source changes.
+
+**Quellkorrektur · Bibliothekssuche:** Ein unveränderter Watch-Abgleich erneuert
+weder identische Records noch einen bereits aktuellen Index. Technische
+Importquittungen machen die Suche nicht mehr vorübergehend veraltet; echte
+Inhalts-, Versions- und Zuordnungsänderungen bleiben an die Frischeprüfung gebunden.
+Diese Korrektur ist noch kein installiertes Desktoppaket.
+
+**Source fix · Library search:** An unchanged watch reconciliation preserves
+identical records and an already current index. Technical import receipts no
+longer temporarily invalidate search; actual content, version and assignment
+changes still require a fresh projection. This is not an installed desktop build.
