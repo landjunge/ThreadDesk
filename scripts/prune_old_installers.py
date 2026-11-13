@@ -27,6 +27,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -126,7 +127,11 @@ def pinned_tags(root="."):
     """Tags still named by install scripts or workflow fixture downloads."""
     tags = set()
     root = Path(root)
-    paths = list(root.glob("scripts/install.*")) + list(root.glob(".github/workflows/*.yml"))
+    paths = (
+        list(root.glob("scripts/install*"))
+        + list(root.glob(".github/workflows/*.yml"))
+        + list(root.glob("docs/INSTALL*.md"))
+    )
     for path in paths:
         try:
             text = path.read_text(encoding="utf-8")
@@ -329,6 +334,14 @@ def self_test():
             {"id": 81, "name": "ThreadDesk-macOS.dmg", "size": 0, "state": "starter"},
         ],
     }
+    desktop_newer = {
+        "tag_name": "v0.1.2-rc.4",
+        "draft": False,
+        "published_at": "2026-11-13T12:00:00Z",
+        "assets": [
+            {"id": 91, "name": "4AllPass_0.1.2-rc.4_x64.dmg", "size": 10, "state": "uploaded"},
+        ],
+    }
 
     cases = [
         (
@@ -379,6 +392,14 @@ def self_test():
             [1, 61],
             ("v0.8.0rc14",),
         ),
+        (
+            "pinned install channel keeps previous desktop installers",
+            [desktop_newer, desktop_new],
+            ["v0.1.2-rc.3", "v0.1.2-rc.4"],
+            [],
+            [91, 1],
+            ("v0.1.2-rc.3",),
+        ),
     ]
     for title, releases, keep_tags, delete_ids, keep_ids, extra in cases:
         result = plan(releases, extra_keep_tags=extra)
@@ -415,6 +436,30 @@ def self_test():
         or lane("v0.2.0") != "desktop"
     ):
         failed.append("lane() mismatch")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        (root / "scripts").mkdir()
+        (root / "docs").mkdir()
+        (root / ".github" / "workflows").mkdir(parents=True)
+        (root / "scripts" / "install.sh").write_text(
+            'CHANNEL="${FOURALLPASS_RELEASE:-v0.1.2-rc.3}"\n', encoding="utf-8"
+        )
+        (root / "scripts" / "install-command.sh").write_text(
+            "gh release download v0.8.0rc49 -R landjunge/KiraBridge\n",
+            encoding="utf-8",
+        )
+        (root / "docs" / "INSTALL-EN.md").write_text(
+            "gh release download linux-v0.8.0rc41 -R landjunge/KiraBridge\n",
+            encoding="utf-8",
+        )
+        (root / ".github" / "workflows" / "macos-package.yml").write_text(
+            "gh release download v0.8.0rc49 -p '*.whl'\n", encoding="utf-8"
+        )
+        got_pins = pinned_tags(root)
+        want_pins = {"v0.1.2-rc.3", "v0.8.0rc49", "linux-v0.8.0rc41"}
+        if got_pins != want_pins:
+            failed.append(f"pinned_tags {sorted(got_pins)} != {sorted(want_pins)}")
 
     if failed:
         raise SystemExit("self-test failed:\n- " + "\n- ".join(failed))
