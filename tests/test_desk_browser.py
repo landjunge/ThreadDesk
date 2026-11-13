@@ -319,20 +319,26 @@ def test_user_keeps_notes_and_snapshot_across_restart(tmp_path: Path) -> None:
 
 
 def _switch_preference(page, name: str) -> None:
-    """Submit a wording/language form and wait for the redirected page to settle.
+    """Submit a wording/language form and wait for the new document's disclosures.
 
-    The heading assertion alone can match the new server HTML before Alpine has
-    hydrated the disclosure, so the next _open_section could toggle a node that
-    is about to be replaced. networkidle is a state wait, not a timeout bump.
+    The preference forms are plain POST/303 navigations. The disclosure state
+    is restored by the synchronous networkpunkt.js IIFE (sessionStorage, then
+    window.npReveal on htmx:afterSwap), not by Alpine. Mark the current document,
+    submit, wait until that marker is gone (a new document) and npReveal exists,
+    so the next _open_section cannot toggle a node that is about to be replaced.
     """
+    page.evaluate("() => { window.__tdSwitchingDocument = true; }")
     page.get_by_role("button", name=name, exact=True).click()
-    page.wait_for_load_state("networkidle")
+    page.wait_for_function("() => window.__tdSwitchingDocument === undefined")
+    page.wait_for_function("() => window.npReveal !== undefined")
 
 
 def _open_section(page, name: str) -> None:
+    page.wait_for_function("() => window.npReveal !== undefined")
     section = page.locator(f'details[data-disclosure="{name}"]')
     if not section.evaluate("el => el.open"):
         section.locator(":scope > summary").click()
+    expect(section.locator(".preferences-menu")).to_be_visible()
 
 
 def test_late_note_reply_cannot_hide_a_later_write_failure(tmp_path: Path) -> None:
