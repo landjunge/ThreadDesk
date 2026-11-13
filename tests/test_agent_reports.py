@@ -223,6 +223,22 @@ def test_archived_legacy_board_is_not_recreated(setup):
     assert len(r.store.list_threads(include_archived=True)) == 1
 
 
+def test_closed_legacy_board_rejects_new_reports_without_creating_overview(setup):
+    from threaddesk.services.whiteboard_lifecycle import WhiteboardService
+    from threaddesk.core.errors import ManagementError
+    r = setup
+    old_board, old_entry = legacy_report(r)
+    WhiteboardService(r.svc).close(old_board)
+    before = r.svc.get(old_board).to_dict(), [e.to_dict() for e in r.svc.whiteboard(old_board)]
+    assert send(r, rid='old') == {'board_id': old_board, 'entry_id': old_entry, 'duplicate': True}
+    for rid, done in [('same-content', 'API geprüft'), ('changed-content', 'Neuer Schritt')]:
+        with pytest.raises(ManagementError, match='Whiteboard'):
+            send(r, rid=rid, done=done)
+        assert r.store.get_management_operation('agent-report-' + digest(['codex-session-a', rid])) is None
+    assert [t.id for t in r.store.list_threads(include_archived=True)] == [old_board]
+    assert before == (r.svc.get(old_board).to_dict(), [e.to_dict() for e in r.svc.whiteboard(old_board)])
+
+
 def test_failure_rolls_back_status_entry_and_receipt(setup, monkeypatch):
     r = setup
     send(r)

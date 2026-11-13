@@ -146,6 +146,8 @@ class AgentReports:
                     return {'board_id': legacy.id, 'entry_id': existing.id, 'duplicate': True}
                 if legacy.status == 'archived':
                     raise ValueError('Report board archived; restore explicitly')
+                from threaddesk.services.whiteboard_lifecycle import require_writable
+                require_writable(legacy)
             overview = self._overview()
             from threaddesk.services.whiteboard_lifecycle import require_writable
             require_writable(overview)
