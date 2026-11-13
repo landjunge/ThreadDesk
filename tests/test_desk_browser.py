@@ -335,10 +335,17 @@ def _switch_preference(page, name: str) -> None:
 
 def _open_section(page, name: str) -> None:
     page.wait_for_function("() => window.npReveal !== undefined")
-    section = page.locator(f'details[data-disclosure="{name}"]')
+    selector = f'details[data-disclosure="{name}"]'
+    section = page.locator(selector)
     if not section.evaluate("el => el.open"):
         section.locator(":scope > summary").click()
-    expect(section.locator(".preferences-menu")).to_be_visible()
+    # Every disclosure must end up open; only preferences has the menu class.
+    page.wait_for_function(
+        "(sel) => { const el = document.querySelector(sel); return !!el && el.open === true; }",
+        arg=selector,
+    )
+    if name == "preferences":
+        expect(section.locator(".preferences-menu")).to_be_visible()
 
 
 def test_late_note_reply_cannot_hide_a_later_write_failure(tmp_path: Path) -> None:
