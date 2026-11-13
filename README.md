@@ -60,6 +60,14 @@ Sprachabläufe, Zuverlässigkeit, Geschwindigkeit und Synchronisation werden wei
 
 **English:** ThreadDesk keeps project context locally: threads, notes, file references, snapshots and knowledge. Its CLI, MCP tools and interface use that store. Current source adds revision-checked changes, correlated handoffs and returns, and recorded questions. Preparing work does not start an external agent; receiving a delivery does not accept it. The map counts whiteboard entries without reading every entry file, so large stores no longer trigger the previous full scan per view.
 
+**Quellentwicklung · Schlüsselprüfung:** Namen und IDs wie `ThreadDesk-…` werden
+wegen eines internen `sk-` nicht mehr als eigenständige Schlüssel abgewiesen.
+Eigenständige Schlüssel bleiben gesperrt, auch an JSON-Escapegrenzen.
+
+**Source development · Key checks:** Names and IDs such as `ThreadDesk-…` are no
+longer rejected as standalone keys because they contain an internal `sk-`.
+Standalone keys remain blocked, including at JSON escape boundaries.
+
 Die Entwicklerinstallation benötigt Python 3.9+. Neue Quellfunktionen sind nicht automatisch im vorhandenen Desktop-Download enthalten. / Developer installation requires Python 3.9+. New source features are not automatically included in existing desktop downloads.
 
 ## Bibliothek importieren / Import a library
