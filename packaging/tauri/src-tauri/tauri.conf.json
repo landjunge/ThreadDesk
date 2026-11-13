@@ -13,6 +13,8 @@
     }
   },
   "bundle": {
+    "license": "LicenseRef-Netzwerkpunkt-Personal-Use-1.0",
+    "licenseFile": "../../../LICENSE",
     "active": true,
     "targets": [
       "app"
