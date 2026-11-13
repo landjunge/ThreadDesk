@@ -487,7 +487,7 @@ def self_test():
         )
         (root / "site").mkdir()
         (root / "site" / "index.html").write_text(
-            'href="https://github.com/landjunge/threaddesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg"',
+            'href="https://github.com/landjunge/ThreadDesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg"',
             encoding="utf-8",
         )
         got_pins = pinned_tags(root)

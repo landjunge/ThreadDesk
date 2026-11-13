@@ -9,18 +9,18 @@
   &nbsp;
   <a href="https://github.com/landjunge/4AllPass#readme" title="4AllPass"><img src="assets/readme/normalized/4AllPass-small.svg" alt="4AllPass" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/tollgate#readme" title="TollGate"><img src="assets/readme/normalized/TollGate-small.svg" alt="TollGate" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/TollGate#readme" title="TollGate"><img src="assets/readme/normalized/TollGate-small.svg" alt="TollGate" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/agent-authority-lab#readme" title="Agent Authority"><img src="assets/readme/normalized/Agent-Authority-small.svg" alt="Agent Authority" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/AgentAuthority#readme" title="Agent Authority"><img src="assets/readme/normalized/Agent-Authority-small.svg" alt="Agent Authority" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/blockdesign#readme" title="BlockDesign"><img src="assets/readme/normalized/BlockDesign-small.svg" alt="BlockDesign" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/BlockDesign#readme" title="BlockDesign"><img src="assets/readme/normalized/BlockDesign-small.svg" alt="BlockDesign" width="48" height="48"></a>
 </p>
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/wordmark.svg"><img src="brand/wordmark-light.svg" alt="ThreadDesk" width="384"></picture></p>
 
 <!-- AUTO-DOWNLOADS:START -->
 <p align="center">
-  <a href="https://github.com/landjunge/threaddesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg" title="ThreadDesk-0.2.0-macOS-Intel.dmg herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.2.0" width="190" height="52"></a>
+  <a href="https://github.com/landjunge/ThreadDesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg" title="ThreadDesk-0.2.0-macOS-Intel.dmg herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.2.0" width="190" height="52"></a>
 </p>
 <!-- AUTO-DOWNLOADS:END -->
 
@@ -30,9 +30,9 @@
 
 **Das Problem:** Ein KI-Auftrag ist beendet, aber Notizen, Entscheidungen und der letzte Arbeitsstand liegen verstreut. **ThreadDesk** bewahrt Threads, Notizen und Projektzusammenhänge lokal, damit du den Faden wieder aufnehmen kannst.
 
-**Direkt ansehen:** [ThreadDesk 0.2.0 für macOS Intel](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0) · [Einstieg für Nutzer](#für-nutzer) · [Entwickler-Einstieg](#für-entwickler). Die Desktop-Ausgabe hat einen eigenen, begrenzten Funktionsstand; neuere Quellfunktionen sind nicht automatisch darin enthalten.
+**Direkt ansehen:** [ThreadDesk 0.2.0 für macOS Intel](https://github.com/landjunge/ThreadDesk/releases/tag/v0.2.0) · [Einstieg für Nutzer](#für-nutzer) · [Entwickler-Einstieg](#für-entwickler). Die Desktop-Ausgabe hat einen eigenen, begrenzten Funktionsstand; neuere Quellfunktionen sind nicht automatisch darin enthalten.
 
-**English:** Keep the context of AI projects locally—threads, notes and work history—so you can pick up where you left off. [Current macOS Intel release](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0). ThreadDesk stores context; it does **not** execute external agents. New source changes are not automatically included in published downloads.
+**English:** Keep the context of AI projects locally—threads, notes and work history—so you can pick up where you left off. [Current macOS Intel release](https://github.com/landjunge/ThreadDesk/releases/tag/v0.2.0). ThreadDesk stores context; it does **not** execute external agents. New source changes are not automatically included in published downloads.
 
 ## Die Werkzeugfamilie und ThreadDesks Aufgabe
 
@@ -131,7 +131,7 @@ ThreadDesk merkt sich diesen Stand. Jeder Arbeitsbereich wird zu einem eigenen T
 
 ### Heutiger Stand – ehrlich
 
-**Aktuelle Desktop-Ausgabe: [0.2.0](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0)**,
+**Aktuelle Desktop-Ausgabe: [0.2.0](https://github.com/landjunge/ThreadDesk/releases/tag/v0.2.0)**,
 veröffentlicht am 9. November 2026, nur für **macOS Intel** (Tauri, x86_64).
 Der Download oben führt direkt zu `ThreadDesk-0.2.0-macOS-Intel.dmg`; Prüfsummen
 und Quell-Commit `fc0bef9` stehen im Release. Neu sind unter anderem
@@ -141,7 +141,7 @@ vollständige Testsuite zweimal ohne Fehler bestanden; der eingebettete Server h
 seinen Selbsttest im Paket bestanden.
 
 Für Apple Silicon und Windows gibt es in 0.2.0 kein Paket; dort bleibt
-[0.1.1rc1](https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1) vom
+[0.1.1rc1](https://github.com/landjunge/ThreadDesk/releases/tag/v0.1.1rc1) vom
 2. Oktober 2026 der letzte Download. Der Release-Entwurf 0.1.1rc2 wurde nie
 veröffentlicht. Lokal installierte Testpakete gelten nicht als Ausgabe.
 
@@ -167,7 +167,7 @@ ad-hoc signiert, nicht mit Developer-ID signiert und nicht Apple-notarisiert.
 | main-Basis `bba99b0`, 18.10.2026 | TD-C01/02 übernommen: revisionsgebundene Verwaltung und ausgestellte Handoff-/Laufbindung. |
 | Diese Quelländerung TD-C03/D01/R01 | Wissensführung/Wiedereinstieg, exakter Rückgabeabruf, begrenzter neuer Wissenskontext und selektiv abgeglichene Design-PR-Teile. Gezielt isoliert geprüft, kein neuer Desktoprelease und keine Nutzerinstallation umgestellt. |
 
-[PR #66](https://github.com/landjunge/threaddesk/pull/66) war beim Abgleich weiter
+[PR #66](https://github.com/landjunge/ThreadDesk/pull/66) war beim Abgleich weiter
 offen. Aus `43dd13a` werden vorhandene UI- und passende Testteile übernommen;
 ältere Speicher-, Versions-, Lizenz- und Paketierungsstände werden nicht pauschal
 zurückgemischt. Die vollständige alte PR-Kette gilt dadurch nicht als übernommen.
