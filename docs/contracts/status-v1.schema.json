@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/landjunge/threaddesk/blob/main/docs/contracts/status-v1.schema.json",
+  "$id": "https://github.com/landjunge/ThreadDesk/blob/main/docs/contracts/status-v1.schema.json",
   "title": "STATUS.json · status-v1",
   "description": "Maschinenlesbares Ist-Stand-Register eines Produkts (Big Plan BP-TRUTH-01). Unbekanntes steht als \"unknown\", nie geraten.",
   "type": "object",

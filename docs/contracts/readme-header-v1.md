@@ -13,11 +13,11 @@ globale `~/.claude/CLAUDE.md` und die erste Zeile jedes Produkt-README.
 
 Live-Referenzen (Stand 08.11.2026):
 [KiraBridge](https://github.com/landjunge/KiraBridge#readme) ·
-[ThreadDesk](https://github.com/landjunge/threaddesk#readme) ·
+[ThreadDesk](https://github.com/landjunge/ThreadDesk#readme) ·
 [4AllPass](https://github.com/landjunge/4AllPass#readme) ·
-[TollGate](https://github.com/landjunge/tollgate#readme) ·
-[Agent Authority](https://github.com/landjunge/agent-authority-lab#readme) ·
-[BlockDesign](https://github.com/landjunge/blockdesign#readme)
+[TollGate](https://github.com/landjunge/TollGate#readme) ·
+[Agent Authority](https://github.com/landjunge/AgentAuthority#readme) ·
+[BlockDesign](https://github.com/landjunge/BlockDesign#readme)
 
 ## Bestandteile
 
