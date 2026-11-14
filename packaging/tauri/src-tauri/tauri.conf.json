@@ -13,6 +13,8 @@
     }
   },
   "bundle": {
+    "license": "LicenseRef-Netzwerkpunkt-Personal-Use-1.0",
+    "licenseFile": "../../../LICENSE",
     "active": true,
     "targets": [
       "app"
@@ -21,7 +23,8 @@
       "icons/icon.icns"
     ],
     "resources": {
-      "../backend/dist/ThreadDeskServer": "bin/ThreadDeskServer"
+      "../backend/dist/ThreadDeskServer": "bin/ThreadDeskServer",
+      "../../../LICENSE": "LICENSE"
     },
     "macOS": {
       "minimumSystemVersion": "11.0"
