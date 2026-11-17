@@ -6,7 +6,7 @@ unabhängig vom Inhalt des README. Gemeinsame Quelle ist ThreadDesk, wie beim
 [Appbar-Vertrag](appbar-v1.md). Wird ein neues Tool angelegt oder bekommt ein
 Tool neue Icons, wird dieser Kopf übernommen — nicht neu erfunden.
 
-![Referenz: TollGate-Kopf auf GitHub, dunkles Theme](../design/readme-header/reference-tollgate-dark.png)
+**Aktuelle Layout-Referenz (17.11.2026):** [KiraBridge README](https://github.com/landjunge/KiraBridge#readme). Die ältere TollGate-Abbildung ist nur historische Designreferenz; insbesondere ist sie keine Freigabe für Farbänderungen.
 
 Ebenfalls festgehalten: KI-Zentrale [D-013](https://github.com/landjunge/KI-Zentralle/blob/main/DECISIONS.md),
 globale `~/.claude/CLAUDE.md` und die erste Zeile jedes Produkt-README.
@@ -34,7 +34,7 @@ Live-Referenzen (Stand 08.11.2026):
 
 0. **Unsichtbarer Hinweis** in der ersten Zeile: `<!-- readme-header-v1: … -->` — verweist auf
    diese Regel, damit jeder, der den Kopf bearbeitet, sie findet (auf GitHub nicht sichtbar).
-1. **Sprachumschalter** `**English** · [Deutsch](README.de.md)` — nur wenn es `README.de.md` gibt.
+1. **Sprachumschalter**, zentriert als `<p align="center">`: `English | Deutsch` mit direkten Links auf `README.md` und `README.de.md`; die aktuelle Sprache ist hervorgehoben. Nur wenn beide Dateien existieren.
 2. **Großes Produktlogo**, 256 × 256: `assets/readme/normalized/<Prefix>-large.svg`.
 3. **Icon-Leiste** mit allen *anderen* Tools, je 48 × 48, getrennt durch `&nbsp;`,
    Reihenfolge wie im Katalog, das eigene Tool fehlt. Jedes Icon ist ein Link auf das
@@ -54,7 +54,7 @@ dass der Rahmen 94 % der Fläche füllt. Damit wirken alle Icons gleich groß, e
 viel Rand das Original hat. Kein Neuzeichnen, keine Buchstaben-Ersatzlogos, keine
 Light-Variante in der Leiste. Klein aus der 128-px-, groß aus der 512-px-Datei.
 
-**Wortmarke.** Ein Wort, zweigeteilt: erster Teil neutral (Dark `#ffffff`, Light
+**Wortmarke.** Bestehende freigegebene Wortmarken und Icons werden bei der Template-Angleichung **nicht neu erzeugt oder farblich verändert**. Die untenstehenden Katalogfarben sind dokumentierte Werte, kein Beleg für die optische Übereinstimmung mit der Originalgrafik. Offene TollGate-Farbabweichung bleibt separat und unangetastet. Für neue Tools gilt: Ein Wort, zweigeteilt: erster Teil neutral (Dark `#ffffff`, Light
 `#17191f`), zweiter Teil in der Markenfarbe — wie die Buchstaben im Icon
 (KB, TD, AP, TG, AA, BD: zweiter Buchstabe farbig). Arial/Helvetica bold, 44 px,
 `letter-spacing -1`, Höhe 64. In der Light-Variante bekommt der farbige Teil eine
@@ -77,7 +77,7 @@ dem Appbar-Katalog):
 `https://github.com/landjunge/<repo>/releases/download/<tag>/<datei>`, **nie** eine
 Release-Seite (`/releases/tag/…`). 190 × 52, Fläche in Markenfarbe, Schrift `#14161b`,
 Download-Pfeil links, Zeile 1 Plattform (fett), Zeile 2 Version.
-Reihenfolge: macOS Apple Silicon, macOS Intel, Windows, Linux.
+Reihenfolge der **fünf** sichtbaren Felder: macOS Apple Silicon, macOS Intel, Windows, Linux Desktop, Debian Server. Fehlende echte Installer bleiben als „In Vorbereitung / Coming soon“ sichtbar und sind nicht klickbar. Quellcode-ZIP ist separat auszuweisen, nicht als Installer.
 
 - Repos mit Releases: `scripts/update_readme_downloads.py` + Workflow
   `readme-downloads.yml`. Nimmt je Plattform die neueste veröffentlichte Datei der
@@ -141,3 +141,7 @@ directly to installer files (never release pages). Catalog, normalised icons and
 `scripts/readme_header.py` (`icons` / `apply` / `check`) live in ThreadDesk. To add a
 tool: add icons, append catalog entry, run `icons`, `apply` to the new repo **and all
 existing repos**, `check`, merge.
+
+## Template-Vorbereitung (17.11.2026)
+
+KiraBridge dient als Referenz für die Anordnung: zentrierte Sprachwahl, großes Produkt-Icon, fünf kleine verlinkte Familien-Icons, Wortmarke, fünf Download-Felder. Produktname, Icon-Dateien, Wortmarken, Farben, Beschreibungen und Release-Assets bleiben individuell. README.md und README.de.md müssen denselben Kopf erhalten. Der Download-Workflow aktualisiert nur belegte Release-Assets und muss separat auf erfolgreiche Ausführung geprüft werden; eine vorhandene Workflow-Datei ist kein Erfolgsnachweis. Ein neues GitHub-Template-Repository und automatische Synchronisierung bestehender Repos sind noch **nicht** eingerichtet. Die bestehende `scripts/readme_header.py`-Implementierung ist vor produktiver Verwendung gegen diese aktualisierte Spezifikation zu prüfen, da sie derzeit insbesondere den Sprachumschalter nicht zentriert rendert.
