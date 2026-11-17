@@ -1,16 +1,6 @@
 <!-- README-LANGUAGES -->
 <p align="center"><a href="README.md">English</a> &nbsp;|&nbsp; <strong>Deutsch</strong></p>
 
-# ThreadDesk – Deutsch
-
-[English README](README.md) · [Alle Releases](https://github.com/landjunge/ThreadDesk/releases)
-
-ThreadDesk bewahrt Projektkontext, Threads, Notizen und Arbeitsstände lokal. Es führt keine externen Agenten selbst aus. Die veröffentlichten Desktop-Versionen können einen anderen Funktionsstand als der aktuelle Quellcode haben.
-
-## Downloads
-
-Die fünf Installationsvarianten werden automatisch angezeigt. Nur tatsächlich veröffentlichte Installationsdateien sind anklickbar. Fehlende Pakete erscheinen als **In Vorbereitung**.
-
 <p align="center">
   <img src="assets/readme/normalized/ThreadDesk-large.svg" alt="ThreadDesk" width="256" height="256">
 </p>
@@ -42,6 +32,10 @@ Die fünf Installationsvarianten werden automatisch angezeigt. Nur tatsächlich 
   <img src="assets/readme/download-debian-server.svg" alt="Debian Server: In Vorbereitung / Coming soon" width="190" height="52">
 </p>
 <!-- AUTO-DOWNLOADS:END -->
+
+ThreadDesk bewahrt Projektkontext, Threads, Notizen und Arbeitsstände lokal. Es führt keine externen Agenten selbst aus. Die veröffentlichten Desktop-Versionen können einen anderen Funktionsstand als der aktuelle Quellcode haben.
+
+Die fünf Installationsvarianten werden automatisch angezeigt. Nur tatsächlich veröffentlichte Installationsdateien sind anklickbar. Fehlende Pakete erscheinen als **In Vorbereitung**.
 
 | Plattform | Status |
 | --- | --- |
