@@ -1,3 +1,6 @@
+<!-- README-LANGUAGES -->
+<p align="center"><a href="README.md">English</a> &nbsp;|&nbsp; <strong>Deutsch</strong></p>
+
 # ThreadDesk – Deutsch
 
 [English README](README.md) · [Alle Releases](https://github.com/landjunge/ThreadDesk/releases)
