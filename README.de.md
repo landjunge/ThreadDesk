@@ -11,6 +11,24 @@ ThreadDesk bewahrt Projektkontext, Threads, Notizen und Arbeitsstände lokal. Es
 
 Die fünf Installationsvarianten werden automatisch angezeigt. Nur tatsächlich veröffentlichte Installationsdateien sind anklickbar. Fehlende Pakete erscheinen als **In Vorbereitung**.
 
+<p align="center">
+  <img src="assets/readme/normalized/ThreadDesk-large.svg" alt="ThreadDesk" width="256" height="256">
+</p>
+
+<p align="center">
+  <a href="https://github.com/landjunge/KiraBridge#readme" title="KiraBridge"><img src="assets/readme/normalized/KiraBridge-small.svg" alt="KiraBridge" width="48" height="48"></a>
+  &nbsp;
+  <a href="https://github.com/landjunge/4AllPass#readme" title="4AllPass"><img src="assets/readme/normalized/4AllPass-small.svg" alt="4AllPass" width="48" height="48"></a>
+  &nbsp;
+  <a href="https://github.com/landjunge/TollGate#readme" title="TollGate"><img src="assets/readme/normalized/TollGate-small.svg" alt="TollGate" width="48" height="48"></a>
+  &nbsp;
+  <a href="https://github.com/landjunge/AgentAuthority#readme" title="Agent Authority"><img src="assets/readme/normalized/Agent-Authority-small.svg" alt="Agent Authority" width="48" height="48"></a>
+  &nbsp;
+  <a href="https://github.com/landjunge/BlockDesign#readme" title="BlockDesign"><img src="assets/readme/normalized/BlockDesign-small.svg" alt="BlockDesign" width="48" height="48"></a>
+</p>
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/wordmark.svg"><img src="brand/wordmark-light.svg" alt="ThreadDesk" width="384"></picture></p>
+
 <!-- AUTO-DOWNLOADS:START -->
 <p align="center">
   <a href="https://github.com/landjunge/ThreadDesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg" title="ThreadDesk macOS Intel DMG herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.2.0" width="190" height="52"></a>
