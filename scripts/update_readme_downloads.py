@@ -34,7 +34,7 @@ import urllib.request
 from html import escape
 from pathlib import Path
 
-TOOL_VERSION = "2.2.0"
+TOOL_VERSION = "2.2.3"
 START, END = "<!-- AUTO-DOWNLOADS:START -->", "<!-- AUTO-DOWNLOADS:END -->"
 BUTTON_DIR = Path("assets/readme")
 API = "https://api.github.com"
@@ -51,8 +51,8 @@ BRAND = {
     "blockdesign": "#ebc33f",
 }
 
-# Display order of the buttons. "Debian Remote" is filled only from linux-* tags.
-ORDER = ["macOS Apple Silicon", "macOS Intel", "Windows", "Linux", "Debian Remote"]
+# Display order of the buttons. "Debian Server" is filled only from linux-* tags.
+ORDER = ["macOS Apple Silicon", "macOS Intel", "Windows", "Linux Desktop", "Debian Server"]
 
 PACKAGE = re.compile(r"\.(?:dmg|pkg|exe|msi|appimage|deb|rpm|zip|tar\.gz)$", re.IGNORECASE)
 NOT_PACKAGE = re.compile(
@@ -81,7 +81,7 @@ def platforms(name):
     if WINDOWS.search(name):
         return ["Windows"]
     if LINUX.search(name):
-        return ["Linux"]
+        return ["Linux Desktop"]
     if MAC.search(name):
         if UNIVERSAL.search(name):
             return ["macOS Apple Silicon", "macOS Intel"]
@@ -192,7 +192,7 @@ def choose(releases):
     if remote:
         linux = pick_from(remote).get("Linux")
         if linux:
-            chosen["Debian Remote"] = linux
+            chosen["Debian Server"] = linux
     return chosen
 
 
@@ -274,24 +274,34 @@ def verify(repo, private, chosen):
 # --- output ------------------------------------------------------------------
 
 
+def placeholder_svg(label):
+    label = escape(label)
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="190" height="52" viewBox="0 0 190 52">'
+        '<rect x="1" y="1" width="188" height="50" rx="10" fill="#555b64" stroke="#858b94"/>'
+        f'<text x="95" y="23" text-anchor="middle" font-family="Arial" font-size="13" fill="white">{label}</text>'
+        '<text x="95" y="39" text-anchor="middle" font-family="Arial" font-size="10" fill="white">'
+        'In Vorbereitung / Coming soon</text></svg>\n'
+    )
+
+
 def render(repo, chosen):
-    """Return ({button file: svg}, readme block) for the chosen downloads."""
+    """Always show five fields; link only to published installer assets."""
     color = BRAND[repo.split("/")[-1].lower()]
     buttons, links = {}, []
     for label in ORDER:
+        path = BUTTON_DIR / f"download-{slug(label)}.svg"
         if label not in chosen:
+            buttons[path] = placeholder_svg(label)
+            links.append(f'<img src="{path.as_posix()}" alt="{escape(label)}: In Vorbereitung / Coming soon" width="190" height="52">')
             continue
         tag, asset = chosen[label]
         version = version_of(tag)
-        path = BUTTON_DIR / f"download-{slug(label)}.svg"
         buttons[path] = button_svg(label, version, color)
         url = escape(asset["browser_download_url"], quote=True)
         title = escape(f"{asset['name']} herunterladen / download", quote=True)
         alt = escape(f"Download {label} {version}", quote=True)
-        links.append(
-            f'<a href="{url}" title="{title}"><img src="{path.as_posix()}" '
-            f'alt="{alt}" width="190" height="52"></a>'
-        )
+        links.append(f'<a href="{url}" title="{title}"><img src="{path.as_posix()}" alt="{alt}" width="190" height="52"></a>')
     block = '<p align="center">\n  ' + "\n  &nbsp;\n  ".join(links) + "\n</p>"
     return buttons, block
 
@@ -333,13 +343,13 @@ def self_test():
         "4AllPass_0.1.2-rc.2_aarch64.dmg": ["macOS Apple Silicon"],
         "4AllPass_0.1.2-rc.2_x64.dmg": ["macOS Intel"],
         "4AllPass_0.1.2-rc.2_x64-setup.exe": ["Windows"],
-        "4AllPass_0.1.2-rc.2_amd64.AppImage": ["Linux"],
+        "4AllPass_0.1.2-rc.2_amd64.AppImage": ["Linux Desktop"],
         "ThreadDesk-macOS-AppleSilicon.dmg": ["macOS Apple Silicon"],
         "ThreadDesk-macOS.dmg": ["macOS Intel"],
         "ThreadDesk-Windows.exe": ["Windows"],
         "KiraBridge-0.8.0rc36-Intel-Installer.zip": ["macOS Intel"],
         "KiraBridge-0.8.0rc37.dev1-Windows-Dev-Kit.zip": ["Windows"],
-        "KiraBridge-0.8.0rc41-Linux-x86_64.tar.gz": ["Linux"],
+        "KiraBridge-0.8.0rc41-Linux-x86_64.tar.gz": ["Linux Desktop"],
         "App-universal.dmg": ["macOS Apple Silicon", "macOS Intel"],
         "SHA256SUMS": [],
         "third-party-notices-macOS.zip": [],
@@ -379,7 +389,7 @@ def self_test():
         },
     ]
     picked = {label: tag for label, (tag, _) in choose(releases).items()}
-    if picked != {"Linux": "v0.8.0rc2"}:
+    if picked != {"Linux Desktop": "v0.8.0rc2"}:
         failed.append(f"choose-desktop: {picked}")
     dual = [
         {
@@ -408,7 +418,7 @@ def self_test():
         },
     ]
     picked = {label: tag for label, (tag, _) in choose(dual).items()}
-    if picked != {"macOS Intel": "v0.8.0rc49", "Debian Remote": "linux-v0.8.0rc41"}:
+    if picked != {"macOS Intel": "v0.8.0rc49", "Debian Server": "linux-v0.8.0rc41"}:
         failed.append(f"choose-lanes: {picked}")
     if version_of("linux-v0.8.0rc41") != "0.8.0rc41":
         failed.append(f"version_of linux tag: {version_of('linux-v0.8.0rc41')}")
@@ -419,7 +429,7 @@ def self_test():
     }
     for repo_name in ("AgentAuthority", "agent-authority-lab"):
         try:
-            rendered, _ = render(f"landjunge/{repo_name}", {"Linux": ("v1.0.0", authority_asset)})
+            rendered, _ = render(f"landjunge/{repo_name}", {"Linux Desktop": ("v1.0.0", authority_asset)})
             svg = next(iter(rendered.values()))
             if "#3b78fc" not in svg:
                 failed.append(f"render-brand {repo_name}: expected Agent Authority brand color")
@@ -437,7 +447,7 @@ def self_test():
         }
     ]
     picked = {label: tag for label, (tag, _) in choose(appimage).items()}
-    if picked != {"macOS Intel": "v0.1.2-rc.2", "Linux": "v0.1.2-rc.2"}:
+    if picked != {"macOS Intel": "v0.1.2-rc.2", "Linux Desktop": "v0.1.2-rc.2"}:
         failed.append(f"choose-appimage: {picked}")
     if failed:
         raise SystemExit("Self-test failed:\n  " + "\n  ".join(failed))
