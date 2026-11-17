@@ -188,9 +188,9 @@ def choose(releases):
     desktop = newest_lane(releases, "desktop")
     if desktop:
         chosen.update(pick_from(desktop))
-    remote = newest_lane(releases, "remote", required="Linux")
+    remote = newest_lane(releases, "remote", required="Linux Desktop")
     if remote:
-        linux = pick_from(remote).get("Linux")
+        linux = pick_from(remote).get("Linux Desktop")
         if linux:
             chosen["Debian Server"] = linux
     return chosen
