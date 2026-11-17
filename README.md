@@ -20,7 +20,15 @@
 
 <!-- AUTO-DOWNLOADS:START -->
 <p align="center">
-  <a href="https://github.com/landjunge/ThreadDesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg" title="ThreadDesk-0.2.0-macOS-Intel.dmg herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.2.0" width="190" height="52"></a>
+  <a href="https://github.com/landjunge/ThreadDesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg" title="ThreadDesk macOS Intel DMG herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.2.0" width="190" height="52"></a>
+  &nbsp;
+  <img src="assets/readme/download-macos-apple-silicon.svg" alt="macOS Apple Silicon: In Vorbereitung / Coming soon" width="190" height="52">
+  &nbsp;
+  <img src="assets/readme/download-windows.svg" alt="Windows: In Vorbereitung / Coming soon" width="190" height="52">
+  &nbsp;
+  <img src="assets/readme/download-linux-desktop.svg" alt="Linux Desktop: In Vorbereitung / Coming soon" width="190" height="52">
+  &nbsp;
+  <img src="assets/readme/download-debian-server.svg" alt="Debian Server: In Vorbereitung / Coming soon" width="190" height="52">
 </p>
 <!-- AUTO-DOWNLOADS:END -->
 
