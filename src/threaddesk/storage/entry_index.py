@@ -20,6 +20,7 @@ import sqlite3
 import stat
 from dataclasses import dataclass
 from pathlib import Path
+from time import monotonic
 
 from threaddesk.core.search import SearchError
 from threaddesk.storage.search_source import identifier
@@ -107,7 +108,7 @@ class EntryIndex:
             if path.is_file() and not path.is_symlink():
                 path.unlink()
 
-    def scan(self, *, abort_thread=None):
+    def scan(self, *, abort_thread=None, deadline=None):
         if not self._fts:
             return self.status()
         self._meta("complete", "0")
@@ -115,6 +116,8 @@ class EntryIndex:
         on_disk = set(self._thread_ids())
         stored = {row[0] for row in self._db.execute("SELECT thread_id FROM thread_manifest")}
         for thread_id in sorted(on_disk | stored):
+            if deadline is not None and monotonic() >= deadline:
+                return {**self.status(), "rebuilding": True}
             if thread_id not in on_disk:
                 self._transaction(lambda gone=thread_id: self._delete_thread(gone))
                 continue

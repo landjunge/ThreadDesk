@@ -52,3 +52,39 @@ def register_search(subparsers, language, service_factory):
         finally:
             search.close()
     parser.set_defaults(func=run)
+
+    entries = subparsers.add_parser(
+        "search-entries",
+        help=text("Whiteboard-Einträge suchen", "Search whiteboard entries"),
+    )
+    entries.add_argument("query")
+    entries.add_argument("--limit", type=int, default=10)
+    entries.add_argument("--cursor", default=None)
+    entries.add_argument("--thread", default=None)
+    entries.add_argument("--actor", default=None)
+    entries.add_argument("--entry-type", default=None)
+    entries.add_argument("--since", default=None)
+    entries.add_argument("--until", default=None)
+    entries.add_argument("--all", action="store_true")
+    entries.add_argument("--sort", choices=("rank", "newest"), default="newest")
+
+    def run_entries(args):
+        from threaddesk.services.entry_search import search_entries
+        root = service_factory().store.workspace_path
+        result = search_entries(
+            root,
+            query=args.query,
+            limit=args.limit,
+            cursor=args.cursor,
+            thread_id=args.thread,
+            actor=args.actor,
+            entry_type=args.entry_type,
+            since=args.since,
+            until=args.until,
+            include_archived=args.all,
+            sort=args.sort,
+        )
+        print(json.dumps(result, ensure_ascii=False))
+        return 0
+
+    entries.set_defaults(func=run_entries)
