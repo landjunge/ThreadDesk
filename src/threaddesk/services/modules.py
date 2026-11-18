@@ -253,12 +253,12 @@ class ModuleContext:
         return [entry.to_dict() for entry in list_entries(self.__store, thread_id)]
 
     def append_whiteboard(self, thread_id: str, **fields: Any) -> dict[str, Any]:
-        """Append one entry. Modules cannot update or delete history."""
+        """Append one entry. The same external key replaces different content."""
         if "whiteboard:append" not in self.manifest.write_actions:
             raise InvalidState("module_write_action")
-        thread = self.__store.get_thread(thread_id)
         entry, duplicate = append_whiteboard_entry(self.__store, thread_id, **fields)
         if not duplicate:
+            thread = self.__store.get_thread(thread_id)
             thread.updated_at = now_iso()
             self.__store.save_thread(thread)
         return {"entry": entry.to_dict(), "duplicate": duplicate}

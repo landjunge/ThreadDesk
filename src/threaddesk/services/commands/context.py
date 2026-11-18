@@ -23,7 +23,9 @@ def specifications():
               "entry_type": choice(*ENTRY_TYPES),
               "content": {"type": "string", "minLength": 1, "maxLength": 8000},
               **{key: ID for key in ("task_id", "handoff_id", "run_id", "actor_id", "instance_id", "room_id")},
-              "metadata": {"type": "object", "maxProperties": 50}, "external_key": TEXT}
+              "metadata": {"type": "object", "maxProperties": 50}, "external_key": TEXT,
+              "expires_at": {"type": "string"},
+              "supersedes": {"type": "array", "items": {"type": "string"}}}
     def append(svc, args):
         args = dict(args)
         identity = args.pop("id")
@@ -96,7 +98,12 @@ def _whiteboard_list(svc, args):
     if not args.get("metadata_only") and "entry_id" not in args:
         return page([row.to_dict() for row in svc.whiteboard(args["id"])], args)
     # Resolve/validate the owning thread through the existing service read path.
+    from threaddesk.services.whiteboard import drop_expired
+
     thread = svc.get(args["id"])
+    removed = drop_expired(svc.store, thread.id)
+    if removed:
+        svc.bus.emit("thread.updated", {"id": thread.id})
     return svc.store.read_whiteboard_page(
         thread.id, metadata_only=args.get("metadata_only", False),
         entry_id=args.get("entry_id"), offset=args.get("offset", 0),
