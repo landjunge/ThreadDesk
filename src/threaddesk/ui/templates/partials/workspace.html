@@ -8,7 +8,7 @@
   x-transition.opacity.duration.200ms
 >
   {% if notice %}
-  <p class="banner-ok" role="status">{{ notice }}</p>
+  <p class="banner-ok" role="status">{{ notice }}{% if opening_saved_id %} <a href="/?thread={{ opening_saved_id }}">{{ opening_saved_title }}</a>{% endif %}</p>
   {% endif %}
   {% if error %}
   <p class="banner-error" role="alert">{{ error }}</p>

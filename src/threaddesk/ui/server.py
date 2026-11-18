@@ -6,6 +6,7 @@ import json
 import os
 import tempfile
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, urlsplit
@@ -217,10 +218,131 @@ def _return_review_states(svc, current, entries):
     return states
 
 
+def _regular_file(path: Path) -> bool:
+    try:
+        return path.is_file() and not path.is_symlink()
+    except OSError:
+        return False
+
+
+def _raw_thread(store, thread_id: str) -> dict | None:
+    path = store.threads_dir / f"{thread_id}.json"
+    if not _regular_file(path):
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict) or data.get("id") != thread_id:
+        return None
+    return data
+
+
+def _note_text(data: dict) -> str:
+    context = data.get("context")
+    if isinstance(context, dict) and isinstance(context.get("notes"), str):
+        return context["notes"].strip()
+    return ""
+
+
+def _has_whiteboard_file(store, thread_id: str) -> bool:
+    folder = store.whiteboard_dir / thread_id
+    if not folder.is_dir() or folder.is_symlink():
+        return False
+    try:
+        for entry in os.scandir(folder):
+            if entry.name.startswith(".") or not entry.name.endswith(".json"):
+                continue
+            if _regular_file(Path(entry.path)):
+                return True
+    except OSError:
+        return False
+    return False
+
+
+# An empty thread the user just created or switched to stays open: its
+# updated_at must be at most this many seconds old. A missing or unreadable
+# stamp counts as old and never raises. This is not a setting. The choice
+# only reads; it does not write state.json.
+OPENING_FRESH_SECONDS = 15 * 60
+
+
+def _opening_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _stamp_age_seconds(value: object, now: datetime) -> float | None:
+    if not isinstance(value, str) or not value or len(value) > 64:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (ValueError, OverflowError):
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return (now - parsed.astimezone(timezone.utc)).total_seconds()
+
+
+def _remembered_is_fresh(data: dict) -> bool:
+    now = _opening_now()
+    updated = _stamp_age_seconds(data.get("updated_at"), now)
+    return updated is not None and 0 <= updated <= OPENING_FRESH_SECONDS
+
+
+def _newest_board(store) -> str | None:
+    chosen: tuple[str, str] | None = None
+    folder = store.threads_dir
+    if not folder.is_dir():
+        return None
+    for path in folder.glob("*.json"):
+        data = _raw_thread(store, path.stem)
+        if data is None or data.get("status") == "archived":
+            continue
+        if not _has_whiteboard_file(store, path.stem):
+            continue
+        stamp = data.get("updated_at") if isinstance(data.get("updated_at"), str) else ""
+        key = (stamp, path.stem)
+        if chosen is None or key > chosen:
+            chosen = key
+    return None if chosen is None else chosen[1]
+
+
+def _opening_choice(store) -> tuple[str | None, str | None]:
+    """Read-only substitute when the remembered thread cannot be shown.
+
+    Returns ``(fallback_id, remembered_id)``. A missing ``current_id`` keeps
+    today's empty opening. Broken ``state.json`` still raises from the store.
+    An empty remembered thread stays when it was touched at most
+    ``OPENING_FRESH_SECONDS`` ago (created or switched to). Only an older empty thread yields to the
+    newest board that already has entries.
+    """
+    if not hasattr(store, "threads_dir") or not hasattr(store, "whiteboard_dir"):
+        return None, None
+    current_id = store.get_current_id()
+    if not current_id:
+        return None, None
+    remembered = _raw_thread(store, current_id)
+    if (
+        remembered is not None
+        and remembered.get("status") != "archived"
+        and (
+            _note_text(remembered)
+            or _has_whiteboard_file(store, current_id)
+            or _remembered_is_fresh(remembered)
+        )
+    ):
+        return None, None
+    fallback = _newest_board(store)
+    if not fallback or fallback == current_id:
+        return None, None
+    return fallback, current_id
+
+
 def _ctx(request: Request, extra: dict | None = None) -> dict:
     svc = _svc()
     current = svc.current()
     selected = request.query_params.get("thread")
+    substituted: str | None = None
     if request.method == "POST" and not request.url.path.endswith("/archive"):
         selected = request.path_params.get("thread_id") or selected
     if selected:
@@ -228,6 +350,14 @@ def _ctx(request: Request, extra: dict | None = None) -> dict:
             current = svc.get(selected)
         except ThreadDeskError:
             pass
+    else:
+        fallback, remembered = _opening_choice(svc.store)
+        if fallback:
+            try:
+                current = svc.get(fallback)
+                substituted = remembered
+            except ThreadDeskError:
+                substituted = None
     snapshots = svc.snapshots(current.id) if current else []
     entries = svc.whiteboard(current.id) if current else []
     from threaddesk.services.whiteboard_lifecycle import WhiteboardService, effective_entries
@@ -250,6 +380,11 @@ def _ctx(request: Request, extra: dict | None = None) -> dict:
         "prompt_preview": None,
         "error": None,
         "notice": None,
+        "opening_saved_id": substituted,
+        "opening_saved_title": (
+            (_raw_thread(svc.store, substituted) or {}).get("title") or substituted
+            if substituted else ""
+        ),
         "whiteboard": displayed_entries,
         "whiteboard_state": board,
         "return_review_states": _return_review_states(svc, current, entries),
@@ -269,6 +404,11 @@ def _ctx(request: Request, extra: dict | None = None) -> dict:
         if any(node.id == chosen for node in data["linked_nodes"]):
             data["focus_node"] = chosen
     data.update(extra)
+    if substituted and not data.get("notice"):
+        data["notice"] = i18n.translate("ui.opened_instead", lang)
+    elif not substituted:
+        data["opening_saved_id"] = None
+        data["opening_saved_title"] = ""
     return data
 
 
