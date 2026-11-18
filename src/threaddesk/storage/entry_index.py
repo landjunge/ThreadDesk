@@ -277,10 +277,35 @@ class EntryIndex:
             digest.update(f"{thread_id}\0{manifest_hash}\n".encode())
         return digest.hexdigest()
 
+    def _trashed(self):
+        """Thread ids that currently sit in the trash. Their files stay under threads/."""
+        folder = self.root / "trash"
+        if not folder.is_dir() or folder.is_symlink():
+            return set()
+        gone = set()
+        for entry in os.scandir(folder):
+            if not entry.name.startswith("thread-") or not entry.name.endswith(".json"):
+                continue
+            if not _regular(entry.path):
+                continue
+            try:
+                data = json.loads(Path(entry.path).read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if (
+                isinstance(data, dict)
+                and data.get("kind") == "thread"
+                and data.get("state") == "trashed"
+                and isinstance(data.get("object_id"), str)
+            ):
+                gone.add(data["object_id"])
+        return gone
+
     def _thread_ids(self):
         folder = self.root / "threads"
         if not folder.is_dir() or folder.is_symlink():
             return []
+        trashed = self._trashed()
         found = []
         for entry in os.scandir(folder):
             if not entry.name.endswith(".json") or not _regular(entry.path):
@@ -289,6 +314,8 @@ class EntryIndex:
             try:
                 identifier(thread_id)
             except SearchError:
+                continue
+            if thread_id in trashed:
                 continue
             found.append(thread_id)
         return sorted(found)
