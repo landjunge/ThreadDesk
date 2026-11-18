@@ -107,12 +107,59 @@ def test_node_relation_roundtrip_and_reference_blockers(store, kind, object_id):
     preview = service.purge_preview(moved["entry"]["trash_id"])
     if kind == "node":
         assert preview["blockers"] == ["referenced_object"]
-        with pytest.raises(ManagementError) as error:
-            service.purge(trash_id=moved["entry"]["trash_id"], generation=1, expected_revision=1,
-                          reference_digest=preview["reference_digest"], confirmation=preview["confirmation"], operation_id="purge")
-        assert error.value.code == "purge_blocked"
+        result = service.purge(trash_id=moved["entry"]["trash_id"], generation=1, expected_revision=1,
+                                reference_digest=preview["reference_digest"], confirmation=preview["confirmation"], operation_id="purge")
+        assert result["entry"]["state"] == "purged"
+        with pytest.raises(NotFound):
+            store.get_node(object_id, include_trashed=True)
+        dangling = [(item.id, item.source_id, item.target_id) for item in store.list_relations(include_trashed=True)]
+        if isinstance(store, SQLiteStore):
+            assert dangling == []
+        else:
+            assert dangling == [("relation1", "node1", "node2")]
+        return
     service.restore(trash_id=moved["entry"]["trash_id"], generation=1, expected_revision=1, operation_id="restore")
     assert store.list_relations()[0].id == "relation1"
+
+
+def test_issued_handoff_and_sync_binding_do_not_block_purge(store):
+    thread = new_thread("Mit Übergabe")
+    store.save_thread(thread)
+    handoff = {"handoff": {"thread_id": thread.id, "handoff_id": "keep-handoff"}, "marker": "KEEP_HANDOFF"}
+    store.save_issued_handoff("keep-handoff", handoff)
+    binding = store.workspace_path / "server-sync-private" / (thread.id + ".json")
+    binding.parent.mkdir(parents=True)
+    binding.write_text('{"binding":"keep"}', encoding="utf-8")
+    service = TrashService(store)
+    entry = service.move(kind="thread", object_id=thread.id, expected_revision=thread.revision, operation_id="move")["entry"]
+    preview = service.purge_preview(entry["trash_id"])
+    assert "issued_handoff_requires_review" in preview["blockers"]
+    assert "sync_binding_requires_review" in preview["blockers"]
+    result = service.purge(trash_id=entry["trash_id"], generation=1, expected_revision=1,
+                           reference_digest=preview["reference_digest"], confirmation=preview["confirmation"], operation_id="purge")
+    assert result["entry"]["state"] == "purged"
+    assert store.get_issued_handoff("keep-handoff") == handoff
+    assert binding.read_text(encoding="utf-8") == '{"binding":"keep"}'
+    assert not store.list_threads(include_archived=True, include_trashed=True)
+
+
+def test_unknown_trash_history_field_stays_while_object_is_purged(store):
+    thread = new_thread("Unbekanntes Historienfeld")
+    store.save_thread(thread)
+    service = TrashService(store)
+    entry = service.move(kind="thread", object_id=thread.id, expected_revision=thread.revision, operation_id="move")["entry"]
+    stored = service.get(entry["trash_id"])
+    stored["private_note"] = "KEEP_UNKNOWN_HISTORY"
+    store.save_trash_entry(stored)
+    preview = service.purge_preview(entry["trash_id"])
+    assert "trash_history_requires_review" in preview["blockers"]
+    result = service.purge(trash_id=entry["trash_id"], generation=1, expected_revision=1,
+                           reference_digest=preview["reference_digest"], confirmation=preview["confirmation"], operation_id="purge")
+    assert result["entry"]["state"] == "purged"
+    kept = service.get(entry["trash_id"])
+    assert kept["state"] == "purged"
+    assert kept["private_note"] == "KEEP_UNKNOWN_HISTORY"
+    assert not store.list_threads(include_archived=True, include_trashed=True)
 
 
 def test_purge_needs_exact_preview_and_explicit_confirmation_keeps_original(store, tmp_path):

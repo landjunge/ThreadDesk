@@ -1,8 +1,9 @@
 """Inventory and minimize exact object copies in durable operation results.
 
 The public plan contains IDs, hashes and JSON paths, never old result bodies.
-Unknown attributable content and unresolved commands block the purge. Audit
-requests/statuses are retained; a replay explicitly returns reduced content.
+Unknown attributable content and unresolved commands stay unchanged and do not
+block purge. Audit requests/statuses are retained; a replay explicitly returns
+reduced content.
 """
 from __future__ import annotations
 
@@ -137,7 +138,11 @@ class ReceiptPlan:
     changes: list
 
     def apply(self, store, entry, *, operation_id, purged_at):
+        blocked = {item["storage_operation_id"] for item in self.public.get("blockers", [])
+                   if isinstance(item, dict) and isinstance(item.get("storage_operation_id"), str)}
         for item in self.changes:
+            if item["storage_operation_id"] in blocked:
+                continue
             evidence = {"schema": SCHEMA, "kind": entry["kind"], "object_id": entry["object_id"],
                         "trash_id": entry["trash_id"], "generation": entry["generation"],
                         "purge_operation_id": operation_id, "purged_at": purged_at,

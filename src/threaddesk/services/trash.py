@@ -2,7 +2,8 @@
 
 Payloads and their IDs stay in their original stores. The only destructive
 method requires an exact, freshly calculated preview and explicit confirmation.
-No method touches external files or shared library blobs.
+Preview blockers stay visible and do not reject that confirmation. No method
+touches external files or shared library blobs.
 """
 from __future__ import annotations
 
@@ -341,16 +342,20 @@ class TrashService:
                 raise ManagementError("reference_conflict", "Referenzen haben sich seit der Vorschau geändert.")
             if confirmation != preview["confirmation"]:
                 raise ManagementError("explicit_confirmation_required", "Exakte endgültige Löschbestätigung fehlt.")
-            if preview["blockers"]:
-                raise ManagementError("purge_blocked", "Referenzen oder offene Übergaben verhindern die Löschung.",
-                                      blockers=preview["blockers"])
             stamp = now_iso()
             receipts.apply(self.store, entry, operation_id=operation_id, purged_at=stamp)
+            blocked_history = {item["trash_id"] for item in preview["trash_entry_reduction_blockers"]
+                               if isinstance(item, dict) and isinstance(item.get("trash_id"), str)}
             for historical in self.store.list_trash_entries():
                 if historical["kind"] == entry["kind"] and historical["object_id"] == entry["object_id"]:
+                    if historical["trash_id"] in blocked_history:
+                        continue
                     self.store.save_trash_entry(minimal_entry(historical))
             self.store.purge_trash_object(entry["kind"], entry["object_id"])
-            entry = minimal_entry(entry)
+            if entry["trash_id"] in blocked_history:
+                entry = dict(entry)
+            else:
+                entry = minimal_entry(entry)
             entry.update(state="purged", revision=entry["revision"] + 1, purged_at=stamp)
             self.store.save_trash_entry(entry)
             return {"entry": entry, "external_originals_preserved": True,

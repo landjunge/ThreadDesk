@@ -130,7 +130,7 @@ def test_receipt_addition_invalidates_preview_and_reduction_rolls_back_with_purg
 
 
 @pytest.mark.parametrize("shape", ["pending", "opaque", "owned_unknown", "structured_text", "nested_prompt"])
-def test_unknown_or_unconfirmed_result_blocks_instead_of_erasing_audit(app, shape):
+def test_unknown_or_unconfirmed_result_is_kept_while_known_copies_reduce(app, shape):
     entry, _, _ = prepared(app)
     record = {"request_hash": "a" * 64, "result": None}
     identity = "unknown"
@@ -148,13 +148,14 @@ def test_unknown_or_unconfirmed_result_blocks_instead_of_erasing_audit(app, shap
     app.store.save_management_operation(identity, record)
     preview = TrashService(app.store).purge_preview(entry["trash_id"])
     assert "receipt_reduction_requires_review" in preview["blockers"]
-    with pytest.raises(ManagementError) as blocked:
-        purge(app, entry, preview=preview)
-    assert blocked.value.code == "purge_blocked"
+    result = purge(app, entry, preview=preview)
+    assert result["entry"]["state"] == "purged"
     assert app.store.get_management_operation(identity) == record
+    assert "PRIVATE_NOTE" not in json.dumps(app.store.get_management_operation("note")["result"])
+    assert not app.store.list_threads(include_archived=True, include_trashed=True)
 
 
-def test_actual_public_prompt_without_owner_id_blocks_purge_and_retains_audit(app):
+def test_actual_public_prompt_without_owner_id_is_kept_while_thread_is_purged(app):
     created = call(app, "thread_manage", {"action": "create", "data": {"title": "Prompt source"}}, "create", 0)
     changed = call(app, "thread_manage", {"action": "set_note", "id": created["thread_id"],
         "data": {"text": "PRIVATE_OPAQUE_PROMPT_NOTE"}}, "note", created["revision"])
@@ -165,41 +166,65 @@ def test_actual_public_prompt_without_owner_id_blocks_purge_and_retains_audit(ap
     preview = call(app, "trash.purge_preview", {"trash_id": entry["trash_id"]})
     assert any(item["reason"] == "unattributed_text_result" and item["path"] == "$.text"
                for item in preview["receipt_reduction"]["blockers"])
-    with pytest.raises(ManagementError) as blocked:
-        purge(app, entry, preview=preview)
-    assert blocked.value.code == "purge_blocked"
+    assert "receipt_reduction_requires_review" in preview["blockers"]
+    result = purge(app, entry, preview=preview)
+    assert result["entry"]["state"] == "purged"
     assert app.operation("prompt")["result"] == prompt
-    assert TrashService(app.store).get(entry["trash_id"])["state"] == "trashed"
+    assert TrashService(app.store).get(entry["trash_id"])["state"] == "purged"
+    assert "PRIVATE_OPAQUE_PROMPT_NOTE" not in json.dumps(app.store.get_management_operation("note")["result"])
+    assert not app.store.list_threads(include_archived=True, include_trashed=True)
 
 
-def test_same_id_foreign_pending_cannot_be_treated_as_own_purge(app):
+def test_same_id_foreign_pending_is_not_exempt_and_does_not_block_purge(app):
     entry, _, _ = prepared(app)
     identity = "forged-purge"
     key = "command-" + hashlib.sha256(identity.encode()).hexdigest() + "-pending"
-    app.store.save_management_operation(key, {"kind": "command", "state": "pending", "request_hash": "0" * 64, "result": None})
+    pending = {"kind": "command", "state": "pending", "request_hash": "0" * 64, "result": None}
+    app.store.save_management_operation(key, pending)
     trash = TrashService(app.store)
     preview = trash.purge_preview(entry["trash_id"])
-    with pytest.raises(ManagementError) as blocked:
-        trash.purge(trash_id=entry["trash_id"], generation=1, expected_revision=1,
-                    reference_digest=preview["reference_digest"], confirmation=preview["confirmation"], operation_id=identity)
-    assert blocked.value.code == "purge_blocked"
+    assert "receipt_reduction_requires_review" in preview["blockers"]
+    result = trash.purge(trash_id=entry["trash_id"], generation=1, expected_revision=1,
+                         reference_digest=preview["reference_digest"], confirmation=preview["confirmation"], operation_id=identity)
+    assert result["entry"]["state"] == "purged"
+    assert app.store.get_management_operation(key) == pending
+    assert not app.store.list_threads(include_archived=True, include_trashed=True)
 
 
 @pytest.mark.parametrize("terminal", ["complete", "failed"])
-def test_unrelated_terminal_record_cannot_close_foreign_pending(app, terminal):
+def test_unrelated_terminal_record_leaves_foreign_pending_and_purge_succeeds(app, terminal):
     entry, _, _ = prepared(app)
     prefix = "command-" + "b" * 64
-    app.store.save_management_operation(prefix + "-pending", {
-        "kind": "command", "state": "pending", "request_hash": "a" * 64, "result": None})
+    pending = {"kind": "command", "state": "pending", "request_hash": "a" * 64, "result": None}
+    app.store.save_management_operation(prefix + "-pending", pending)
     app.store.save_management_operation(prefix + "-" + terminal, {
         "kind": "command", "state": terminal, "request_hash": "c" * 64, "result": None})
     preview = TrashService(app.store).purge_preview(entry["trash_id"])
     assert any(item["storage_operation_id"] == prefix + "-pending"
                and item["reason"] == "unconfirmed_command_requires_review"
                for item in preview["receipt_reduction"]["blockers"])
-    with pytest.raises(ManagementError) as blocked:
-        purge(app, entry, preview=preview)
-    assert blocked.value.code == "purge_blocked"
+    assert "receipt_reduction_requires_review" in preview["blockers"]
+    result = purge(app, entry, preview=preview)
+    assert result["entry"]["state"] == "purged"
+    assert app.store.get_management_operation(prefix + "-pending") == pending
+    assert not app.store.list_threads(include_archived=True, include_trashed=True)
+
+
+def test_blocked_receipt_with_reducible_path_is_not_rewritten(app):
+    entry, _, _ = prepared(app)
+    record = {"request_hash": "a" * 64, "result": {
+        "kind": "thread", "object_id": entry["object_id"], "trash_id": entry["trash_id"],
+        "title": "Private title", "private_note": "KEEP_MIXED_RECEIPT"}}
+    app.store.save_management_operation("mixed-copy", record)
+    preview = TrashService(app.store).purge_preview(entry["trash_id"])
+    assert "receipt_reduction_requires_review" in preview["blockers"]
+    assert any(item.get("storage_operation_id") == "mixed-copy" and item.get("reason") == "unknown_lifecycle_result_field"
+               for item in preview["receipt_reduction"]["blockers"])
+    result = purge(app, entry, preview=preview)
+    assert result["entry"]["state"] == "purged"
+    assert app.store.get_management_operation("mixed-copy") == record
+    assert "PRIVATE_NOTE" not in json.dumps(app.store.get_management_operation("note")["result"])
+    assert not app.store.list_threads(include_archived=True, include_trashed=True)
 
 
 def test_purge_reduces_prior_generations_but_preserves_other_thread_result(app):

@@ -130,9 +130,13 @@ class SQLiteLifecycleStore(LifecycleStore):
             raise ManagementError("lifecycle_conflict", "Objekt muss zuerst in den Papierkorb.")
         if kind == "thread":
             self.delete_thread(object_id)
-        elif kind in {"node", "relation"}:
-            table = "nodes" if kind == "node" else "relations"
-            self.connection.execute("DELETE FROM " + table + " WHERE id=?", (object_id,))
+        elif kind == "node":
+            # The relations table references nodes without cascade or null.
+            # Those rows cannot remain after the node row is gone.
+            self.connection.execute("DELETE FROM relations WHERE source_id=? OR target_id=?", (object_id, object_id))
+            self.connection.execute("DELETE FROM nodes WHERE id=?", (object_id,))
+        elif kind == "relation":
+            self.connection.execute("DELETE FROM relations WHERE id=?", (object_id,))
         else:
             raise ManagementError("validation_error", "Unbekannte Objektart.")
 
