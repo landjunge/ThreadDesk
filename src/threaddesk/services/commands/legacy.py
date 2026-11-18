@@ -25,7 +25,7 @@ def specifications():
     for tool in TOOLS:
         name = tool["name"]
         # Owner search stays off HTTP/Room: only the unscoped local stdio bridge offers it.
-        if name in {"command_catalog", "command_invoke", "command_query", "search_threads"}:
+        if name in {"command_catalog", "command_invoke", "command_query", "search_threads", "search_entries"}:
             continue
         if name not in _DATA | _NATIVE | _READ | _EXTERNAL:
             raise RuntimeError("Legacy command needs an effect review: " + name)
