@@ -49,4 +49,4 @@ Die Platzhalter sind keine Downloads. Nach Veröffentlichung eines passenden Pak
 
 ## Einstieg und Dokumentation
 
-Die ausführliche Projektdokumentation, Entwicklungsdetails und Installationshinweise befinden sich in der [Haupt-README](README.md) und im Verzeichnis [docs](docs). Die aktuelle Desktop-Ausgabe und der Entwicklungsstand sind getrennt zu betrachten.
+Die ausführliche Projektdokumentation, Entwicklungsdetails und Installationshinweise befinden sich in der [Haupt-README](README.md) und im Verzeichnis [docs](docs). Die aktuelle Desktop-Ausgabe und der Entwicklungsstand sind getrennt zu betrachten. `td search-entries` und das lokale MCP-Werkzeug `search_entries` durchsuchen den Text der Whiteboard-Einträge; Ausschnitte sind untrusted data.

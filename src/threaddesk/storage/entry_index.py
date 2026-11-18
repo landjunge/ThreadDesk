@@ -20,6 +20,7 @@ import sqlite3
 import stat
 from dataclasses import dataclass
 from pathlib import Path
+from time import monotonic
 
 from threaddesk.core.search import SearchError
 from threaddesk.storage.search_source import identifier
@@ -107,7 +108,7 @@ class EntryIndex:
             if path.is_file() and not path.is_symlink():
                 path.unlink()
 
-    def scan(self, *, abort_thread=None):
+    def scan(self, *, abort_thread=None, deadline=None):
         if not self._fts:
             return self.status()
         self._meta("complete", "0")
@@ -115,6 +116,8 @@ class EntryIndex:
         on_disk = set(self._thread_ids())
         stored = {row[0] for row in self._db.execute("SELECT thread_id FROM thread_manifest")}
         for thread_id in sorted(on_disk | stored):
+            if deadline is not None and monotonic() >= deadline:
+                return {**self.status(), "rebuilding": True}
             if thread_id not in on_disk:
                 self._transaction(lambda gone=thread_id: self._delete_thread(gone))
                 continue
@@ -274,10 +277,35 @@ class EntryIndex:
             digest.update(f"{thread_id}\0{manifest_hash}\n".encode())
         return digest.hexdigest()
 
+    def _trashed(self):
+        """Thread ids that currently sit in the trash. Their files stay under threads/."""
+        folder = self.root / "trash"
+        if not folder.is_dir() or folder.is_symlink():
+            return set()
+        gone = set()
+        for entry in os.scandir(folder):
+            if not entry.name.startswith("thread-") or not entry.name.endswith(".json"):
+                continue
+            if not _regular(entry.path):
+                continue
+            try:
+                data = json.loads(Path(entry.path).read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if (
+                isinstance(data, dict)
+                and data.get("kind") == "thread"
+                and data.get("state") == "trashed"
+                and isinstance(data.get("object_id"), str)
+            ):
+                gone.add(data["object_id"])
+        return gone
+
     def _thread_ids(self):
         folder = self.root / "threads"
         if not folder.is_dir() or folder.is_symlink():
             return []
+        trashed = self._trashed()
         found = []
         for entry in os.scandir(folder):
             if not entry.name.endswith(".json") or not _regular(entry.path):
@@ -286,6 +314,8 @@ class EntryIndex:
             try:
                 identifier(thread_id)
             except SearchError:
+                continue
+            if thread_id in trashed:
                 continue
             found.append(thread_id)
         return sorted(found)

@@ -247,3 +247,37 @@ def test_short_query_is_not_a_complete_miss(tmp_path):
     with pytest.raises(SearchError):
         index.query("marigold", limit=0)
     index.close()
+
+
+def _trash(root: Path, thread_id: str, state: str = "trashed", generation: int = 1) -> None:
+    folder = root / "trash"
+    folder.mkdir(parents=True, exist_ok=True)
+    body = {"kind": "thread", "object_id": thread_id, "state": state, "generation": generation}
+    (folder / f"thread-{thread_id}-g{generation}.json").write_text(json.dumps(body), encoding="utf-8")
+
+
+def test_trashed_threads_are_not_indexed_and_leave_the_index(tmp_path):
+    root = tmp_path / "ws"
+    _thread(root, "live00000001")
+    _entry(root, "live00000001", "e1", "wasserzeichen im plan")
+    _thread(root, "junk00000002")
+    _entry(root, "junk00000002", "e2", "wasserzeichen im herzschlag")
+    index = EntryIndex(root)
+    index.scan()
+    assert {hit.thread_id for hit in index.query("wasserzeichen").hits} == {"live00000001", "junk00000002"}
+    _trash(root, "junk00000002")
+    index.scan()
+    hits = index.query("wasserzeichen").hits
+    assert {hit.thread_id for hit in hits} == {"live00000001"}
+    index.close()
+
+
+def test_restored_or_purged_trash_entries_do_not_hide_a_thread(tmp_path):
+    root = tmp_path / "ws"
+    _thread(root, "back00000003")
+    _entry(root, "back00000003", "e3", "wiederhergestellt")
+    _trash(root, "back00000003", state="restored")
+    index = EntryIndex(root)
+    index.scan()
+    assert [hit.thread_id for hit in index.query("wiederhergestellt").hits] == ["back00000003"]
+    index.close()
