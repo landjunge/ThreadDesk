@@ -29,6 +29,16 @@ _WORKSPACE_LOCKS: dict[str, threading.RLock] = {}
 _LOCK_REGISTRY = threading.Lock()
 
 
+def _plain_entry_id(entry_id: str) -> bool:
+    return (
+        isinstance(entry_id, str)
+        and entry_id not in {"", ".", ".."}
+        and "/" not in entry_id
+        and "\\" not in entry_id
+        and entry_id == Path(entry_id).name
+    )
+
+
 def _lock_exclusive(lock: IO[bytes]) -> None:
     """Hold the next ordinal until this append has stored its file."""
     if lock.seek(0, os.SEEK_END) == 0:
@@ -262,7 +272,7 @@ class JsonStore(JsonLifecycleStore):
         path = self.root / "management-operations" / f"{operation_id}.json"
         return self._read_json(path) if path.exists() else None
 
-    def save_management_operation(self, operation_id, data):
+    def save_management_operation(self, operation_id, data, *, replace=False):
         self._write_json(self.root / "management-operations" / f"{operation_id}.json", data)
 
     def _delete_path(self, path):
@@ -662,9 +672,11 @@ class JsonStore(JsonLifecycleStore):
             with lock_path.open("a+b") as lock:
                 _lock_exclusive(lock)
                 try:
-                    stored, duplicate = plan_whiteboard_append(
+                    stored, duplicate, replace = plan_whiteboard_append(
                         self.list_whiteboard(entry.thread_id), entry
                     )
+                    for entry_id in replace:
+                        self._delete_path(folder / f"{entry_id}.json")
                     if duplicate:
                         return stored, True
                     path = folder / f"{entry.id}.json"
@@ -677,6 +689,48 @@ class JsonStore(JsonLifecycleStore):
                     return stored, False
                 finally:
                     _unlock(lock)
+
+    def expired_entry_ids(self, thread_id: str, now) -> list[str]:
+        """Entry ids past expiry, without the full-list helper."""
+        from threaddesk.services.whiteboard import _expired_value
+
+        folder = self._whiteboard_dir(thread_id)
+        if not folder.exists() and not (
+            self.in_transaction and any(
+                Path(relative).parent == folder.relative_to(self.root)
+                for relative in self._pending
+            )
+        ):
+            return []
+        found = []
+        for path in self._graph_collection_paths(folder):
+            try:
+                data = self._read_json(path)
+            except (OSError, json.JSONDecodeError, FileNotFoundError):
+                continue
+            if isinstance(data, dict) and _expired_value(data.get("expires_at"), now):
+                identity = data.get("id") if isinstance(data.get("id"), str) else path.stem
+                found.append(identity)
+        return found
+
+    def delete_whiteboard_entry(self, thread_id: str, entry_id: str) -> bool:
+        """Unlink one entry file. A missing file is success and removes nothing."""
+        if not _plain_entry_id(entry_id):
+            return False
+        if not self.in_transaction:
+            with self.transaction():
+                return self.delete_whiteboard_entry(thread_id, entry_id)
+        folder = self._whiteboard_dir(thread_id)
+        path = folder / f"{entry_id}.json"
+        try:
+            if path.resolve().parent != folder.resolve():
+                return False
+        except OSError:
+            return False
+        if not self._staged_exists(path):
+            return False
+        self._delete_path(path)
+        return True
 
     def list_snapshots(self, thread_id: str, *, include_trashed: bool = False) -> list[Snapshot]:
         if not include_trashed:

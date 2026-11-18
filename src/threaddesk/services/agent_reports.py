@@ -130,20 +130,28 @@ class AgentReports:
         self._require_runtime()
         key = 'agent-report-' + digest([instance, report_id])
         payload_hash = digest(fields)
+        payload = {'schema': SCHEMA, **fields, 'reported_at': stamp(), 'report_id': report_id}
         with self.svc.bus.defer_until_commit(), self.store.transaction():
             saved = self.store.get_management_operation(key)
-            if saved:
-                if saved.get('request_hash') != payload_hash:
-                    raise ValueError('report_id already used with different content')
+            if saved and saved.get('request_hash') == payload_hash:
                 return {**saved['result'], 'duplicate': True}
             legacy = self._find_board(instance, include_trashed=True)
             if legacy is not None:
                 self.store.require_live_object('thread', legacy.id)
                 existing = next((e for e in self.svc.whiteboard(legacy.id) if e.external_key == key), None)
-                if existing:
-                    if existing.metadata.get('payload_hash') != payload_hash:
-                        raise ValueError('report_id already used with different content')
+                if existing and existing.metadata.get('payload_hash') == payload_hash:
                     return {'board_id': legacy.id, 'entry_id': existing.id, 'duplicate': True}
+                if existing:
+                    entry_type = 'result' if status == 'done' else 'problem' if status == 'blocked' else 'progress'
+                    entry = self.svc.append_whiteboard(legacy.id, actor=agent, actor_type='system',
+                        entry_type=entry_type, content=self._summary(payload), external_key=key,
+                        metadata={'agent_report': payload, 'payload_hash': payload_hash,
+                                  'overview_reason': 'replace'})['entry']
+                    result = {'board_id': legacy.id, 'entry_id': entry['id'], 'duplicate': False,
+                              'changed': True, 'replaced': True, 'operation_id': key}
+                    self.store.save_management_operation(key, {'request_hash': payload_hash,
+                        'recorded_at': now_iso(), 'result': result}, replace=True)
+                    return result
                 if legacy.status == 'archived':
                     raise ValueError('Report board archived; restore explicitly')
                 from threaddesk.services.whiteboard_lifecycle import require_writable
@@ -154,17 +162,22 @@ class AgentReports:
             registry = overview.context.extra.get('agent_reports', {})
             if not isinstance(registry, dict):
                 raise ValueError('Invalid agent_reports registry; preserve and repair explicitly')
+            current_row = registry.get(instance)
+            keep_current = (
+                saved is not None
+                and isinstance(current_row, dict)
+                and current_row.get('report_id') not in (None, report_id)
+            )
             if instance in registry and (not valid_row(registry[instance])
                                          or registry[instance]['instance'] != instance):
                 raise ValueError('Invalid agent report row; preserve and repair explicitly')
             previous = next((r for r in self._snapshot(overview=overview)['instances']
                              if r['instance'] == instance), None)
-            payload = {'schema': SCHEMA, **fields, 'reported_at': stamp(), 'report_id': report_id}
             row = {**payload, 'board_id': previous['board_id'] if previous else overview.id,
                    'entry_id': previous['entry_id'] if previous else None}
             # Compare the actual fields, independent of old/new storage location.
             changed = previous is None or any(previous[k] != fields[k] for k in fields)
-            if changed:
+            if changed and not keep_current:
                 entry_type = 'result' if status == 'done' else 'problem' if status == 'blocked' else 'progress'
                 entry = self.svc.append_whiteboard(overview.id, actor=agent, actor_type='system',
                     entry_type=entry_type, content=self._summary(payload), external_key=key,
@@ -172,14 +185,24 @@ class AgentReports:
                               'overview_reason': 'initial' if previous is None else 'change'})['entry']
                 row['entry_id'] = entry['id']
                 row['board_id'] = overview.id
+            elif changed and keep_current:
+                # A later report stays current. Replace this key when it already
+                # has an entry, and do not append a second copy.
+                if any(entry.external_key == key for entry in self.svc.whiteboard(overview.id)):
+                    entry_type = 'result' if status == 'done' else 'problem' if status == 'blocked' else 'progress'
+                    self.svc.append_whiteboard(overview.id, actor=agent, actor_type='system',
+                        entry_type=entry_type, content=self._summary(payload), external_key=key,
+                        metadata={'agent_report': payload, 'payload_hash': payload_hash,
+                                  'overview_reason': 'replace'})
             overview = self.store.get_thread(overview.id)
-            overview.context.extra.setdefault('agent_reports', {})[instance] = row
+            bucket = overview.context.extra.setdefault('agent_reports', {})
+            bucket[instance] = current_row if keep_current else row
             self.store.save_thread(overview)
             self._publish(overview=overview)
             result = {'board_id': row['board_id'], 'entry_id': row['entry_id'], 'overview_id': overview.id,
                       'duplicate': False, 'changed': changed, 'operation_id': key}
             self.store.save_management_operation(key, {'request_hash': payload_hash,
-                'recorded_at': now_iso(), 'result': result})
+                'recorded_at': now_iso(), 'result': result}, replace=saved is not None)
             return result
 
     def snapshot(self, now=None):

@@ -56,8 +56,12 @@ def test_identity_retry_conflict_and_current_thread(setup):
     assert send(r)['duplicate'] is True
     assert r.svc.get(first['board_id']).revision == revision
     assert len(r.svc.whiteboard(first['board_id'])) == 1
-    with pytest.raises(ValueError, match='different content'):
-        send(r, done='anderer Inhalt')
+    changed = send(r, done='anderer Inhalt')
+    assert changed['duplicate'] is False
+    replaced = r.svc.whiteboard(first['board_id'])
+    assert len(replaced) == 1
+    assert replaced[0].id != first['entry_id']
+    assert 'anderer Inhalt' in replaced[0].content
     second = send(r, instance='codex-session-b')
     assert second['board_id'] == first['board_id']
     assert len(r.snapshot()['instances']) == 2
@@ -195,11 +199,11 @@ def test_restart_and_late_retry_preserve_current_state_and_conflict_checks(setup
     assert result['duplicate'] is True
     assert result['entry_id'] == unchanged['entry_id']
     assert restarted.snapshot()['instances'][0]['report_id'] == 'c'
-    with pytest.raises(ValueError, match='different content'):
-        send(restarted, rid='a', done='anderer Inhalt')
-    with pytest.raises(ValueError, match='different content'):
-        send(restarted, rid='b', done='anderer Inhalt')
+    send(restarted, rid='a', done='anderer Inhalt')
+    send(restarted, rid='b', done='anderer Inhalt')
+    assert restarted.snapshot()['instances'][0]['report_id'] == 'c'
     assert len(overview_entries(restarted)) == 2
+    assert any('anderer Inhalt' in entry.content for entry in overview_entries(restarted))
 
 
 def test_legacy_reports_stay_readable_and_retries_dont_roll_back_new_status(setup):
@@ -209,10 +213,15 @@ def test_legacy_reports_stay_readable_and_retries_dont_roll_back_new_status(setu
     assert r.snapshot()['instances'][0]['entry_id'] == old_entry
     send(r, rid='new', done='Neuer Schritt')
     assert send(r, rid='old') == {'board_id': old_board, 'entry_id': old_entry, 'duplicate': True}
-    with pytest.raises(ValueError, match='different content'):
-        send(r, rid='old', done='Anderer Inhalt')
+    replaced = send(r, rid='old', done='Anderer Inhalt')
+    assert replaced['replaced'] is True
+    assert replaced['board_id'] == old_board
+    assert replaced['entry_id'] != old_entry
     assert r.snapshot()['instances'][0]['report_id'] == 'new'
-    assert before == (r.svc.get(old_board).to_dict(), [e.to_dict() for e in r.svc.whiteboard(old_board)])
+    current = r.svc.whiteboard(old_board)
+    assert [entry.id for entry in current] == [replaced['entry_id']]
+    assert 'Anderer Inhalt' in current[0].metadata['agent_report']['done']
+    assert before[0]['id'] == r.svc.get(old_board).id
 
 
 def test_archived_legacy_board_is_not_recreated(setup):

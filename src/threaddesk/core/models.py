@@ -291,9 +291,10 @@ class GraphEvent:
 
 @dataclass
 class WhiteboardEntry:
-    """One append-only contribution on a thread whiteboard.
+    """One contribution on a thread whiteboard.
 
-    Corrections are new entries. Nothing here is edited in place.
+    A correction can still be a new entry. The same external key with new
+    content replaces the previous entry, and an entry can be removed.
     """
 
     id: str
@@ -312,6 +313,7 @@ class WhiteboardEntry:
     instance_id: str | None = None
     room_id: str | None = None
     content_hash: str | None = None
+    expires_at: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -336,6 +338,7 @@ class WhiteboardEntry:
             instance_id=data.get("instance_id") or None,
             room_id=data.get("room_id") or None,
             content_hash=data.get("content_hash") or None,
+            expires_at=data.get("expires_at") or None,
             metadata=dict(data.get("metadata") or {}),
         )
 
@@ -358,26 +361,29 @@ class WhiteboardEntry:
 
 def plan_whiteboard_append(
     existing: list[WhiteboardEntry], entry: WhiteboardEntry
-) -> tuple[WhiteboardEntry, bool]:
-    """Decide whether to keep an existing entry or append this one.
+) -> tuple[WhiteboardEntry, bool, list[str]]:
+    """Keep an entry with the same key and content, or replace a different one.
 
-    Same external key or same id with the same body is a duplicate.
-    A different body never replaces the stored entry.
+    The third value lists entry ids on this board whose files must be removed
+    before the new entry is stored. The same id with a different body stays a
+    conflict: that is a replay of one stored contribution, not a new key.
     """
+    replace: list[str] = []
     if entry.external_key:
         for current in existing:
-            if current.external_key == entry.external_key:
-                if not current.same_body(entry):
-                    raise InvalidState("whiteboard_conflict")
-                return current, True
+            if current.external_key != entry.external_key:
+                continue
+            if current.content == entry.content:
+                return current, True, []
+            replace.append(current.id)
     for current in existing:
-        if current.id == entry.id:
+        if current.id == entry.id and current.id not in replace:
             if not current.same_body(entry):
                 raise InvalidState("whiteboard_conflict")
-            return current, True
+            return current, True, []
     if entry.ordinal < 1:
         entry.ordinal = 1 + max((item.ordinal for item in existing), default=0)
-    return entry, False
+    return entry, False, replace
 
 
 def new_thread(title: str, description: str = "") -> Thread:

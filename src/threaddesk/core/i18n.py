@@ -1267,6 +1267,14 @@ CATALOG: dict[str, dict[str, str]] = {
         "de": "{format} braucht einen Dateinamen, zum Beispiel --output wissen.{extension}",
         "en": "{format} needs a file name, for example --output knowledge.{extension}",
     },
+    "cli.help.whiteboard": {
+        "de": "Whiteboard-Eintrag entfernen",
+        "en": "Remove a whiteboard entry",
+    },
+    "cli.help.whiteboard_remove": {
+        "de": "Ein Eintrag wird gelöscht, ohne Archiv",
+        "en": "Delete one entry, with no archive",
+    },
     "cli.help.serve": {
         "de": "Lokale UI auf localhost (führt nichts aus)",
         "en": "Local UI on localhost (executes nothing)",

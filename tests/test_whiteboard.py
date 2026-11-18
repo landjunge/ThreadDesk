@@ -125,9 +125,12 @@ def test_external_return_is_idempotent_and_does_not_overwrite(svc: ThreadService
     assert again["entry"]["id"] == first["entry"]["id"]
     assert len(svc.whiteboard(thread.id)) == 1
 
-    with pytest.raises(InvalidState, match="whiteboard_conflict"):
-        _add(svc, thread.id, "anders", external_key="ext-1", entry_type="result")
-    assert svc.whiteboard(thread.id)[0].content == "fertig"
+    replaced = _add(svc, thread.id, "anders", external_key="ext-1", entry_type="result")
+    assert replaced["duplicate"] is False
+    assert replaced["entry"]["id"] != first["entry"]["id"]
+    entries = svc.whiteboard(thread.id)
+    assert [entry.content for entry in entries] == ["anders"]
+    assert entries[0].ordinal > first["entry"]["ordinal"]
 
 
 def test_json_file_is_not_rewritten_on_duplicate(tmp_path: Path) -> None:

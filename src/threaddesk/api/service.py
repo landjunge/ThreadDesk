@@ -569,7 +569,37 @@ class ThreadService:
 
     def whiteboard(self, key: str) -> list:
         thread = self.get(key)
+        removed = whiteboard_log.drop_expired(self.store, thread.id)
+        if removed:
+            self.bus.emit("thread.updated", {"id": thread.id})
         return whiteboard_log.list_entries(self.store, thread.id)
+
+    def remove_whiteboard_entry(self, key: str, entry_id: str) -> dict:
+        """Delete one entry file. A second call succeeds and removes nothing."""
+        try:
+            thread = self.get(key)
+        except NotFound:
+            return {
+                "removed": False,
+                "duplicate": True,
+                "thread_id": key if isinstance(key, str) else "",
+                "entry_id": entry_id if isinstance(entry_id, str) else "",
+            }
+        if not self.store.in_transaction:
+            with self.bus.defer_until_commit(), self.store.transaction():
+                return self.remove_whiteboard_entry(thread.id, entry_id)
+        removed = self.store.delete_whiteboard_entry(thread.id, entry_id)
+        if removed:
+            fresh = self.get(thread.id)
+            fresh.updated_at = now_iso()
+            self.store.save_thread(fresh)
+            self.bus.emit("thread.updated", {"id": fresh.id})
+        return {
+            "removed": bool(removed),
+            "duplicate": not removed,
+            "thread_id": thread.id,
+            "entry_id": entry_id if isinstance(entry_id, str) else "",
+        }
 
     def append_whiteboard(self, key: str, **fields) -> dict:
         # Direct API calls own persistence and notification together. Existing
@@ -580,11 +610,12 @@ class ThreadService:
         thread = self.get(key)
         entry, duplicate = whiteboard_log.append(self.store, thread.id, **fields)
         if not duplicate:
-            thread.updated_at = now_iso()
-            self.store.save_thread(thread)
+            fresh = self.get(thread.id)
+            fresh.updated_at = now_iso()
+            self.store.save_thread(fresh)
             self.bus.emit(
                 "whiteboard.appended",
-                {"thread_id": thread.id, "id": entry.id, "duplicate": False},
+                {"thread_id": fresh.id, "id": entry.id, "duplicate": False},
             )
         return {"entry": entry.to_dict(), "duplicate": duplicate}
 

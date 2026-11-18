@@ -1,9 +1,11 @@
 """Whiteboards are views of the existing thread log, never a second store.
 
-A board has its thread's identity and title. Corrections append an event; saved
-entries, return bindings and room contributions remain unchanged. The explicit
-open/closed state is persisted in ThreadContext.extra, not a window-visibility
-claim. Thread trash owns reversible removal and the existing purge contract.
+A board has its thread's identity and title. A correction can still append an
+event. Replacing a key and removing an entry are also allowed. Return bindings
+and room contributions stay on the entries that remain. The explicit open/closed
+state is persisted in ThreadContext.extra, not a window-visibility claim.
+Thread trash owns reversible removal of the whole thread and the existing purge
+contract. Removing one entry deletes that file and does not archive it.
 """
 from __future__ import annotations
 
