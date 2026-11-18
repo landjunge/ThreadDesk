@@ -104,19 +104,22 @@ def lose_completion(app, request, monkeypatch):
             app.call(request)
 
 
-def assert_pending_blocks(copy, task, operation):
+def assert_pending_note_does_not_block_purge(copy, task, operation):
     trash = TrashService(copy.store)
     entry = trash.move(kind='node', object_id=task.id, expected_revision=task.revision, operation_id='restored-trash')['entry']
     preview = trash.purge_preview(entry['trash_id'])
     assert {'storage_operation_id': pending_key(operation), 'reason': 'unconfirmed_command_requires_review'} in preview['receipt_reduction']['blockers']
-    with pytest.raises(ManagementError) as error:
-        trash.purge(trash_id=entry['trash_id'], generation=entry['generation'], expected_revision=entry['revision'],
-                    reference_digest=preview['reference_digest'], confirmation=preview['confirmation'], operation_id='blocked-purge')
-    assert error.value.code == 'purge_blocked'
-    assert copy.store.get_node(task.id, include_trashed=True).id == task.id
+    assert 'receipt_reduction_requires_review' in preview['blockers']
+    retained = deepcopy(copy.store.get_management_operation(pending_key(operation)))
+    purged = trash.purge(trash_id=entry['trash_id'], generation=entry['generation'], expected_revision=entry['revision'],
+                         reference_digest=preview['reference_digest'], confirmation=preview['confirmation'], operation_id='owner-purge')
+    assert purged['entry']['state'] == 'purged'
+    assert copy.store.get_management_operation(pending_key(operation)) == retained
+    with pytest.raises(NotFound):
+        copy.store.get_node(task.id, include_trashed=True)
 
 
-def test_unrelated_actual_pending_is_preserved_and_still_blocks_after_restore(source, tmp_path, monkeypatch):
+def test_unrelated_actual_pending_is_preserved_and_does_not_block_purge_after_restore(source, tmp_path, monkeypatch):
     core, _identity, task, _original, _artifact = source
     app = CommandApplication(core)
     unrelated = {'version': 1, 'workspace_id': app.workspace_id, 'command': 'room.create',
@@ -129,7 +132,7 @@ def test_unrelated_actual_pending_is_preserved_and_still_blocks_after_restore(so
     try:
         assert copy.store.get_management_operation(pending_key('unrelated-room')) == retained
         assert copy.store.get_management_operation(pending_key('own-native-export')) is None
-        assert_pending_blocks(copy, task, 'unrelated-room')
+        assert_pending_note_does_not_block_purge(copy, task, 'unrelated-room')
     finally:
         if isinstance(copy.store, SQLiteStore):
             copy.store.connection.close()
@@ -160,7 +163,7 @@ def test_aborted_export_keeps_source_pending_and_later_backups_do_not_clean_hist
         assert core.store.get_management_operation(pending_key('interrupted-export')) == retained
         assert copy.store.get_management_operation(pending_key('interrupted-export')) == retained
         assert copy.store.get_management_operation(pending_key('fresh-later-export')) is None
-        assert_pending_blocks(copy, task, 'interrupted-export')
+        assert_pending_note_does_not_block_purge(copy, task, 'interrupted-export')
     finally:
         if isinstance(copy.store, SQLiteStore):
             copy.store.connection.close()
