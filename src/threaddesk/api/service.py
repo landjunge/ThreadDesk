@@ -312,6 +312,7 @@ class ThreadService:
         ]
         relations.extend(library_relations(self.store, nodes))
         relations.extend(boards.graph_relations(nodes))
+        relations.extend(boards.organization_relations(nodes))
         return {
             "schema": "threaddesk.graph.v1",
             "nodes": [node.to_dict() for node in nodes],
