@@ -128,7 +128,8 @@ def test_no_hardcoded_text_in_templates(template: Path) -> None:
 # test_every_dropdown_value_has_a_label prueft dafuer jeden moeglichen Wert.
 DYNAMIC_PREFIXES = {"map.age.", "map.mode.", "kind.", "status.", "relation.", "prompt.target.",
                     "prompt.variant.", "register.", "whiteboard.entry.", "board.state.",
-                    "hausmeister.phase.", "room.state.", "room.role.", "return.review.", "sync.state."}
+                    "hausmeister.phase.", "room.state.", "room.role.", "return.review.", "sync.state.",
+                    "search.field."}
 
 
 @pytest.mark.parametrize("template", TEMPLATE_FILES,
@@ -293,7 +294,7 @@ def test_unknown_language_falls_back_to_german(client) -> None:
     assert 'lang="de"' in client.get("/map?lang=klingon").text
 
 
-@pytest.mark.parametrize("path", ["/", "/knowledge", "/map"])
+@pytest.mark.parametrize("path", ["/", "/search", "/knowledge", "/map"])
 def test_every_page_renders_in_both_languages(client, path) -> None:
     """Keine Seite darf in einer Sprache zerbrechen."""
     for code in i18n.LANGUAGES:
@@ -325,7 +326,7 @@ def test_post_routes_return_localised_success_and_error(client, language) -> Non
 
 
 def test_browser_strings_are_injected_for_every_page(client) -> None:
-    for path in ("/", "/knowledge", "/map"):
+    for path in ("/", "/search", "/knowledge", "/map"):
         page = client.get(f"{path}?lang=en")
         assert "data-ui-strings=" in page.text
         assert "Copied" in page.text

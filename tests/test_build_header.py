@@ -35,7 +35,7 @@ class Header(HTMLParser):
 
 
 @pytest.mark.parametrize("path", [
-    "/", "/knowledge", "/data", "/map", "/migration",
+    "/", "/search", "/knowledge", "/data", "/map", "/migration",
     "/threads/{thread_id}/server-sync",
 ])
 def test_full_pages_identify_build_and_keep_navigation(tmp_path, monkeypatch, path):
@@ -61,7 +61,7 @@ def test_full_pages_identify_build_and_keep_navigation(tmp_path, monkeypatch, pa
         assert SOURCE_COMMIT in label["attrs"]["title"]
     else:
         assert "Quellstand" in label["text"]
-    assert all(path in header.links for path in ("/", "/knowledge", "/data", "/map"))
+    assert all(path in header.links for path in ("/", "/search", "/knowledge", "/data", "/map"))
 
 
 def _page_label(tmp_path, monkeypatch):

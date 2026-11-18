@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block body %}
+<main class="panel migration-center" tabindex="0" aria-label="{{ t('search.title') }}" data-testid="search">
+  <h1>{{ t("search.title") }}</h1>
+  <form method="get" action="/search">
+    <label for="search-q">{{ t("search.query") }}</label>
+    <input id="search-q" name="q" type="search" value="{{ query }}" />
+    <label for="search-thread">{{ t("search.thread") }}</label>
+    <input id="search-thread" name="thread" type="text" value="{{ thread }}" />
+    <label for="search-sort">{{ t("search.sort") }}</label>
+    <select id="search-sort" name="sort">
+      <option value="newest"{% if sort == "newest" %} selected{% endif %}>{{ t("search.newest") }}</option>
+      <option value="relevance"{% if sort == "relevance" %} selected{% endif %}>{{ t("search.relevance") }}</option>
+    </select>
+    <button class="btn btn-primary" type="submit">{{ t("search.submit") }}</button>
+  </form>
+  {% if rebuilding %}<p class="muted">{{ t("search.rebuilding") }}</p>{% endif %}
+  {% if query %}
+  <section>
+    <h2>{{ t("search.entries") }}</h2>
+    <ul>
+      {% for hit in entries %}
+      <li>
+        <a href="/?thread={{ hit.thread_id }}">{{ hit.title }}</a>
+        <span>{{ hit.actor }}</span>
+        <span>{{ t('whiteboard.entry.' ~ hit.entry_type) }}</span>
+        <time datetime="{{ hit.created_at }}">{{ hit.created_at }}</time>
+        <p>{{ hit.snippet }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  <section>
+    <h2>{{ t("search.threads") }}</h2>
+    <ul>
+      {% for hit in threads %}
+      <li>
+        <a href="/?thread={{ hit.thread_id }}">{{ hit.title }}</a>
+        <span>{{ t('search.field.' ~ hit.field) }}</span>
+        <p>{{ hit.snippet }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% if more %}<p><a href="{{ more }}">{{ t("search.more") }}</a></p>{% endif %}
+  {% endif %}
+</main>
+{% endblock %}

@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, urlencode, urlsplit
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -174,6 +174,171 @@ def _browser_strings(language: str, register: str) -> str:
         },
         ensure_ascii=False,
     )
+
+
+_SEARCH_PAGE = 20
+_THREAD_SEARCH: dict = {}
+
+
+class _SearchView:
+    """Read-only stand-in. Opening the page must not create store directories."""
+
+    def __init__(self, root: Path):
+        self.root = root
+        self.workspace_path = root
+        self.threads_dir = root / "threads"
+        self._pending = None
+
+    def search_adapter(self):
+        from threaddesk.storage.search_source import JsonSearchAdapter
+        return JsonSearchAdapter(self)
+
+    def list_trash_entries(self):
+        folder = self.root / "trash"
+        if not folder.is_dir() or folder.is_symlink():
+            return []
+        found = []
+        for path in sorted(folder.glob("*.json")):
+            if not path.is_file() or path.is_symlink():
+                continue
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                continue
+            if isinstance(data, dict):
+                found.append(data)
+        return found
+
+    def get_object_lifecycle(self, kind, object_id):
+        items = [
+            item for item in self.list_trash_entries()
+            if item.get("kind") == kind and item.get("object_id") == object_id
+        ]
+        if not items:
+            return None
+        return max(items, key=lambda item: item.get("generation") or 0)
+
+    def object_in_trash(self, kind, object_id) -> bool:
+        entry = self.get_object_lifecycle(kind, object_id)
+        return entry is not None and entry.get("state") in {"trashed", "purged"}
+
+
+def _clip_query(value: str) -> str:
+    if not isinstance(value, str):
+        return ""
+    cleaned = []
+    for char in value:
+        code = ord(char)
+        if code < 32 or 127 <= code <= 159:
+            cleaned.append(" ")
+        else:
+            cleaned.append(char)
+    kept = []
+    size = 0
+    for term in "".join(cleaned).split():
+        if len(kept) == 16:
+            break
+        piece = term.encode("utf-8")
+        extra = len(piece) if not kept else len(piece) + 1
+        if size + extra > 512:
+            if not kept:
+                kept.append(piece[:512].decode("utf-8", "ignore"))
+            break
+        kept.append(term)
+        size += extra
+    return " ".join(kept)
+
+
+def _thread_filter(value: str):
+    import re
+    if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value):
+        return value
+    return None
+
+
+def _sort_name(value: str) -> str:
+    if value in {"rank", "relevance"}:
+        return "relevance"
+    return "newest"
+
+
+def _search_root():
+    try:
+        root, backend = selected_profile(base_root())
+    except BackupError:
+        return None, None
+    root = Path(root)
+    if root.is_symlink() or not root.is_dir():
+        return None, None
+    return root, backend
+
+
+def _thread_service(root: Path, store=None):
+    from threaddesk.services.search import LocalFileOwnerPolicy, SearchService
+    key = str(root)
+    service = _THREAD_SEARCH.get(key)
+    if service is None:
+        holder = store if store is not None else _SearchView(root)
+        service = SearchService(holder, LocalFileOwnerPolicy(root))
+        _THREAD_SEARCH[key] = service
+    return service
+
+
+def _entry_hits(root: Path, query: str, sort: str, thread: str | None, cursor: str | None):
+    from threaddesk.services.entry_search import search_entries
+    primary = {"query": query, "sort": sort, "limit": _SEARCH_PAGE}
+    if thread:
+        primary["thread_id"] = thread
+    if cursor:
+        primary["cursor"] = cursor
+    attempts = [primary]
+    if cursor or thread:
+        attempts.append({"query": query, "sort": sort, "limit": _SEARCH_PAGE})
+    for arguments in attempts:
+        try:
+            found = search_entries(root, **arguments)
+        except ManagementError:
+            continue
+        return found.get("hits") or [], found.get("mode") or "", found.get("next_cursor")
+    return [], "", None
+
+
+def _thread_hits(root: Path, query: str, thread: str | None, cursor: str | None, store=None):
+    from threaddesk.core.search import SearchError
+    service = _thread_service(root, store)
+    tokens = [cursor, None] if cursor else [None]
+    for token in tokens:
+        try:
+            page = service.search(
+                query, limit=_SEARCH_PAGE, cursor=token, include_archived=False,
+            )
+        except SearchError:
+            continue
+        hits = [hit for hit in page.hits if thread is None or hit.thread_id == thread]
+        rows = [
+            {
+                "thread_id": hit.thread_id,
+                "title": hit.title,
+                "field": hit.field,
+                "snippet": hit.snippet,
+            }
+            for hit in hits
+        ]
+        return rows, page.next_cursor
+    return [], None
+
+
+def _more_link(query: str, sort: str, thread: str, entry_cursor, thread_cursor) -> str:
+    if not entry_cursor and not thread_cursor:
+        return ""
+    params = {"q": query, "sort": sort}
+    if thread:
+        params["thread"] = thread
+    if entry_cursor:
+        params["next_cursor"] = entry_cursor
+    if thread_cursor:
+        params["thread_cursor"] = thread_cursor
+    return "/search?" + urlencode(params)
 
 
 def _hausmeister_status(store, model_status: dict | None = None) -> dict:
@@ -1215,6 +1380,55 @@ def create_app() -> FastAPI:
             _language(request),
         )
         return workspace(request, {"notice": label})
+
+    @app.get("/search", response_class=HTMLResponse)
+    def search_view(request: Request) -> HTMLResponse:
+        sort = _sort_name(request.query_params.get("sort") or "")
+        query = _clip_query(request.query_params.get("q") or "")
+        thread = _thread_filter(request.query_params.get("thread") or "")
+        entry_cursor = request.query_params.get("next_cursor") or ""
+        thread_cursor = request.query_params.get("thread_cursor") or ""
+        if len(entry_cursor) > 2000:
+            entry_cursor = ""
+        if len(thread_cursor) > 64:
+            thread_cursor = ""
+        hits: list = []
+        threads: list = []
+        mode = ""
+        more = ""
+        root, backend = _search_root()
+        if query and root is not None:
+            store = None
+            if (backend or os.environ.get("THREADDESK_STORAGE")) == "sqlite":
+                store = _svc().store
+                root = Path(store.workspace_path)
+            hits, mode, entry_next = _entry_hits(
+                root, query, "rank" if sort == "relevance" else "newest",
+                thread, entry_cursor or None,
+            )
+            threads, thread_next = _thread_hits(
+                root, query, thread, thread_cursor or None, store,
+            )
+            more = _more_link(query, sort, thread or "", entry_next, thread_next)
+        lang = _language(request)
+        register = _register(request)
+        return templates.TemplateResponse(
+            request,
+            "search.html",
+            {
+                "request": request,
+                "lang": lang,
+                "register": register,
+                "browser_strings": _browser_strings(lang, register),
+                "query": query,
+                "thread": thread or "",
+                "sort": sort,
+                "entries": hits,
+                "threads": threads,
+                "rebuilding": mode == "rebuilding",
+                "more": more,
+            },
+        )
 
     return app
 
