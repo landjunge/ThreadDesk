@@ -378,6 +378,10 @@ CATALOG: dict[str, dict[str, str]] = {
     "ui.mutation_precondition": {"de": "Diese Ansicht ist veraltet. Dein Entwurf bleibt erhalten. Lade den aktuellen Stand vor dem Speichern.", "en": "This view is out of date. Your draft is retained. Load the current version before saving."},
     "ui.mutation_failed": {"de": "Änderung abgelehnt. Dein Entwurf bleibt erhalten. Bitte Eingabe prüfen.", "en": "Change rejected. Your draft is retained. Please check your input."},
     "ui.mutation_legacy_delete": {"de": "Alte dauerhafte Löschung gesperrt. trash.move verwenden; endgültiges Löschen erfordert den Vorschau- und Bestätigungsvertrag von trash.purge.", "en": "Legacy permanent deletion is disabled. Use trash.move; permanent deletion requires the preview and confirmation contract of trash.purge."},
+    "ui.opened_instead": {
+        "de": "Stattdessen ist ein Board mit Einträgen geöffnet. Gemerkter Thread:",
+        "en": "A board with entries is open instead. Remembered thread:",
+    },
     "ui.created": {"de": "Angelegt: {title}", "en": "Created: {title}"},
     "ui.note_saved": {"de": "Notiz gespeichert", "en": "Note saved"},
     "ui.whiteboard_saved": {"de": "Beitrag angehängt", "en": "Entry appended"},
