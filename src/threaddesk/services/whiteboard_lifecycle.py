@@ -7,6 +7,7 @@ claim. Thread trash owns reversible removal and the existing purge contract.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import replace
 
 from threaddesk.core.errors import ManagementError, NotFound
@@ -14,6 +15,7 @@ from threaddesk.core.models import KnowledgeNode, Relation, now_iso
 
 KEY = "whiteboard"
 PREFIX = "wb-"
+_THREAD_ID = re.compile(r"(?<![0-9a-fA-F])[0-9a-fA-F]{12}(?![0-9a-fA-F])")
 
 
 def state(thread):
@@ -198,4 +200,63 @@ class WhiteboardService:
                 result.append(Relation(id="wb-rel-" + board.metadata["thread_id"] + "-" + node.id,
                     source_id=board.id, target_id=node.id, kind="references", created_at=board.created_at,
                     revision=board.revision, source="threaddesk.whiteboard", metadata={"projection": "thread_whiteboard"}))
+        return result
+
+    def organization_relations(self, nodes):
+        """Plan links read from thread fields. Nothing is stored, and bad data is skipped."""
+        try:
+            return self._organization_relations(nodes)
+        except Exception:  # noqa: BLE001 - unreadable thread fields must not stop the map
+            return []
+
+    def _organization_relations(self, nodes):
+        boards = {}
+        for node in nodes:
+            metadata = node.metadata if isinstance(getattr(node, "metadata", None), dict) else {}
+            thread_id = metadata.get("thread_id")
+            if (getattr(node, "kind", None) == "whiteboard" and getattr(node, "source", None) == "threaddesk.whiteboard"
+                    and isinstance(thread_id, str) and getattr(node, "id", None) == PREFIX + thread_id):
+                boards[thread_id] = node
+        living = {}
+        for thread in self.store.list_threads():
+            if getattr(thread, "status", None) == "archived" or getattr(thread, "id", None) not in boards:
+                continue
+            living[thread.id] = thread
+        seen = set()
+        result = []
+
+        def add(source_id, target_id, kind):
+            if (not isinstance(source_id, str) or not isinstance(target_id, str)
+                    or source_id == target_id or source_id not in living or target_id not in living):
+                return
+            key = (kind, source_id, target_id)
+            if key in seen:
+                return
+            seen.add(key)
+            source = boards[source_id]
+            result.append(Relation(
+                id="wb-org-" + kind + "-" + source_id + "-" + target_id,
+                source_id=source.id, target_id=boards[target_id].id, kind=kind,
+                created_at=source.created_at, revision=source.revision,
+                source="threaddesk.organization",
+                metadata={"derived": True, "projection": "thread_organization"},
+            ))
+
+        for thread in living.values():
+            context = getattr(thread, "context", None)
+            extra = getattr(context, "extra", None)
+            org = extra.get("organization") if isinstance(extra, dict) else None
+            if isinstance(org, dict):
+                parent = org.get("parent_thread_id")
+                if isinstance(parent, str):
+                    add(parent, thread.id, "contains")
+                related = org.get("related_thread_ids")
+                if isinstance(related, (list, tuple)) and not isinstance(related, str):
+                    for item in related:
+                        if isinstance(item, str):
+                            add(thread.id, item, "contains")
+            description = thread.description if isinstance(getattr(thread, "description", None), str) else ""
+            notes = context.notes if context is not None and isinstance(getattr(context, "notes", None), str) else ""
+            for found in _THREAD_ID.findall(description + "\n" + notes):
+                add(thread.id, found.lower(), "references")
         return result
