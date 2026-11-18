@@ -191,7 +191,7 @@ def test_empty_thread_age_window(home: Path, monkeypatch: pytest.MonkeyPatch, ag
     assert (home / "state.json").read_bytes() == state
 
 
-def test_old_created_at_still_falls_back(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_old_empty_thread_the_user_just_switched_to_stays(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _freeze(monkeypatch)
     page, state = _opening(
         home,
@@ -205,8 +205,8 @@ def test_old_created_at_still_falls_back(home: Path, monkeypatch: pytest.MonkeyP
         remember="emptythread01",
     )
     assert page.status_code == 200
-    assert "sichtbarer eintrag" in page.text
-    assert "nur beschreibung" not in page.text
+    assert "nur beschreibung" in page.text
+    assert "sichtbarer eintrag" not in page.text
     assert (home / "state.json").read_bytes() == state
 
 
