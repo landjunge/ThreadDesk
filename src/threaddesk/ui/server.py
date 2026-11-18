@@ -6,6 +6,7 @@ import json
 import os
 import tempfile
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, urlsplit
@@ -259,6 +260,41 @@ def _has_whiteboard_file(store, thread_id: str) -> bool:
     return False
 
 
+# An empty thread the user just created stays open. Both updated_at and
+# created_at must be at most this many seconds old. A missing or unreadable
+# stamp counts as old and never raises. This is not a setting. The choice
+# only reads; it does not write state.json.
+OPENING_FRESH_SECONDS = 15 * 60
+
+
+def _opening_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _stamp_age_seconds(value: object, now: datetime) -> float | None:
+    if not isinstance(value, str) or not value or len(value) > 64:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (ValueError, OverflowError):
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return (now - parsed.astimezone(timezone.utc)).total_seconds()
+
+
+def _remembered_is_fresh(data: dict) -> bool:
+    now = _opening_now()
+    updated = _stamp_age_seconds(data.get("updated_at"), now)
+    created = _stamp_age_seconds(data.get("created_at"), now)
+    return (
+        updated is not None
+        and created is not None
+        and 0 <= updated <= OPENING_FRESH_SECONDS
+        and 0 <= created <= OPENING_FRESH_SECONDS
+    )
+
+
 def _newest_board(store) -> str | None:
     chosen: tuple[str, str] | None = None
     folder = store.threads_dir
@@ -282,6 +318,9 @@ def _opening_choice(store) -> tuple[str | None, str | None]:
 
     Returns ``(fallback_id, remembered_id)``. A missing ``current_id`` keeps
     today's empty opening. Broken ``state.json`` still raises from the store.
+    An empty remembered thread stays when both stamps are at most
+    ``OPENING_FRESH_SECONDS`` old. Only an older empty thread yields to the
+    newest board that already has entries.
     """
     if not hasattr(store, "threads_dir") or not hasattr(store, "whiteboard_dir"):
         return None, None
@@ -292,7 +331,11 @@ def _opening_choice(store) -> tuple[str | None, str | None]:
     if (
         remembered is not None
         and remembered.get("status") != "archived"
-        and (_note_text(remembered) or _has_whiteboard_file(store, current_id))
+        and (
+            _note_text(remembered)
+            or _has_whiteboard_file(store, current_id)
+            or _remembered_is_fresh(remembered)
+        )
     ):
         return None, None
     fallback = _newest_board(store)

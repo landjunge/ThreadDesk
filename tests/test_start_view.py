@@ -1,11 +1,15 @@
 """Opening view when the remembered thread is empty. Synthetic homes only."""
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 from threaddesk.api.service import ThreadService
 from threaddesk.storage.json_store import JsonStore
+
+FIXED = datetime(2026, 11, 18, 12, 0, 0, tzinfo=timezone.utc)
+WINDOW = 15 * 60
 
 
 @pytest.fixture
@@ -28,18 +32,31 @@ def _remember(home: Path, thread_id: str | None) -> bytes:
     return path.read_bytes()
 
 
-def _board(home: Path, thread_id: str, updated_at: str, content: str | None, **changes) -> None:
+def _freeze(monkeypatch: pytest.MonkeyPatch) -> None:
+    import threaddesk.ui.server as server
+
+    monkeypatch.setattr(server, "_opening_now", lambda: FIXED)
+
+
+def _stamp(seconds_ago: int) -> str:
+    return (FIXED - timedelta(seconds=seconds_ago)).isoformat()
+
+
+def _board(home: Path, thread_id: str, updated_at: str | None, content: str | None, **changes) -> None:
     notes = changes.get("notes", "")
     body = {
         "id": thread_id,
         "title": changes.get("title", thread_id),
         "description": changes.get("description", ""),
         "status": changes.get("status", "idea"),
-        "created_at": "2026-11-01T00:00:00+00:00",
-        "updated_at": updated_at,
         "revision": 1,
         "context": {"notes": notes, "files": [], "prompts": [], "agent_state": {}, "extra": {}},
     }
+    created_at = changes.get("created_at", "2026-11-01T00:00:00+00:00")
+    if created_at is not None:
+        body["created_at"] = created_at
+    if updated_at is not None:
+        body["updated_at"] = updated_at
     (home / "threads").mkdir(parents=True, exist_ok=True)
     (home / "threads" / f"{thread_id}.json").write_text(json.dumps(body), encoding="utf-8")
     if content is not None:
@@ -128,3 +145,105 @@ def test_missing_current_and_broken_state_stay_as_before(home: Path) -> None:
     with pytest.raises(json.JSONDecodeError):
         _client().get("/")
     assert (home / "state.json").read_bytes() == broken
+
+
+def _opening(home: Path, *boards: tuple, remember: str) -> tuple[object, bytes]:
+    for thread_id, updated_at, content, changes in boards:
+        _board(home, thread_id, updated_at, content, **changes)
+    state = _remember(home, remember)
+    return _client().get("/"), state
+
+
+@pytest.mark.parametrize(
+    ("age_seconds", "stays"),
+    [
+        (0, True),
+        (WINDOW - 1, True),
+        (WINDOW, True),
+        (WINDOW + 1, False),
+        (2 * 60 * 60, False),
+    ],
+    ids=["fresh", "just-under-15m", "exactly-15m", "just-over-15m", "old"],
+)
+def test_empty_thread_age_window(home: Path, monkeypatch: pytest.MonkeyPatch, age_seconds: int, stays: bool) -> None:
+    _freeze(monkeypatch)
+    stamp = _stamp(age_seconds)
+    page, state = _opening(
+        home,
+        ("emptythread01", stamp, None, {
+            "title": "Leerer Start", "description": "nur beschreibung", "created_at": stamp,
+        }),
+        ("fullthread001", _stamp(3 * 60 * 60), "sichtbarer eintrag", {
+            "title": "Volles Board", "created_at": _stamp(3 * 60 * 60),
+        }),
+        remember="emptythread01",
+    )
+    assert page.status_code == 200
+    if stays:
+        assert "nur beschreibung" in page.text
+        assert "sichtbarer eintrag" not in page.text
+        assert "Stattdessen" not in page.text
+    else:
+        assert "sichtbarer eintrag" in page.text
+        assert "nur beschreibung" not in page.text
+        assert "Stattdessen" in page.text
+        assert "/?thread=emptythread01" in page.text
+    assert (home / "state.json").read_bytes() == state
+
+
+def test_old_created_at_still_falls_back(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _freeze(monkeypatch)
+    page, state = _opening(
+        home,
+        ("emptythread01", _stamp(60), None, {
+            "title": "Leerer Start", "description": "nur beschreibung",
+            "created_at": _stamp(WINDOW + 60),
+        }),
+        ("fullthread001", _stamp(3 * 60 * 60), "sichtbarer eintrag", {
+            "title": "Volles Board", "created_at": _stamp(3 * 60 * 60),
+        }),
+        remember="emptythread01",
+    )
+    assert page.status_code == 200
+    assert "sichtbarer eintrag" in page.text
+    assert "nur beschreibung" not in page.text
+    assert (home / "state.json").read_bytes() == state
+
+
+def test_missing_or_unreadable_timestamps_count_as_old(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _freeze(monkeypatch)
+    page, state = _opening(
+        home,
+        ("emptythread01", None, None, {
+            "title": "Leerer Start", "description": "nur beschreibung", "created_at": None,
+        }),
+        ("fullthread001", _stamp(3 * 60 * 60), "sichtbarer eintrag", {
+            "title": "Volles Board", "created_at": _stamp(3 * 60 * 60),
+        }),
+        remember="emptythread01",
+    )
+    assert page.status_code == 200
+    assert "sichtbarer eintrag" in page.text
+    assert (home / "state.json").read_bytes() == state
+    raw = json.loads((home / "threads" / "emptythread01.json").read_text(encoding="utf-8"))
+    raw["created_at"] = "not-a-time"
+    raw["updated_at"] = "also-not"
+    (home / "threads" / "emptythread01.json").write_text(json.dumps(raw), encoding="utf-8")
+    broken = _client().get("/")
+    assert broken.status_code == 200
+    assert "sichtbarer eintrag" in broken.text
+    assert (home / "state.json").read_bytes() == state
+
+
+def test_just_created_empty_thread_keeps_its_heading(home: Path) -> None:
+    _board(home, "fullthread001", "2026-11-01T00:00:00+00:00", "sichtbarer eintrag", title="Volles Board")
+    client = _client()
+    created = client.post_thread_form("/threads", data={"title": "Browser Leseraumthread", "description": ""})
+    assert created.status_code == 200
+    assert "<h1>Browser Leseraumthread</h1>" in created.text
+    assert "<h1>Volles Board</h1>" not in created.text
+    state = (home / "state.json").read_bytes()
+    again = client.get("/")
+    assert "<h1>Browser Leseraumthread</h1>" in again.text
+    assert "sichtbarer eintrag" not in again.text
+    assert (home / "state.json").read_bytes() == state
