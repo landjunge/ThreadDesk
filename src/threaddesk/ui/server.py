@@ -27,7 +27,7 @@ from starlette.background import BackgroundTask
 from starlette.concurrency import run_in_threadpool
 
 from threaddesk.api.service import ThreadService
-from threaddesk.build_info import BUILD_DESCRIPTION, BUILD_ID, BUILD_LABEL
+from threaddesk.build_info import BUILD_DESCRIPTION, BUILD_ID, VisibleBuildLabel
 from threaddesk.core import i18n
 from threaddesk.core.errors import (
     InvalidState,
@@ -500,7 +500,7 @@ def create_app() -> FastAPI:
     templates.env.globals["language_names"] = i18n.LANGUAGE_NAMES
     templates.env.globals["registers"] = i18n.REGISTERS
     templates.env.globals.update(
-        build_label=BUILD_LABEL, build_description=BUILD_DESCRIPTION, build_id=BUILD_ID,
+        build_label=VisibleBuildLabel(), build_description=BUILD_DESCRIPTION, build_id=BUILD_ID,
     )
     from threaddesk.ui.project_memory_router import project_memory_router
     app.include_router(project_memory_router(_svc, templates, _language, _register, _browser_strings))
