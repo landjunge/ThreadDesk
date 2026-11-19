@@ -188,6 +188,11 @@ def check_tauri(repo: Path) -> list[str]:
             problems.append(
                 f"{rel}: bundle.licenseFile oder bundle.license muss Personal Use 1.0 sein"
             )
+        if license_id and not ok_id:
+            # A valid license file must not mask a conflicting explicit identifier.
+            problems.append(f"{rel}: bundle.license {license_id!r} ist nicht Personal Use 1.0")
+        if license_file and not ok_file:
+            problems.append(f"{rel}: bundle.licenseFile muss LICENSE nennen")
         cargo = conf.parent / "Cargo.toml"
         if cargo.is_file() and not re.search(
             r'(?m)^license-file\s*=\s*".*LICENSE"', cargo.read_text(encoding="utf-8")
