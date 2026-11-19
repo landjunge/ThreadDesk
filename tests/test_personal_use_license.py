@@ -43,3 +43,24 @@ def test_repository_names_are_matched_case_insensitively(monkeypatch):
     ):
         monkeypatch.setenv("GITHUB_REPOSITORY", name)
         assert tool.detect_product(None) == product
+
+
+def test_tauri_and_cargo_license_files_must_equal_the_root_license(tmp_path):
+    import json
+
+    tool = _tool()
+    (tmp_path / "LICENSE").write_text("Netzwerkpunkt Personal Use License 1.0\n")
+    app = tmp_path / "app" / "src-tauri"
+    app.mkdir(parents=True)
+    (app / "OTHER_LICENSE").write_text("MIT License\n")
+    conf = app / "tauri.conf.json"
+    cargo = app / "Cargo.toml"
+    conf.write_text(json.dumps({"bundle": {"licenseFile": "OTHER_LICENSE"}}))
+    cargo.write_text('license-file = "OTHER_LICENSE"\n')
+    problems = tool.check_tauri(tmp_path)
+    assert any("bundle.licenseFile stimmt nicht" in p for p in problems)
+    assert any("Cargo.toml: license-file stimmt nicht" in p for p in problems)
+    (app / "LICENSE").write_text("Netzwerkpunkt Personal Use License 1.0\n")
+    conf.write_text(json.dumps({"bundle": {"licenseFile": "LICENSE"}}))
+    cargo.write_text('license-file = "LICENSE"\n')
+    assert not tool.check_tauri(tmp_path)
