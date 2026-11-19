@@ -72,8 +72,11 @@ def detect_product(explicit: str | None) -> str:
             raise SystemExit(f"Unknown product {explicit!r}; expected {sorted(PRODUCTS)}")
         return key
     repo = os.environ.get("GITHUB_REPOSITORY", "").split("/")[-1]
-    if repo in REPO_TO_PRODUCT:
-        return REPO_TO_PRODUCT[repo]
+    # GitHub repository names are matched case-insensitively and by their short names.
+    known = {name.lower(): key for name, key in REPO_TO_PRODUCT.items()}
+    known.update({"agentauthority": "agent-authority", "agent-authority": "agent-authority"})
+    if repo.lower() in known:
+        return known[repo.lower()]
     raise SystemExit("Pass --product KEY or set GITHUB_REPOSITORY")
 
 

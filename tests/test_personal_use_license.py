@@ -31,3 +31,15 @@ def test_a_valid_license_file_cannot_mask_a_conflicting_tauri_identifier(tmp_pat
     assert any("bundle.license" in p for p in tool.check_tauri(tmp_path))
     conf.write_text(json.dumps({"bundle": {"licenseFile": "../LICENSE"}}))
     assert not [p for p in tool.check_tauri(tmp_path) if "bundle" in p]
+
+
+def test_repository_names_are_matched_case_insensitively(monkeypatch):
+    tool = _tool()
+    for name, product in (
+        ("landjunge/ThreadDesk", "threaddesk"),
+        ("landjunge/threaddesk", "threaddesk"),
+        ("landjunge/AgentAuthority", "agent-authority"),
+        ("landjunge/KiraBridge", "kirabridge"),
+    ):
+        monkeypatch.setenv("GITHUB_REPOSITORY", name)
+        assert tool.detect_product(None) == product
