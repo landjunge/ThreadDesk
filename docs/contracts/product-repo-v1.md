@@ -39,5 +39,9 @@ darf keine fremden Produktnamen in der Historie führen.
 
 ## Prüfung
 
-`check` verlangt denselben Lizenznamen in `LICENSE` und README sowie einen Link
-auf `LICENSE`. Der Kopf bleibt unverändert `readme-header-v1`.
+`readme_header.py check` verlangt denselben Lizenznamen in `LICENSE` und README
+sowie einen Link auf `LICENSE`. Der Kopf bleibt unverändert `readme-header-v1`.
+
+GitHub: `.github/workflows/personal-use-license.yml` führt
+`scripts/check_personal_use_license.py` aus. Installationspakete folgen
+[personal-use-package-v1.md](personal-use-package-v1.md).

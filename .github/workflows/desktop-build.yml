@@ -90,8 +90,10 @@ jobs:
         run: |
           test "$(uname -m)" = '${{ matrix.arch }}'
           file dist/ThreadDesk.app/Contents/MacOS/ThreadDesk | grep '${{ matrix.arch }}'
+          cp LICENSE dist/ThreadDesk.app/Contents/Resources/LICENSE
           dist/ThreadDesk.app/Contents/MacOS/ThreadDesk --self-test
           test -f dist/ThreadDesk.app/Contents/Resources/icon.icns
+          cmp -s LICENSE dist/ThreadDesk.app/Contents/Resources/LICENSE
       - name: Create Windows download
         if: runner.os == 'Windows'
         shell: pwsh
@@ -104,6 +106,7 @@ jobs:
           codesign --deep --force --sign - dist/ThreadDesk.app
           mkdir -p dmg
           cp -R dist/ThreadDesk.app dmg/
+          cp LICENSE dmg/LICENSE
           ln -s /Applications dmg/Applications
           hdiutil create -volname ThreadDesk -srcfolder dmg -ov -format UDZO '${{ matrix.artifact }}.dmg'
           python scripts/package_provenance.py '${{ matrix.artifact }}.dmg'
@@ -113,6 +116,7 @@ jobs:
           path: |
             ${{ matrix.artifact }}.exe
             ${{ matrix.artifact }}.dmg
+            LICENSE
             ${{ matrix.artifact }}.*.sha256
             ${{ matrix.artifact }}.*.build.json
           if-no-files-found: error

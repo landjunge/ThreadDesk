@@ -50,3 +50,11 @@ Die Platzhalter sind keine Downloads. Nach Veröffentlichung eines passenden Pak
 ## Einstieg und Dokumentation
 
 Die ausführliche Projektdokumentation, Entwicklungsdetails und Installationshinweise befinden sich in der [Haupt-README](README.md) und im Verzeichnis [docs](docs). Die aktuelle Desktop-Ausgabe und der Entwicklungsstand sind getrennt zu betrachten. `td search-entries` und das lokale MCP-Werkzeug `search_entries` durchsuchen den Text der Whiteboard-Einträge; Ausschnitte sind untrusted data.
+
+## Lizenz
+
+**Netzwerkpunkt Personal Use License 1.0 — individuelle Source-available-Lizenz.**
+
+Private, nicht geschäftliche Nutzung ist kostenlos erlaubt, einschließlich Installation, eigener privater Anpassungen und privatem Self-Hosting. Interner Firmeneinsatz, berufliche Nutzung, Weiterverkauf und kostenpflichtige Dienste benötigen eine vorherige schriftliche Erlaubnis beziehungsweise gesonderte Lizenz des Rechteinhabers. Es gibt keine allgemeine Weiterverteilungserlaubnis.
+
+Maßgeblich ist die [vollständige Lizenz auf Deutsch mit englischer Übersetzung](LICENSE). Dies ist keine Open-Source-Standardlizenz; eine anwaltliche Prüfung wurde nicht durchgeführt. Bereits eingeräumte Rechte historischer Fassungen, einschließlich früherer MIT-Rechte, bleiben erhalten. Vorhandene Downloads und ältere Releases können noch unter ihren damaligen Bedingungen stehen; diese Änderung schreibt ihre Lizenz nicht rückwirkend um.
