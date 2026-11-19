@@ -138,3 +138,15 @@ Nachtrag zur Bridge-Abnahme: Der separate Auftrag `td-library-frozen-live-202610
 KEY-Aufnahmegrenze: `.key` kollidiert mit der bestehenden Schutzregel für private Schlüssel und wird im Ordnerimport sowie Dateiempfang derzeit mit `secret_name` gesperrt. Der Formatkatalog weist deshalb `import_allowed=false` aus. Ein bereits gespeicherter zulässiger Record kann verwaltbar sein; dies ist keine Zusage, eine neue Keynote-Datei aufnehmen zu können. Eine sichere positive Keynote-Inhaltsprüfung einschließlich echter geprüfter Fixture fehlt. KEY gilt ausdrücklich als noch nicht vollständig unterstützt; die private-Schlüssel-Sperre wird nicht pauschal gelockert.
 
 Runtime-Recovery: Beim aktiven Desktop-/MCP-Hintergrundlauf werden vorhandene CAS-Bibliotheken mit fehlendem oder defektem Index, altem JSON-Index oder fehlendem Manifest aus ihren erhaltenen Records neu projiziert. Dateiknoten entstehen vor dem Inhaltsindex. Ein leerer Arbeitsbereich wird dabei nicht initialisiert, Quellen werden nicht neu registriert, Readtools lösen keine Reparatur aus. Record-/Speicherlinks werden vor automatischen Reads abgewiesen; fehlgeschlagene Reparaturen erhalten 30 Sekunden Rückstand statt eines dichten Wiederholungsloops.
+
+## Indexfrische bei unverändertem Watch-Abgleich
+
+Ein wiederholter Import ohne fachliche Änderung schreibt identische Recorddateien
+nicht erneut. Für die Versionsprojektion zählen die aktuellen und historischen
+Recordkennungen aus den Quellenquittungen; technische Checkpoints, Zeitstempel und
+Aktivitätsnachweise ändern diese Zuordnung nicht. Ein bereits aktueller,
+workspacebezogener Index behält bei einem solchen Abgleich seine Generation.
+Echte Record-, Thread-, Knoten-, Papierkorb-, Overlay- und Versionsänderungen
+bleiben Frischequellen. Suche und Statusabfragen bauen weiterhin keinen Index auf.
+Die Änderung verhindert `index_stale` während eines fachlich unveränderten
+Watchimports; sie unterdrückt keine Fehler nach tatsächlichen Datenänderungen.

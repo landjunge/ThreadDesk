@@ -64,9 +64,12 @@ class LibraryIndex:
         receipts = self.root.parent / "library-batch-sources.json"
         if receipts.is_symlink():
             raise OSError("unsafe_source_receipts")
-        if receipts.exists():
-            info = receipts.stat()
-            signature.append(("source_receipts", info.st_mtime_ns, info.st_size))
+        from threaddesk.services.library_files.versions import version_state
+        from threaddesk.core.errors import ThreadDeskError
+        try:
+            signature.append(("source_versions", version_state(self.root)))
+        except ThreadDeskError as exc:
+            raise OSError('unsafe_source_receipts') from exc
         return generation, hashlib.sha256(json.dumps(signature).encode()).hexdigest()
 
     def status(self) -> dict:
@@ -208,6 +211,7 @@ class LibraryIndex:
             "errors": errors[:100],
             "error": "",
             "entity_documents": entity_count,
+            "workspace_projected": store is not None,
             "documents": documents,
         }
         self._replace(manifest)

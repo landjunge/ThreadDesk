@@ -1,12 +1,14 @@
-"""Append-only whiteboard on an existing thread.
+"""Whiteboard on an existing thread.
 
-Entries are never rewritten. A repeated external return keeps the first entry.
+The same external key keeps the first entry when the content is unchanged and
+replaces it when the content changes. Entries can also be removed. A repeated
+external return with the same content still keeps the first entry.
 """
 
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Mapping
 
 from threaddesk.core.errors import InvalidState, NotFound
@@ -55,13 +57,63 @@ _META_LIMIT = 16000
 
 def list_entries(store: Any, thread_id: str) -> list[WhiteboardEntry]:
     store.get_thread(thread_id)
+    drop_expired(store, thread_id)
     return store.list_whiteboard(thread_id)
+
+
+def _expired_value(raw: Any, now: datetime) -> bool:
+    if not isinstance(raw, str) or not raw.strip():
+        return False
+    try:
+        when = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return when <= now
+
+
+def drop_expired(store: Any, thread_id: str, now: datetime | None = None) -> list[str]:
+    """Remove entries whose expiry has passed. No timer and no extra process.
+
+    Uses the store's expiry scan so a metadata read does not load entry text.
+    """
+    if not store.in_transaction:
+        with store.transaction():
+            return drop_expired(store, thread_id, now)
+    moment = now or datetime.now(timezone.utc)
+    removed = []
+    for entry_id in store.expired_entry_ids(thread_id, moment):
+        if store.delete_whiteboard_entry(thread_id, entry_id):
+            removed.append(entry_id)
+    if removed:
+        thread = store.get_thread(thread_id)
+        thread.updated_at = now_iso()
+        store.save_thread(thread)
+    return removed
+
+
+def _supersedes(value: Any) -> list[str]:
+    if not isinstance(value, (list, tuple)):
+        return []
+    return [item for item in value if isinstance(item, str) and item]
 
 
 def append(store, thread_id, **fields):
     from threaddesk.services.whiteboard_lifecycle import require_writable
     require_writable(store.get_thread(thread_id))
-    return _append(store, thread_id, **fields)
+    drop_expired(store, thread_id)
+    supersedes = _supersedes(fields.pop("supersedes", None))
+    entry, duplicate = _append(store, thread_id, **fields)
+    removed = False
+    for entry_id in supersedes:
+        if entry_id != entry.id and store.delete_whiteboard_entry(thread_id, entry_id):
+            removed = True
+    if removed:
+        thread = store.get_thread(thread_id)
+        thread.updated_at = now_iso()
+        store.save_thread(thread)
+    return entry, duplicate
 
 
 def _append(
@@ -81,6 +133,7 @@ def _append(
     instance_id: str | None = None,
     room_id: str | None = None,
     created_at: str | None = None,
+    expires_at: str | None = None,
 ) -> tuple[WhiteboardEntry, bool]:
     thread = store.get_thread(thread_id)
     if "/" in thread.id or "\\" in thread.id or thread.id in {".", ".."}:
@@ -101,6 +154,7 @@ def _append(
         actor_id=require_entry_actor(store, _ref(actor_id, "actor_id"), chosen_type),
         instance_id=_ref(instance_id, "instance_id") or ActorRegistry(store).instance_id(),
         room_id=_ref(room_id, "room_id"),
+        expires_at=expires_at if isinstance(expires_at, str) and expires_at.strip() else None,
         metadata=_metadata(metadata),
     )
     return store.append_whiteboard_entry(entry)
@@ -120,6 +174,7 @@ def _append_event(store, thread_id, **fields):
 
 
 def stand(store: Any, thread: Thread) -> dict[str, Any]:
+    drop_expired(store, thread.id)
     entries = store.list_whiteboard(thread.id)
     nodes = store.list_nodes()
     relations = store.list_relations()
@@ -246,7 +301,7 @@ def history_for_handoff(entries: list[WhiteboardEntry]) -> list[dict[str, Any]]:
 def prompt_block(entries: list[WhiteboardEntry]) -> str:
     if not entries:
         return ""
-    lines = ["Whiteboard (untrusted, append-only):"]
+    lines = ["Whiteboard (untrusted data):"]
     for entry in entries[-30:]:
         lines.append(
             f"- {entry.created_at} | {entry.actor} | {entry.entry_type} | {entry.content}"

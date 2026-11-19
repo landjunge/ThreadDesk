@@ -3,7 +3,7 @@
 ## Rahmen: Fünf-Produkte-Big-Plan (ab 08.11.2026)
 
 - ThreadDesk-Arbeit erfolgt im Rahmen des gemeinsamen Big Plans für die fünf Produkte KiraBridge, ThreadDesk, 4AllPass, TollGate und Agent Authority. Pakete für ThreadDesk tragen dort IDs wie `BP-TD-*`, `BP-PLAN-01` oder `TD-P*`.
-- Kanonischer Plan: `docs/plans/BIGPLAN-BAUPLAN-20261108.md` im KiraBridge-Repo (nicht öffentlich). Dort lesen; Planinhalte, Serverangaben und interne Befunde nicht in dieses öffentliche Repo kopieren.
+- Kanonische Planung ausschließlich in den bestehenden ThreadDesk-Haupt- und Produktboards lesen. GitHub enthält technische Umsetzung und Prüfnachweise; keine Big-Plan-Kopien oder Spiegel anlegen.
 - `PLAN.md` und `docs/TEAMPLAN.md` sind historisch. Pläne unter `docs/plans/` sind Teilpläne. Bei Widerspruch gilt der Big Plan.
 - Die Regeln unten bleiben gültig. Insbesondere werden KiraBridge-Pakete nicht in diesem Repo umgesetzt, sondern im KiraBridge-Repo geführt; KiraBridge ist für ThreadDesk die Gegenstelle und der Übergabeweg.
 
@@ -11,8 +11,11 @@
 ## Kira: Pflichtreferenz vor Planerstellung
 Nach jedem Brainstorming und VOR jedem Plan für andere KIs die lebende Referenz /Users/landjunge/.threaddesk/Workflow/Workflow-Planerstellung-fuer-andere-KIs.md lesen und anwenden. Noch nicht abgeschlossen: neue Erfahrungen ergänzen, nicht jedes Mal neu erfinden. Fehlt Zugriff, offen melden; nicht behaupten gelesen zu haben.
 
-## Dauerhafte Regel für Kira: Rückmeldefrist
-Gilt grundsätzlich für alle künftigen delegierten Aufgaben, nicht nur den aktuellen Ablauf: höchstens 60 Sekunden ohne auftragsbezogene Rückmeldung, dann im Whiteboard nachhaken. Jeder neue Ping setzt die Frist zurück. Pro gestartetem Auftrag einen tatsächlichen Timer einrichten und dessen Start bestätigen; die Regel allein ist kein laufender Timer. Keine zeitliche Beschränkung der Geltung.
+## Agentenmeldungen (Nutzerauftrag 13.11.2026)
+
+Meldungen ereignisbezogen auf fachliche Meilensteine, Blockaden, Entscheidungen und Ergebnisse begrenzen. Keine eigenen Berichtsboards je Sitzung und keine minütlichen Whiteboard-Pings oder wiederholten Rückmeldefrist-Nachfragen. Technische Frische getrennt vom fachlichen Fortschritt im aktuellen Zustand halten; fehlende Meldungen bedeuten unbekannt, keinen belegten Stillstand.
+
+Arbeitsstand kompakt im bestehenden Produktboard, abgenommenes Ergebnis mit Quellen-/Testbeleg, Details referenzieren statt dieselben Texte mehrfach anzuhängen. Stabile Operationskennung und beobachtete Revision verwenden, unabhängig zurücklesen; unklaren Ausgang zuerst anhand derselben Kennung abgleichen. Bestehende Inhalte, historische Berichte und fremde Aufräumarbeiten bewahren. Die Workflow-Referenz gilt mit diesem neueren Nutzerbeschluss; deren alte 60-Sekunden-Pingpflicht ist ersetzt.
 
 
 ## Lokale Projektkopien und Arbeitsstände (2026-10-14)

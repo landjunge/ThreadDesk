@@ -103,13 +103,13 @@ def test_cli_and_mcp_publish_the_current_command_and_tool_contracts(tmp_path: Pa
     assert tuple(commands) == (
         "new", "list", "switch", "current", "note", "describe", "status",
         "files", "rename", "archive", "unarchive", "delete", "snap", "prompt",
-        "handoff", "inbox", "mcp", "grok", "gnom", "gnom-job", "module", "workshop", "gate", "dash", "graph", "authority", "serve", "ui", "search", "library", "command",
+        "handoff", "inbox", "mcp", "grok", "gnom", "gnom-job", "module", "workshop", "gate", "dash", "graph", "whiteboard", "authority", "serve", "ui", "search", "search-entries", "library", "command",
     )
 
     bridge = McpBridge(ThreadService(JsonStore(tmp_path)))
     legacy_names = [
         "library_receive_status", "library_search", "library_file_info", "library_receive",
-        "knowledge_manage", "search_threads", "get_reentry",
+        "knowledge_manage", "search_threads", "search_entries", "get_reentry",
         "record_handoff_question", "answer_handoff_question",
         "issue_handoff", "get_issued_handoff", "bind_handoff_run",
         "thread_operation_status", "thread_manage", "list_threads", "get_thread", "current_thread", "switch_thread", "add_note",

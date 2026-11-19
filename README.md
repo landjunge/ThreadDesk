@@ -1,5 +1,8 @@
 <!-- readme-header-v1: Kopf nach ThreadDesk docs/contracts/readme-header-v1.md. Nicht von Hand umgestalten; scripts/readme_header.py apply/check verwenden. -->
 
+<!-- README-LANGUAGES -->
+<p align="center"><strong>English</strong> &nbsp;|&nbsp; <a href="README.de.md">Deutsch</a></p>
+
 <p align="center">
   <img src="assets/readme/normalized/ThreadDesk-large.svg" alt="ThreadDesk" width="256" height="256">
 </p>
@@ -9,18 +12,26 @@
   &nbsp;
   <a href="https://github.com/landjunge/4AllPass#readme" title="4AllPass"><img src="assets/readme/normalized/4AllPass-small.svg" alt="4AllPass" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/tollgate#readme" title="TollGate"><img src="assets/readme/normalized/TollGate-small.svg" alt="TollGate" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/TollGate#readme" title="TollGate"><img src="assets/readme/normalized/TollGate-small.svg" alt="TollGate" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/agent-authority-lab#readme" title="Agent Authority"><img src="assets/readme/normalized/Agent-Authority-small.svg" alt="Agent Authority" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/AgentAuthority#readme" title="Agent Authority"><img src="assets/readme/normalized/Agent-Authority-small.svg" alt="Agent Authority" width="48" height="48"></a>
   &nbsp;
-  <a href="https://github.com/landjunge/blockdesign#readme" title="BlockDesign"><img src="assets/readme/normalized/BlockDesign-small.svg" alt="BlockDesign" width="48" height="48"></a>
+  <a href="https://github.com/landjunge/BlockDesign#readme" title="BlockDesign"><img src="assets/readme/normalized/BlockDesign-small.svg" alt="BlockDesign" width="48" height="48"></a>
 </p>
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/wordmark.svg"><img src="brand/wordmark-light.svg" alt="ThreadDesk" width="384"></picture></p>
 
 <!-- AUTO-DOWNLOADS:START -->
 <p align="center">
-  <a href="https://github.com/landjunge/threaddesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg" title="ThreadDesk-0.2.0-macOS-Intel.dmg herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.2.0" width="190" height="52"></a>
+  <a href="https://github.com/landjunge/ThreadDesk/releases/download/v0.2.0/ThreadDesk-0.2.0-macOS-Intel.dmg" title="ThreadDesk macOS Intel DMG herunterladen / download"><img src="assets/readme/download-macos-intel.svg" alt="Download macOS Intel 0.2.0" width="190" height="52"></a>
+  &nbsp;
+  <img src="assets/readme/download-macos-apple-silicon.svg" alt="macOS Apple Silicon: In Vorbereitung / Coming soon" width="190" height="52">
+  &nbsp;
+  <img src="assets/readme/download-windows.svg" alt="Windows: In Vorbereitung / Coming soon" width="190" height="52">
+  &nbsp;
+  <img src="assets/readme/download-linux-desktop.svg" alt="Linux Desktop: In Vorbereitung / Coming soon" width="190" height="52">
+  &nbsp;
+  <img src="assets/readme/download-debian-server.svg" alt="Debian Server: In Vorbereitung / Coming soon" width="190" height="52">
 </p>
 <!-- AUTO-DOWNLOADS:END -->
 
@@ -30,9 +41,9 @@
 
 **Das Problem:** Ein KI-Auftrag ist beendet, aber Notizen, Entscheidungen und der letzte Arbeitsstand liegen verstreut. **ThreadDesk** bewahrt Threads, Notizen und Projektzusammenhänge lokal, damit du den Faden wieder aufnehmen kannst.
 
-**Direkt ansehen:** [ThreadDesk 0.2.0 für macOS Intel](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0) · [Einstieg für Nutzer](#für-nutzer) · [Entwickler-Einstieg](#für-entwickler). Die Desktop-Ausgabe hat einen eigenen, begrenzten Funktionsstand; neuere Quellfunktionen sind nicht automatisch darin enthalten.
+**Direkt ansehen:** [ThreadDesk 0.2.0 für macOS Intel](https://github.com/landjunge/ThreadDesk/releases/tag/v0.2.0) · [Einstieg für Nutzer](#für-nutzer) · [Entwickler-Einstieg](#für-entwickler). Die Desktop-Ausgabe hat einen eigenen, begrenzten Funktionsstand; neuere Quellfunktionen sind nicht automatisch darin enthalten.
 
-**English:** Keep the context of AI projects locally—threads, notes and work history—so you can pick up where you left off. [Current macOS Intel release](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0). ThreadDesk stores context; it does **not** execute external agents. New source changes are not automatically included in published downloads.
+**English:** Keep the context of AI projects locally—threads, notes and work history—so you can pick up where you left off. [Current macOS Intel release](https://github.com/landjunge/ThreadDesk/releases/tag/v0.2.0). ThreadDesk stores context; it does **not** execute external agents. New source changes are not automatically included in published downloads.
 
 ## Die Werkzeugfamilie und ThreadDesks Aufgabe
 
@@ -56,9 +67,17 @@ Sprachabläufe, Zuverlässigkeit, Geschwindigkeit und Synchronisation werden wei
 
 ## Aktueller Funktionsstand / Current capabilities
 
-**Deutsch:** ThreadDesk hält Projektkontext lokal fest: Threads, Notizen, Dateiverweise, Snapshots und Wissen. CLI, MCP und die Oberfläche greifen auf diese Ablage zu. Der aktuelle Quellstand ergänzt revisionsgeprüfte Änderungen, zugeordnete Übergaben und Rückgaben sowie gespeicherte Rückfragen. Kontextverwaltung und Ausführung bleiben getrennt: Ein vorbereiteter Auftrag startet keinen externen Agenten, eine Lieferung ist noch keine Abnahme. Die Kartenansicht zählt Whiteboard-Einträge, ohne jede Eintragsdatei zu lesen; große Bestände lösen dadurch nicht mehr den bisherigen Vollscan pro Ansicht aus.
+**Deutsch:** ThreadDesk hält Projektkontext lokal fest: Threads, Notizen, Dateiverweise, Snapshots und Wissen. CLI, MCP und die Oberfläche greifen auf diese Ablage zu. Der aktuelle Quellstand ergänzt revisionsgeprüfte Änderungen, zugeordnete Übergaben und Rückgaben sowie gespeicherte Rückfragen. Kontextverwaltung und Ausführung bleiben getrennt: Ein vorbereiteter Auftrag startet keinen externen Agenten, eine Lieferung ist noch keine Abnahme. Die Kartenansicht zählt Whiteboard-Einträge, ohne jede Eintragsdatei zu lesen; große Bestände lösen dadurch nicht mehr den bisherigen Vollscan pro Ansicht aus. Die Seite Suche findet Einträge und Threads.
 
-**English:** ThreadDesk keeps project context locally: threads, notes, file references, snapshots and knowledge. Its CLI, MCP tools and interface use that store. Current source adds revision-checked changes, correlated handoffs and returns, and recorded questions. Preparing work does not start an external agent; receiving a delivery does not accept it. The map counts whiteboard entries without reading every entry file, so large stores no longer trigger the previous full scan per view.
+**English:** ThreadDesk keeps project context locally: threads, notes, file references, snapshots and knowledge. Its CLI, MCP tools and interface use that store. Current source adds revision-checked changes, correlated handoffs and returns, and recorded questions. Preparing work does not start an external agent; receiving a delivery does not accept it. The map counts whiteboard entries without reading every entry file, so large stores no longer trigger the previous full scan per view. The Search page finds entries and threads. `td search-entries` and the local MCP tool `search_entries` search whiteboard entry text; snippets are untrusted data.
+
+**Quellentwicklung · Schlüsselprüfung:** Namen und IDs wie `ThreadDesk-…` werden
+wegen eines internen `sk-` nicht mehr als eigenständige Schlüssel abgewiesen.
+Eigenständige Schlüssel bleiben gesperrt, auch an JSON-Escapegrenzen.
+
+**Source development · Key checks:** Names and IDs such as `ThreadDesk-…` are no
+longer rejected as standalone keys because they contain an internal `sk-`.
+Standalone keys remain blocked, including at JSON escape boundaries.
 
 Die Entwicklerinstallation benötigt Python 3.9+. Neue Quellfunktionen sind nicht automatisch im vorhandenen Desktop-Download enthalten. / Developer installation requires Python 3.9+. New source features are not automatically included in existing desktop downloads.
 
@@ -123,7 +142,7 @@ ThreadDesk merkt sich diesen Stand. Jeder Arbeitsbereich wird zu einem eigenen T
 
 ### Heutiger Stand – ehrlich
 
-**Aktuelle Desktop-Ausgabe: [0.2.0](https://github.com/landjunge/threaddesk/releases/tag/v0.2.0)**,
+**Aktuelle Desktop-Ausgabe: [0.2.0](https://github.com/landjunge/ThreadDesk/releases/tag/v0.2.0)**,
 veröffentlicht am 9. November 2026, nur für **macOS Intel** (Tauri, x86_64).
 Der Download oben führt direkt zu `ThreadDesk-0.2.0-macOS-Intel.dmg`; Prüfsummen
 und Quell-Commit `fc0bef9` stehen im Release. Neu sind unter anderem
@@ -133,7 +152,7 @@ vollständige Testsuite zweimal ohne Fehler bestanden; der eingebettete Server h
 seinen Selbsttest im Paket bestanden.
 
 Für Apple Silicon und Windows gibt es in 0.2.0 kein Paket; dort bleibt
-[0.1.1rc1](https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1) vom
+[0.1.1rc1](https://github.com/landjunge/ThreadDesk/releases/tag/v0.1.1rc1) vom
 2. Oktober 2026 der letzte Download. Der Release-Entwurf 0.1.1rc2 wurde nie
 veröffentlicht. Lokal installierte Testpakete gelten nicht als Ausgabe.
 
@@ -159,7 +178,7 @@ ad-hoc signiert, nicht mit Developer-ID signiert und nicht Apple-notarisiert.
 | main-Basis `bba99b0`, 18.10.2026 | TD-C01/02 übernommen: revisionsgebundene Verwaltung und ausgestellte Handoff-/Laufbindung. |
 | Diese Quelländerung TD-C03/D01/R01 | Wissensführung/Wiedereinstieg, exakter Rückgabeabruf, begrenzter neuer Wissenskontext und selektiv abgeglichene Design-PR-Teile. Gezielt isoliert geprüft, kein neuer Desktoprelease und keine Nutzerinstallation umgestellt. |
 
-[PR #66](https://github.com/landjunge/threaddesk/pull/66) war beim Abgleich weiter
+[PR #66](https://github.com/landjunge/ThreadDesk/pull/66) war beim Abgleich weiter
 offen. Aus `43dd13a` werden vorhandene UI- und passende Testteile übernommen;
 ältere Speicher-, Versions-, Lizenz- und Paketierungsstände werden nicht pauschal
 zurückgemischt. Die vollständige alte PR-Kette gilt dadurch nicht als übernommen.
@@ -216,6 +235,19 @@ Dateisync, Konfliktbehandlung, Authentifizierung und Wiederaufnahme. Dieser
 läuft laut damaligem Bericht nur auf Loopback; öffentliche Bereitstellung,
 Desktop-Integration und vollständige KiraBridge-Livekopplung bleiben offen.
 Ein historischer Server-Test ersetzt keine neue End-to-End-Abnahme.
+
+**Server-Bibliothek (Quellstand):** Der authentifizierte Server kann gespeicherte
+Bibliothekskopien pro Projekt auflisten, durchsuchen und als geprüfte Anhänge
+herunterladen. Die bestehende MCP-Adresse `/library/files/{id}` verwendet dieselbe
+Benutzergrenze. Lokale Originale werden dafür nicht geöffnet; Papierkorbeinträge
+und fremde Benutzer oder Projekte bleiben ausgeschlossen. Installation und
+öffentliche Abnahme dieses Quellstands erfolgen getrennt.
+
+**Server library (current source):** The authenticated server lists and searches
+stored library copies per project and downloads verified copies as attachments.
+The existing MCP `/library/files/{id}` address uses the same user boundary.
+Original local files are never opened; trashed records and other users or projects
+remain excluded. Installation and public acceptance of this source are separate.
 
 ### Deine Daten sichern
 
@@ -346,6 +378,15 @@ Klicke auf „Neuer Thread“, gib deiner Idee einen Namen und speichere den ers
 ## Für Entwickler
 
 ThreadDesk ist eine lokale Control-Layer; Übergabeweg zu Agenten ist KiraBridge. Die Grenze ist Teil des Produkts: Übergaben werden vorbereitet und von KiraBridge unter deren eigener Autorisierung über MCP abgerufen. ThreadDesk sendet oder führt sie nicht automatisch extern aus. Der ältere lokale Gnom-Hub-V1-Weg bleibt dokumentiert. Der optionale lokale Hausmeister ist davon getrennt und darf nur innerhalb der dokumentierten lokalen Grenzen arbeiten.
+
+**Whiteboard-Speicherung (Quellstand):** Direkte API-Aufrufe speichern neue Einträge und die Threadrevision gemeinsam in einer Transaktion, sowohl mit JSON als auch mit SQLite. Der Server-Endpunkt gibt Benachrichtigungen ebenfalls erst nach erfolgreichem Commit frei; ein Rollback verwirft sie. Wer eine eigene äußere Transaktion öffnet, muss sie mit `bus.defer_until_commit()` umschließen. Diese Benachrichtigungen sind kein dauerhaftes Zustellprotokoll.
+
+**Whiteboard persistence (current source):** Direct API calls save new entries and the thread revision in one transaction, with both JSON and SQLite. The server endpoint also publishes notifications only after a successful commit; rollback discards them. Callers opening an outer transaction must enclose it in `bus.defer_until_commit()`. These notifications are not a durable delivery log.
+
+**Whiteboard-Lesen (Quellstand):** `whiteboard.list` akzeptiert optional `metadata_only: true` und `entry_id`. Standardmäßig bleibt das vollständige Ergebnis unverändert. Metadaten enthalten IDs, Ordinal, Typ, gespeicherten Hash (gegebenenfalls `null`), Akteur-/Task-/Run-/Handoff-Verweise und External Key; aus freien Metadaten nur vorhandene `return_id`, `job_id`, `event_id`, `handoff_revision`, `supersedes_entry_id` und `whiteboard_edit`-Eintragsverweise. Inhalte und andere freie Metadaten fehlen. Für einen ausgewählten Inhalt denselben Befehl mit `entry_id` ohne Metadatenmodus aufrufen; unbekannte IDs ergeben eine leere Seite. Sortierung, `limit`/`offset` und Ergebnis-Digest bleiben erhalten. SQLite projiziert und begrenzt im Store; JSON parst weiterhin jede Eintragsdatei (O(N)-Scan, O(N log N)-Sortierung), hält aber nur Metadaten statt der vollständigen Inhaltsliste. Dies ist kein Snapshot: Umbenennung, Wiederherstellung, parallele oder rückdatierte Anhänge können Reads/Seitengrenzen ändern. Ein Digest prüft nur das jeweilige Ergebnis, keine vollständige Traversierung oder Exactly-once-Verarbeitung; fehlende Snapshotkonflikte sind keine Neustartabnahme.
+
+**Whiteboard reads (current source):** `whiteboard.list` optionally accepts `metadata_only: true` and `entry_id`. The default full result is unchanged. Metadata includes IDs, ordinal, type, stored hash (possibly `null`), actor/task/run/handoff references and external key; freeform metadata contributes only existing `return_id`, `job_id`, `event_id`, `handoff_revision`, `supersedes_entry_id` and `whiteboard_edit` entry references. Content and other freeform metadata are omitted. Fetch selected content with the same command and `entry_id` without metadata mode; unknown IDs return an empty page. Ordering, `limit`/`offset` and result digests are preserved. SQLite projects and limits in the store; JSON still parses every entry file (O(N) scan, O(N log N) sort), retaining metadata instead of the full content list. This is no snapshot: rename, restore, concurrent or backdated appends can change reads/page boundaries. A digest checks only that result, not complete traversal or exactly-once processing; absence of snapshot conflicts does not establish restart acceptance.
+
 
 ### Wichtige Befehle
 
@@ -532,7 +573,17 @@ live item states. This is not an installed desktop release.
 [Projektstart / Project intake](docs/plans/PROJECT-START-20261106.md).
 [Planrevisionen / Plan revisions](docs/plans/PROJECT-PLAN-20261106.md).
 [Gemeinsamer Big-Plan-Quellstand / Integrated Big Plan source](docs/plans/BIGPLAN-SOURCE-INTEGRATION-20261106.md)
-verbindet diese Arbeit mit den [Instanz-Kurzberichten / instance short reports](docs/agents/SHORT-REPORTS.md).
+verbindet diese Arbeit mit den [Agenten-Kurzberichten / agent short reports](docs/agents/SHORT-REPORTS.md).
+
+**Quellstand · Agentenstatus:** Neue Instanzen teilen sich eine zentrale Übersicht.
+Gleiche Statusmeldungen aktualisieren nur den aktuellen Stand; fachliche Änderungen
+und Ergebnisse bleiben als kurze Beiträge mit Details erhalten. Alte Berichtsboards
+bleiben lesbar. Keine automatische Installation in laufende Berichtsdienste.
+
+**Source change · Agent status:** New instances share one overview. Repeated status
+reports update current state; substantive changes and results retain short entries
+with their details. Existing report boards stay readable. Running report services
+require a separately verified update.
 
 `knowledge_manage` speichert referenzierte Entscheidungen, offene Fragen,
 verworfene Vorschläge und Aufgaben über denselben MCP-Zugang. Erwartete Thread-
@@ -600,3 +651,14 @@ broker evidence is reported as failed or uncertain, never connected. Switching d
 not unlock 4AllPass. Closing the window hides ThreadDesk; reopening shows the same
 interface. Explicit application quit remains available. Existing downloads and
 installations are unchanged by these source changes.
+
+**Quellkorrektur · Bibliothekssuche:** Ein unveränderter Watch-Abgleich erneuert
+weder identische Records noch einen bereits aktuellen Index. Technische
+Importquittungen machen die Suche nicht mehr vorübergehend veraltet; echte
+Inhalts-, Versions- und Zuordnungsänderungen bleiben an die Frischeprüfung gebunden.
+Diese Korrektur ist noch kein installiertes Desktoppaket.
+
+**Source fix · Library search:** An unchanged watch reconciliation preserves
+identical records and an already current index. Technical import receipts no
+longer temporarily invalidate search; actual content, version and assignment
+changes still require a fresh projection. This is not an installed desktop build.

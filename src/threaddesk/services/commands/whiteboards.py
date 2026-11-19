@@ -45,5 +45,16 @@ def specifications():
         description="Reversibly move the whiteboard WITH its owning thread/notes to trash. Read delete_preview first and explicitly set confirm_thread_move=true. Permanent deletion remains exclusively trash.purge with its preview-bound approval.")
     fields = {"trash_id": TEXT, "generation": {"type": "integer", "minimum": 1},
               "operation_id": ID, "expected_revision": REV}
+    yield spec(
+        "entry.remove",
+        {"id": ID, "entry_id": ID},
+        ("id", "entry_id"),
+        lambda svc, a: svc.remove_whiteboard_entry(a["id"], a["entry_id"]),
+        effect="data",
+        description=(
+            "Remove one whiteboard entry now. The file is deleted, not archived. "
+            "A repeated call succeeds."
+        ),
+    )
     yield spec("restore", fields, tuple(fields), lambda svc, a: WhiteboardService(svc).restore(**a),
         effect="domain", native=True, description="Restore the owning thread and whiteboard from an exact trash generation; original IDs and relationships are preserved. For archive restoration use whiteboard.unarchive.")

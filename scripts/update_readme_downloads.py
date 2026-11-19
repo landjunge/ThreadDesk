@@ -6,9 +6,12 @@ never to a release page, so one click starts the download. Drafts are ignored;
 prereleases count because the products currently ship previews only.
 
 Shared by KiraBridge, ThreadDesk and 4AllPass; the three copies are identical
-(see TOOL_VERSION). Only the block between the AUTO-DOWNLOADS markers in
-README.md / README.de.md and the generated ``assets/readme/download-<platform>.svg``
-buttons are touched. Other ``download-*.svg`` files are never removed.
+(see TOOL_VERSION). Desktop buttons come from the newest unprefixed ``v*``
+release. KiraBridge's Debian server track (``linux-*`` tags) is a second lane
+and shows as optional ``Debian Remote``. ``windows-*`` tags stay unused.
+Only the block between the AUTO-DOWNLOADS markers in README.md / README.de.md
+and the generated ``assets/readme/download-<platform>.svg`` buttons are
+touched. Other ``download-*.svg`` files are never removed.
 
 Before anything is written, every chosen asset is confirmed through the
 Releases API and, for public repositories, the download URL itself must answer.
@@ -31,7 +34,7 @@ import urllib.request
 from html import escape
 from pathlib import Path
 
-TOOL_VERSION = "2.1.0"
+TOOL_VERSION = "2.2.3"
 START, END = "<!-- AUTO-DOWNLOADS:START -->", "<!-- AUTO-DOWNLOADS:END -->"
 BUTTON_DIR = Path("assets/readme")
 API = "https://api.github.com"
@@ -43,12 +46,13 @@ BRAND = {
     "threaddesk": "#b99cff",
     "4allpass": "#6be4f2",
     "tollgate": "#e77745",
+    "agentauthority": "#3b78fc",
     "agent-authority-lab": "#3b78fc",
     "blockdesign": "#ebc33f",
 }
 
-# Display order of the buttons.
-ORDER = ["macOS Apple Silicon", "macOS Intel", "Windows", "Linux"]
+# Display order of the buttons. "Debian Server" is filled only from linux-* tags.
+ORDER = ["macOS Apple Silicon", "macOS Intel", "Windows", "Linux Desktop", "Debian Server"]
 
 PACKAGE = re.compile(r"\.(?:dmg|pkg|exe|msi|appimage|deb|rpm|zip|tar\.gz)$", re.IGNORECASE)
 NOT_PACKAGE = re.compile(
@@ -77,7 +81,7 @@ def platforms(name):
     if WINDOWS.search(name):
         return ["Windows"]
     if LINUX.search(name):
-        return ["Linux"]
+        return ["Linux Desktop"]
     if MAC.search(name):
         if UNIVERSAL.search(name):
             return ["macOS Apple Silicon", "macOS Intel"]
@@ -121,45 +125,75 @@ def button_svg(label, version, color):
     )
 
 
-def base_version(tag):
-    match = re.search(r"(\d+)\.(\d+)\.(\d+)", tag)
-    return match.groups() if match else None
+def lane(tag):
+    """desktop = unprefixed v*; remote = linux-*; windows-* is ignored."""
+    name = (tag or "").lower()
+    if name.startswith("linux-"):
+        return "remote"
+    if name.startswith("windows-"):
+        return None
+    return "desktop"
 
 
-def choose(releases):
-    """Only the newest published release that has installers.
-
-    Older tags are not used to fill missing platforms. A later Linux-only
-    release therefore replaces a previous macOS button until a new release
-    ships that platform again.
-    """
-    releases = sorted(
+def published(releases):
+    return sorted(
         (r for r in releases if not r.get("draft") and r.get("published_at")),
         key=lambda r: r["published_at"],
         reverse=True,
     )
-    newest = next(
-        (
-            release
-            for release in releases
-            if any(
-                asset.get("state") == "uploaded" and platforms(asset.get("name", ""))
-                for asset in release.get("assets", [])
-            )
-        ),
-        None,
-    )
-    if newest is None:
-        return {}
+
+
+def installer_labels(release):
+    labels = []
+    for asset in release.get("assets", []):
+        if asset.get("state") == "uploaded":
+            labels.extend(platforms(asset.get("name", "")))
+    return labels
+
+
+def pick_from(release):
     best = {}
-    for asset in newest.get("assets", []):
+    for asset in release.get("assets", []):
         name = asset.get("name", "")
         if asset.get("state") != "uploaded":
             continue
         for label in platforms(name):
             if label not in best or preference(name) > preference(best[label]["name"]):
                 best[label] = asset
-    return {label: (newest["tag_name"], asset) for label, asset in best.items()}
+    return {label: (release["tag_name"], asset) for label, asset in best.items()}
+
+
+def newest_lane(releases, wanted, required=None):
+    for release in published(releases):
+        if lane(release["tag_name"]) != wanted:
+            continue
+        labels = installer_labels(release)
+        if not labels:
+            continue
+        if required and required not in labels:
+            continue
+        return release
+    return None
+
+
+def choose(releases):
+    """Newest desktop release plus newest linux-* Debian Remote, independently.
+
+    Desktop (unprefixed v*) still offers only that one release: missing
+    platforms stay empty. linux-* is a second track; its Linux installer
+    becomes ``Debian Remote``. windows-* tags never fill a button. A 4AllPass
+    AppImage on v* stays ``Linux``.
+    """
+    chosen = {}
+    desktop = newest_lane(releases, "desktop")
+    if desktop:
+        chosen.update(pick_from(desktop))
+    remote = newest_lane(releases, "remote", required="Linux Desktop")
+    if remote:
+        linux = pick_from(remote).get("Linux Desktop")
+        if linux:
+            chosen["Debian Server"] = linux
+    return chosen
 
 
 # --- network -----------------------------------------------------------------
@@ -240,24 +274,34 @@ def verify(repo, private, chosen):
 # --- output ------------------------------------------------------------------
 
 
+def placeholder_svg(label):
+    label = escape(label)
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="190" height="52" viewBox="0 0 190 52">'
+        '<rect x="1" y="1" width="188" height="50" rx="10" fill="#555b64" stroke="#858b94"/>'
+        f'<text x="95" y="23" text-anchor="middle" font-family="Arial" font-size="13" fill="white">{label}</text>'
+        '<text x="95" y="39" text-anchor="middle" font-family="Arial" font-size="10" fill="white">'
+        'In Vorbereitung / Coming soon</text></svg>\n'
+    )
+
+
 def render(repo, chosen):
-    """Return ({button file: svg}, readme block) for the chosen downloads."""
+    """Always show five fields; link only to published installer assets."""
     color = BRAND[repo.split("/")[-1].lower()]
     buttons, links = {}, []
     for label in ORDER:
+        path = BUTTON_DIR / f"download-{slug(label)}.svg"
         if label not in chosen:
+            buttons[path] = placeholder_svg(label)
+            links.append(f'<img src="{path.as_posix()}" alt="{escape(label)}: In Vorbereitung / Coming soon" width="190" height="52">')
             continue
         tag, asset = chosen[label]
         version = version_of(tag)
-        path = BUTTON_DIR / f"download-{slug(label)}.svg"
         buttons[path] = button_svg(label, version, color)
         url = escape(asset["browser_download_url"], quote=True)
         title = escape(f"{asset['name']} herunterladen / download", quote=True)
         alt = escape(f"Download {label} {version}", quote=True)
-        links.append(
-            f'<a href="{url}" title="{title}"><img src="{path.as_posix()}" '
-            f'alt="{alt}" width="190" height="52"></a>'
-        )
+        links.append(f'<a href="{url}" title="{title}"><img src="{path.as_posix()}" alt="{alt}" width="190" height="52"></a>')
     block = '<p align="center">\n  ' + "\n  &nbsp;\n  ".join(links) + "\n</p>"
     return buttons, block
 
@@ -299,13 +343,13 @@ def self_test():
         "4AllPass_0.1.2-rc.2_aarch64.dmg": ["macOS Apple Silicon"],
         "4AllPass_0.1.2-rc.2_x64.dmg": ["macOS Intel"],
         "4AllPass_0.1.2-rc.2_x64-setup.exe": ["Windows"],
-        "4AllPass_0.1.2-rc.2_amd64.AppImage": ["Linux"],
+        "4AllPass_0.1.2-rc.2_amd64.AppImage": ["Linux Desktop"],
         "ThreadDesk-macOS-AppleSilicon.dmg": ["macOS Apple Silicon"],
         "ThreadDesk-macOS.dmg": ["macOS Intel"],
         "ThreadDesk-Windows.exe": ["Windows"],
         "KiraBridge-0.8.0rc36-Intel-Installer.zip": ["macOS Intel"],
         "KiraBridge-0.8.0rc37.dev1-Windows-Dev-Kit.zip": ["Windows"],
-        "KiraBridge-0.8.0rc41-Linux-x86_64.tar.gz": ["Linux"],
+        "KiraBridge-0.8.0rc41-Linux-x86_64.tar.gz": ["Linux Desktop"],
         "App-universal.dmg": ["macOS Apple Silicon", "macOS Intel"],
         "SHA256SUMS": [],
         "third-party-notices-macOS.zip": [],
@@ -345,11 +389,72 @@ def self_test():
         },
     ]
     picked = {label: tag for label, (tag, _) in choose(releases).items()}
-    if picked != {"Linux": "v0.8.0rc2"}:
-        failed.append(f"choose: {picked}")
+    if picked != {"Linux Desktop": "v0.8.0rc2"}:
+        failed.append(f"choose-desktop: {picked}")
+    dual = [
+        {
+            "tag_name": "v0.8.0rc49",
+            "draft": False,
+            "published_at": "2026-11-12",
+            "assets": [{"name": "KiraBridge-macos.tar.gz", "state": "uploaded"}],
+        },
+        {
+            "tag_name": "linux-v0.8.0rc41",
+            "draft": False,
+            "published_at": "2026-11-07",
+            "assets": [{"name": "KiraBridge-0.8.0rc41-Linux-x86_64.tar.gz", "state": "uploaded"}],
+        },
+        {
+            "tag_name": "linux-v0.8.0rc40",
+            "draft": False,
+            "published_at": "2026-11-01",
+            "assets": [{"name": "KiraBridge-0.8.0rc40-Linux-x86_64.tar.gz", "state": "uploaded"}],
+        },
+        {
+            "tag_name": "windows-v0.8.0rc37.dev1",
+            "draft": False,
+            "published_at": "2026-11-13",
+            "assets": [{"name": "KiraBridge-Windows.zip", "state": "uploaded"}],
+        },
+    ]
+    picked = {label: tag for label, (tag, _) in choose(dual).items()}
+    if picked != {"macOS Intel": "v0.8.0rc49", "Debian Server": "linux-v0.8.0rc41"}:
+        failed.append(f"choose-lanes: {picked}")
+    if version_of("linux-v0.8.0rc41") != "0.8.0rc41":
+        failed.append(f"version_of linux tag: {version_of('linux-v0.8.0rc41')}")
+    authority_asset = {
+        "id": 1,
+        "name": "AgentAuthority-linux.deb",
+        "browser_download_url": "https://example.invalid/AgentAuthority-linux.deb",
+    }
+    for repo_name in ("AgentAuthority", "agent-authority-lab"):
+        try:
+            rendered, _ = render(f"landjunge/{repo_name}", {"Linux Desktop": ("v1.0.0", authority_asset)})
+            svg = next(iter(rendered.values()))
+            if "#3b78fc" not in svg:
+                failed.append(f"render-brand {repo_name}: expected Agent Authority brand color")
+        except (KeyError, StopIteration) as exc:
+            failed.append(f"render-brand {repo_name}: {exc}")
+    appimage = [
+        {
+            "tag_name": "v0.1.2-rc.2",
+            "draft": False,
+            "published_at": "2026-06-01",
+            "assets": [
+                {"name": "4AllPass_0.1.2-rc.2_x64.dmg", "state": "uploaded"},
+                {"name": "4AllPass_0.1.2-rc.2_amd64.AppImage", "state": "uploaded"},
+            ],
+        }
+    ]
+    picked = {label: tag for label, (tag, _) in choose(appimage).items()}
+    if picked != {"macOS Intel": "v0.1.2-rc.2", "Linux Desktop": "v0.1.2-rc.2"}:
+        failed.append(f"choose-appimage: {picked}")
     if failed:
         raise SystemExit("Self-test failed:\n  " + "\n  ".join(failed))
-    print(f"Self-test passed ({len(cases)} names, newest-release selection), tool {TOOL_VERSION}")
+    print(
+        f"Self-test passed ({len(cases)} names, desktop plus linux-remote lanes), "
+        f"tool {TOOL_VERSION}"
+    )
 
 
 def main(argv):

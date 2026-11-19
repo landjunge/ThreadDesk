@@ -3,7 +3,7 @@
 > Big-Plan-Paket `BP-TD-REL-01`, Nutzerfreigabe vom 09.11.2026. Veröffentlicht als
 > GitHub-Release `v0.2.0` mit einem Paket für **macOS Intel (x86_64, Tauri)**.
 > Prüfsummen und den Quell-Commit des Pakets nennt der Release-Text auf GitHub.
-> Ältere Ausgaben bleiben unverändert: [0.1.1rc1](https://github.com/landjunge/threaddesk/releases/tag/v0.1.1rc1)
+> Ältere Ausgaben bleiben unverändert: [0.1.1rc1](https://github.com/landjunge/ThreadDesk/releases/tag/v0.1.1rc1)
 > (Pre-release) und der nie veröffentlichte Entwurf 0.1.1rc2.
 
 ## Deutsch

@@ -555,6 +555,12 @@ def _load_authority_events(path: Path) -> list[dict]:
     return events
 
 
+def cmd_whiteboard_remove(args: argparse.Namespace) -> int:
+    result = _svc().remove_whiteboard_entry(args.thread, args.entry)
+    print(json.dumps(result, ensure_ascii=False))
+    return 0
+
+
 def cmd_authority(args: argparse.Namespace) -> int:
     """Import a Gnom JSON/JSONL envelope. Does not write the knowledge SQLite."""
     from threaddesk.graph import AuthorityGraph
@@ -803,6 +809,13 @@ def build_parser(language: str = i18n.DEFAULT_LANGUAGE,
     gr.add_argument("--ids", nargs="*", default=None)
     gr.add_argument("--include-private", action="store_true")
     gr.set_defaults(func=cmd_graph)
+
+    wb = sub.add_parser("whiteboard", help=t("cli.help.whiteboard"))
+    wbs = wb.add_subparsers(dest="whiteboard_cmd", required=True)
+    wr = wbs.add_parser("remove", help=t("cli.help.whiteboard_remove"))
+    wr.add_argument("thread")
+    wr.add_argument("entry")
+    wr.set_defaults(func=cmd_whiteboard_remove)
 
     au = sub.add_parser("authority", help=t("cli.help.authority"))
     aus = au.add_subparsers(dest="authority_cmd", required=True)

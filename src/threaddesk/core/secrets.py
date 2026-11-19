@@ -7,7 +7,10 @@ from threaddesk.core.errors import SecretRejected
 # Reject obvious key material so it never lands in thread files.
 _SECRET = re.compile(
     r"(?i)(api[_-]?key|secret|password|token|bearer)[\"']?\s*[:=]\s*[\"']?\S+"
-    r"|sk-[A-Za-z0-9]{16,}"
+    # Unlabelled tokens start outside alphanumeric identifiers, not inside an
+    # application name. JSON escapes also delimit them: callers scan JSON too.
+    # Labelled assignments above remain blocked independently of this boundary.
+    r"|(?:(?<![A-Za-z0-9])|(?<=\\[nrtbf])|(?<=\\u[0-9A-Fa-f]{4}))sk-[A-Za-z0-9]{16,}"
     r"|gh[pousr]_[A-Za-z0-9_]{20,}"
     r"|glpat-[A-Za-z0-9_-]{20,}"
     r"|AKIA[0-9A-Z]{16}"

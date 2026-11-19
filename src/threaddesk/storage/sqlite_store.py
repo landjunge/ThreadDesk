@@ -21,6 +21,7 @@ from threaddesk.core.models import (
 )
 from threaddesk.core.provenance import SourceRecord
 from threaddesk.storage.lifecycle import SQLiteLifecycleStore
+from threaddesk.storage.whiteboard_read import metadata_row, metadata_sql, page_result
 from threaddesk.storage.owner_documents import MigratedOwnerDocuments
 from threaddesk.storage.schema import FTS_SQL, MIGRATIONS, SCHEMA_SQL, SCHEMA_VERSION
 
@@ -197,8 +198,18 @@ class SQLiteStore(SQLiteLifecycleStore, MigratedOwnerDocuments):
         row = self.connection.execute("SELECT payload FROM management_operations WHERE id=?", (operation_id,)).fetchone()
         return self._load(row) if row else None
 
-    def save_management_operation(self, operation_id, data):
-        self.connection.execute("INSERT INTO management_operations(id,payload) VALUES (?,?)", (operation_id, self._dump(data)))
+    def save_management_operation(self, operation_id, data, *, replace=False):
+        if replace:
+            self.connection.execute(
+                "INSERT INTO management_operations(id,payload) VALUES (?,?) "
+                "ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",
+                (operation_id, self._dump(data)),
+            )
+        else:
+            self.connection.execute(
+                "INSERT INTO management_operations(id,payload) VALUES (?,?)",
+                (operation_id, self._dump(data)),
+            )
         self._commit()
 
     def delete_thread(self, thread_id: str) -> None:
@@ -269,12 +280,37 @@ class SQLiteStore(SQLiteLifecycleStore, MigratedOwnerDocuments):
         items.sort(key=lambda item: (item.created_at, item.ordinal, item.id))
         return items
 
+    def read_whiteboard_page(
+        self, thread_id: str, *, metadata_only: bool = False,
+        entry_id: str | None = None, offset: int = 0, limit: int = 50,
+    ) -> dict[str, Any]:
+        self.get_thread(thread_id)
+        where, params = "thread_id = ?", [thread_id]
+        if entry_id is not None:
+            where += " AND id = ?"
+            params.append(entry_id)
+        total = self.connection.execute(
+            f"SELECT COUNT(*) FROM whiteboard_entries WHERE {where}", params).fetchone()[0]
+        projection = metadata_sql() if metadata_only else "payload"
+        rows = self.connection.execute(
+            f"SELECT {projection} AS payload FROM whiteboard_entries WHERE {where} "
+            "ORDER BY created_at, ordinal, id LIMIT ? OFFSET ?", [*params, limit, offset])
+        convert = (lambda data: metadata_row(data, sql_reference_pairs=True)) if metadata_only else (
+            lambda data: WhiteboardEntry.from_dict(data).to_dict())
+        items = [convert(self._load(row)) for row in rows]
+        return page_result(items, total, offset=offset, limit=limit)
+
     def append_whiteboard_entry(self, entry: WhiteboardEntry) -> tuple[WhiteboardEntry, bool]:
         if not self._transaction_depth:
             with self.transaction():
                 return self.append_whiteboard_entry(entry)
         self.get_thread(entry.thread_id)
-        stored, duplicate = plan_whiteboard_append(self.list_whiteboard(entry.thread_id), entry)
+        stored, duplicate, replace = plan_whiteboard_append(self.list_whiteboard(entry.thread_id), entry)
+        for entry_id in replace:
+            self.connection.execute(
+                "DELETE FROM whiteboard_entries WHERE thread_id = ? AND id = ?",
+                (entry.thread_id, entry_id),
+            )
         if duplicate:
             return stored, True
         self.connection.execute(
@@ -282,6 +318,36 @@ class SQLiteStore(SQLiteLifecycleStore, MigratedOwnerDocuments):
             (stored.id, stored.thread_id, stored.created_at, stored.ordinal, stored.external_key, self._dump(stored.to_dict())),
         )
         return stored, False
+
+    def expired_entry_ids(self, thread_id: str, now) -> list[str]:
+        """Entry ids past expiry. The query does not load entry text."""
+        from threaddesk.services.whiteboard import _expired_value
+
+        rows = self.connection.execute(
+            "SELECT id, json_extract(payload, '$.expires_at') "
+            "FROM whiteboard_entries WHERE thread_id = ?",
+            (thread_id,),
+        ).fetchall()
+        return [row[0] for row in rows if _expired_value(row[1], now)]
+
+    def delete_whiteboard_entry(self, thread_id: str, entry_id: str) -> bool:
+        """Delete one row. A missing row is success and removes nothing."""
+        if not self._transaction_depth:
+            with self.transaction():
+                return self.delete_whiteboard_entry(thread_id, entry_id)
+        if (
+            not isinstance(entry_id, str)
+            or entry_id in {"", ".", ".."}
+            or "/" in entry_id
+            or "\\" in entry_id
+        ):
+            return False
+        cursor = self.connection.execute(
+            "DELETE FROM whiteboard_entries WHERE thread_id = ? AND id = ?",
+            (thread_id, entry_id),
+        )
+        self._commit()
+        return cursor.rowcount > 0
 
     def save_node(self, node: KnowledgeNode, *, include_trashed: bool = False) -> None:
         if not self._transaction_depth:

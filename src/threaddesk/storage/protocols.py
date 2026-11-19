@@ -39,10 +39,16 @@ class SnapshotStore(Protocol):
 
 
 class WhiteboardStore(Protocol):
+    def read_whiteboard_page(
+        self, thread_id: str, *, metadata_only: bool = False,
+        entry_id: str | None = None, offset: int = 0, limit: int = 50,
+    ) -> dict[str, Any]: ...
     def list_whiteboard(self, thread_id: str, *, include_trashed: bool = False) -> list[WhiteboardEntry]: ...
     def append_whiteboard_entry(
         self, entry: WhiteboardEntry
     ) -> tuple[WhiteboardEntry, bool]: ...
+    def delete_whiteboard_entry(self, thread_id: str, entry_id: str) -> bool: ...
+    def expired_entry_ids(self, thread_id: str, now: Any) -> list[str]: ...
 
 
 class GraphStore(Protocol):

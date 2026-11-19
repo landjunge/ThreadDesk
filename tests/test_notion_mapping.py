@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import json
+import sqlite3
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
 
 from threaddesk.core.import_models import DiffKind
-from threaddesk.core.models import KnowledgeNode
+from threaddesk.core.models import KnowledgeNode, WhiteboardEntry, new_thread
 from threaddesk.core.provenance import SourceRecord
 from threaddesk.services.migration.diff import DryRunPlanner, node_target_hash
 from threaddesk.services.migration.mapper import NotionMapper
@@ -340,6 +342,56 @@ def test_sqlite_v1_workspace_is_migrated_to_source_records_schema(tmp_path: Path
     assert store.connection.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='source_records'"
     ).fetchone()[0] == "source_records"
+
+
+def test_sqlite_v1_user_thread_note_and_whiteboard_survive_migration(tmp_path: Path) -> None:
+    """User rows written before SQLiteStore opens are still the same rows after it."""
+    from threaddesk.storage.schema import SCHEMA_VERSION, V1_SCHEMA_SQL, WHITEBOARD_SQL
+
+    database = tmp_path / "threaddesk.sqlite3"
+    thread = new_thread("Bestand vor dem Update")
+    thread.context.notes = "Notiz bleibt genau so"
+    entry = WhiteboardEntry(
+        id="tafelvorupdate",
+        thread_id=thread.id,
+        actor="Mensch",
+        actor_type="human",
+        created_at=thread.created_at,
+        entry_type="note",
+        content="Tafeltext bleibt genau so",
+        ordinal=1,
+    )
+    thread_payload = json.dumps(thread.to_dict(), ensure_ascii=False, sort_keys=True)
+    entry_payload = json.dumps(entry.to_dict(), ensure_ascii=False, sort_keys=True)
+    connection = sqlite3.connect(database)
+    connection.executescript(V1_SCHEMA_SQL)
+    connection.execute("INSERT INTO schema_info(version) VALUES (1)")
+    # Version 1 has no whiteboard table yet. The row is stored before the jump;
+    # migration 4 creates that table with IF NOT EXISTS and must leave the row.
+    connection.executescript(WHITEBOARD_SQL)
+    connection.execute(
+        "INSERT INTO threads(id, status, updated_at, payload) VALUES (?,?,?,?)",
+        (thread.id, thread.status, thread.updated_at, thread_payload),
+    )
+    connection.execute(
+        "INSERT INTO whiteboard_entries(id, thread_id, created_at, ordinal, external_key, payload)"
+        " VALUES (?,?,?,?,?,?)",
+        (entry.id, entry.thread_id, entry.created_at, entry.ordinal, entry.external_key, entry_payload),
+    )
+    connection.commit()
+    connection.close()
+
+    store = SQLiteStore(tmp_path)
+
+    assert store.connection.execute("SELECT version FROM schema_info").fetchone()[0] == SCHEMA_VERSION
+    assert store.connection.execute(
+        "SELECT payload FROM threads WHERE id = ?", (thread.id,)
+    ).fetchone()[0] == thread_payload
+    assert store.connection.execute(
+        "SELECT payload FROM whiteboard_entries WHERE id = ?", (entry.id,)
+    ).fetchone()[0] == entry_payload
+    assert store.get_thread(thread.id) == thread
+    assert store.list_whiteboard(thread.id) == [entry]
 
 
 def test_future_sqlite_schema_is_rejected_without_backporting_tables(tmp_path: Path) -> None:

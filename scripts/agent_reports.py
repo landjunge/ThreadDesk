@@ -22,11 +22,15 @@ def main():
     for field in ('instance', 'agent', 'report-id', 'status', 'done', 'working', 'next'):
         report.add_argument('--' + field, required=True)
     report.add_argument('--blocker', default='')
+    sub.add_parser('capabilities')
     sub.add_parser('overview')
     sub.add_parser('refresh')
     watch = sub.add_parser('watch')
     watch.add_argument('--interval', type=int, default=60)
     args = parser.parse_args()
+    if args.action == 'capabilities':
+        print(json.dumps(module.capabilities(JsonStore)))
+        return
     reports = module.AgentReports(ThreadService(JsonStore(args.workspace), bus=module.ReportEventBus()))
     if args.action == 'report':
         print(json.dumps(reports.report(args.instance, args.agent, args.report_id,
