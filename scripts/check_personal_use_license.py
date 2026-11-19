@@ -164,8 +164,8 @@ def check_package_json(repo: Path) -> list[str]:
         rel = path.relative_to(repo).as_posix()
         data = json.loads(path.read_text(encoding="utf-8"))
         license_field = data.get("license")
-        if not isinstance(license_field, str) or not license_field.startswith(
-            ("SEE LICENSE IN ", "LicenseRef-Netzwerkpunkt")
+        if not isinstance(license_field, str) or not (
+            license_field == ALLOWED_LICENSE_REF or license_field.startswith("SEE LICENSE IN ")
         ):
             problems.append(f"{rel}: license muss SEE LICENSE IN LICENSE sein")
             continue
@@ -220,12 +220,31 @@ def check_tauri(repo: Path) -> list[str]:
     return problems
 
 
+# Concrete source-recipe guards, not proof of a built artifact. Unknown recipes fail closed.
+PACKAGER_PROOFS = {
+    ".github/workflows/desktop-build.yml": (
+        "cp LICENSE dist/ThreadDesk.app/Contents/Resources/LICENSE",
+        "cp LICENSE dmg/LICENSE",
+    ),
+    "packaging/server/Dockerfile": ("COPY pyproject.toml README.md LICENSE ./",),
+}
+
+
+def executable_lines(text: str) -> str:
+    """Drop full-line comments so a commented-out command is not accepted as proof."""
+    return "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+
+
 def check_packagers(repo: Path) -> list[str]:
     problems = []
     for rel in PACKAGERS:
         path = repo / rel
-        if path.is_file() and "LICENSE" not in path.read_text(encoding="utf-8"):
-            problems.append(f"{rel}: Installationsrezept muss LICENSE mit ausliefern")
+        if not path.is_file():
+            continue
+        code = executable_lines(path.read_text(encoding="utf-8"))
+        proofs = PACKAGER_PROOFS.get(rel, ())
+        if not proofs or not all(proof in code for proof in proofs):
+            problems.append(f"{rel}: konkreter Produkt-LICENSE-Paketnachweis fehlt")
     return problems
 
 

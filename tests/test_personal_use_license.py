@@ -64,3 +64,39 @@ def test_tauri_and_cargo_license_files_must_equal_the_root_license(tmp_path):
     conf.write_text(json.dumps({"bundle": {"licenseFile": "LICENSE"}}))
     cargo.write_text('license-file = "LICENSE"\n')
     assert not tool.check_tauri(tmp_path)
+
+
+def test_npm_license_reference_must_be_exact(tmp_path):
+    import json
+
+    tool = _tool()
+    (tmp_path / "LICENSE").write_text("Netzwerkpunkt Personal Use License 1.0\n")
+    manifest = tmp_path / "package.json"
+    for value, accepted in (
+        (tool.ALLOWED_LICENSE_REF, True),
+        ("LicenseRef-Netzwerkpunkt-Commercial-Only-2.0", False),
+        (tool.ALLOWED_LICENSE_REF + "-changed", False),
+    ):
+        manifest.write_text(json.dumps({"name": "x", "license": value}))
+        assert (not tool.check_package_json(tmp_path)) is accepted, value
+
+
+def test_packaging_proofs_are_concrete_and_ignore_comments(tmp_path):
+    tool = _tool()
+    for relative, proofs in tool.PACKAGER_PROOFS.items():
+        original = ROOT / relative
+        text = original.read_text(encoding="utf-8")
+        recipe = tmp_path / relative
+        recipe.parent.mkdir(parents=True, exist_ok=True)
+        recipe.write_text(text, encoding="utf-8")
+        assert not tool.check_packagers(tmp_path), relative
+        for proof in proofs:
+            removed = text.replace(proof, "REMOVED_PRODUCT_INCLUSION")
+            recipe.write_text(removed, encoding="utf-8")
+            assert tool.check_packagers(tmp_path), (relative, proof)
+            commented = "\n".join(
+                "# " + line if proof in line else line for line in text.splitlines()
+            )
+            recipe.write_text(commented, encoding="utf-8")
+            assert tool.check_packagers(tmp_path), (relative, proof, "commented")
+        recipe.write_text(text, encoding="utf-8")
