@@ -1,5 +1,8 @@
 """Existing package and historical journal imports keep their actual semantics."""
 import hashlib
+import os
+import subprocess
+import sys
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -11,6 +14,45 @@ from threaddesk.services.commands import CommandApplication
 from threaddesk.services.library_import import LibraryImporter
 from threaddesk.storage.json_store import JsonStore
 from threaddesk.storage.sqlite_store import SQLiteStore
+
+
+def test_owner_sync_status_without_http_extras(tmp_path):
+    source = Path(__file__).resolve().parents[1] / "src"
+    probe = """
+import importlib.abc
+from pathlib import Path
+import sys
+
+class NoHTTPExtras(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname.split(".")[0] in {"fastapi", "starlette"}:
+            raise ModuleNotFoundError(fullname)
+
+sys.meta_path.insert(0, NoHTTPExtras())
+from threaddesk.api.service import ThreadService
+from threaddesk.services.mcp import McpBridge
+from threaddesk.storage.json_store import JsonStore
+
+store = JsonStore(Path(sys.argv[1]))
+service = ThreadService(store)
+thread = service.create("Owner status fixture")
+owner = McpBridge(service, allowed_scopes={"workspace.read"})
+response = owner.call("td_server_usync__status", {
+    "workspace_id": owner.commands.application.workspace_id,
+    "arguments": {"thread_id": thread.id},
+})
+assert response["ok"], response
+status = response["result"]["result"]
+assert status["thread_revision"] == thread.revision
+assert status["configured"] is False and status["status"]["state"] == "unconfigured"
+assert not (store.workspace_path / "server-sync-private").exists()
+"""
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", probe, str(tmp_path / "workspace")],
+        env={"PATH": os.defpath, "HOME": str(tmp_path), "PYTHONPATH": str(source)},
+        capture_output=True, text=True, timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 @pytest.mark.parametrize("backend", [JsonStore, SQLiteStore])
