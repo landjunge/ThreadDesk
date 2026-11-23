@@ -1,6 +1,4 @@
 """Explicit local project bindings; remote metadata never grants host file access."""
-from __future__ import annotations
-
 from contextlib import contextmanager, ExitStack
 import hashlib
 import json
@@ -10,9 +8,6 @@ import stat
 import threading
 from pathlib import Path
 from urllib.parse import urlsplit
-
-from fastapi import HTTPException, Request
-from starlette.concurrency import run_in_threadpool
 
 from threaddesk.core.errors import InvalidState, ManagementError, NotFound
 from threaddesk.server_sync.store import SyncError, _id
@@ -382,6 +377,10 @@ class DesktopSyncManager:
 
 
 def install_routes(app, service_factory, render):
+    # Bindings are also read by the owner CLI and stdio without the HTTP extras.
+    from fastapi import HTTPException, Request
+    from starlette.concurrency import run_in_threadpool
+
     manager = DesktopSyncManager(service_factory)
     app.state.server_sync_manager = manager
 
