@@ -430,7 +430,9 @@ def self_test():
     for repo_name in ("AgentAuthority", "agent-authority-lab"):
         try:
             rendered, _ = render(f"landjunge/{repo_name}", {"Linux Desktop": ("v1.0.0", authority_asset)})
-            svg = next(iter(rendered.values()))
+            # Five fixed fields are always rendered; pick the Linux Desktop button that was
+            # actually chosen, not the first (placeholder) entry.
+            svg = next(v for path, v in rendered.items() if "linux-desktop" in path.as_posix())
             if "#3b78fc" not in svg:
                 failed.append(f"render-brand {repo_name}: expected Agent Authority brand color")
         except (KeyError, StopIteration) as exc:
