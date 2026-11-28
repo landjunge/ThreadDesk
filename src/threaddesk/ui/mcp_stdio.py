@@ -138,6 +138,12 @@ def serve(svc: ThreadService | None = None) -> None:
             if current != revision:
                 revision = current
                 write({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
+    except BrokenPipeError:
+        # The reader on the other end of stdout closed (e.g. a readiness probe
+        # that gave up and disconnected). That is an ordinary way for this
+        # stdio transport to end, not a crash: stop serving quietly instead of
+        # propagating an uncaught traceback out of this process.
+        pass
     finally:
         runtime.stop()
         deferral.__exit__(None, None, None)
